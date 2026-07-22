@@ -8,7 +8,7 @@ import informationSourceRoutes from "./routes/informationSources.routes.js";
 import connectorDefinitionRoutes from "./routes/connectorDefinitions.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
 import monitoringCapabilityRoutes from "./routes/monitoringCapabilities.routes.js";
-
+import sourceRecommendationRoutes from "./routes/sourceRecommendations.routes.js";
 
 const app = express();
 
@@ -46,6 +46,7 @@ app.use("/api/ingestion", ingestionRoutes);
 app.use("/api/information-sources", informationSourceRoutes);
 app.use("/api/connector-definitions", connectorDefinitionRoutes);
 app.use("/api/monitoring-capabilities", monitoringCapabilityRoutes);
+app.use("/api/monitoring-capabilities", sourceRecommendationRoutes);
 app.use("/api/ai", aiRoutes);
 
 app.use((req, res) => {
