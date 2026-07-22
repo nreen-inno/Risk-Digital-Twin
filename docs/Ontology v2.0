@@ -1,0 +1,427 @@
+# Risk Digital Twin Ontology
+
+## Vision
+
+The Risk Digital Twin is an AI-assisted semantic integration platform that continuously transforms heterogeneous internal and external information into a unified enterprise risk picture.
+
+Unlike traditional risk registers, the platform does not start from risks.
+
+It starts from information.
+
+Information is collected from multiple sources, semantically interpreted using AI, transformed into common ontology objects, and connected to enterprise risks through risk factors.
+
+The same architecture can later support Quality, Sustainability, Supply Chain, Commissioning and other Digital Twins.
+
+---
+
+# Main Principles
+
+1. Business concepts are separated from technical integration.
+2. Enterprise risks are independent of information sources.
+3. One information source may support many risk factors.
+4. One risk factor may influence many enterprise risks.
+5. AI assists configuration but does not replace human approval.
+6. Original information is always preserved.
+7. Every decision is traceable back to its evidence.
+
+---
+
+# Core Architecture
+
+Enterprise Risk
+        ↓
+Risk Definition
+        ↓
+Risk Factor
+        ↓
+Monitoring Capability
+        ↓
+Information Source
+        ↓
+Connector Definition
+        ↓
+Connector Instance
+        ↓
+Connector Runtime
+        ↓
+Raw Record
+        ↓
+AI Interpretation
+        ↓
+Knowledge Objects
+        ↓
+Risk Intelligence
+        ↓
+Dashboards / Alerts / Recommendations
+
+---
+
+# Core Objects
+
+| Object | Purpose | Created by | Demo |
+|---------|----------|------------|------|
+| EnterpriseRiskCategory | Top-level enterprise taxonomy (Strategic, Financial, Supply Chain, Engineering, HSE, Cyber...) | Administrator | ✓ |
+| RiskSubcategory | Second-level enterprise taxonomy | Administrator | ✓ |
+| RiskDefinition | Generic reusable enterprise risk (Late Delivery, Supplier Insolvency, OT Attack...) | Administrator | ✓ |
+| RiskFactor | Business factor influencing one or more enterprise risks (Weather, Commodity Prices, Politics, Labour Market, Supplier Capacity...) | Administrator / AI | ✓ |
+| MonitoringCapability | Business definition describing WHAT should be monitored | User | ✓ |
+| InformationSource (DataSource) | System or provider delivering information (SAP, FMI, Reuters, MEPS, Manual Expert...) | User | ✓ |
+| ConnectorDefinition | Generic AI-generated connector template | AI + User | ✓ |
+| ConnectorInstance | Configured execution of one connector | User | ✓ |
+| ConnectorRun | One execution of ConnectorInstance | Runtime | Later |
+| RawRecord | Original imported record | Runtime | ✓ |
+| Interpretation | AI understanding of RawRecord | AI | ✓ |
+| MappingSuggestion | AI proposal for ontology objects | AI | ✓ |
+| KnowledgeObject | Common parent for semantic objects | System | ✓ |
+| Entity | Supplier, Ship, Project, Material, Port, Country... | AI/User | ✓ |
+| Observation | Current fact | AI/User | ✓ |
+| Incident | Historical event | AI/User | ✓ |
+| Evidence | Supporting information | AI/User | ✓ |
+| RiskInstance | Actual risk affecting one or more entities | AI/User | ✓ |
+| Relationship | Semantic relationship between objects | AI/User | ✓ |
+| Mitigation | Risk response | User | Later |
+| Recommendation | AI recommendation | AI | Later |
+| Scenario | What-if simulation | User | Later |
+
+---
+
+# Risk Factors
+
+Risk Factors are business concepts.
+
+They are NOT information sources.
+
+Examples:
+
+- Weather
+- Commodity Prices
+- Inflation
+- Interest Rates
+- Politics & Conflicts
+- Supplier Capacity
+- Material Availability
+- Labour Market
+- Cyber Threats
+- Environmental Regulation
+- Pandemic
+- Port Congestion
+
+One Risk Factor may influence multiple enterprise risks.
+
+One enterprise risk may depend on multiple risk factors.
+
+---
+
+# Monitoring Capability
+
+Monitoring Capability describes WHAT the organisation wants to monitor.
+
+Examples:
+
+- Weather Monitoring
+- Commodity Monitoring
+- Supplier Monitoring
+- Political Monitoring
+- Cyber Monitoring
+- Regulatory Monitoring
+
+Monitoring Capability is independent from specific data providers.
+
+---
+
+# Information Sources
+
+Information Sources provide evidence.
+
+Examples:
+
+Weather
+
+- FMI
+- OpenWeather
+- ECMWF
+- NOAA
+
+Commodity Prices
+
+- MEPS
+- London Metal Exchange
+- Trading Economics
+
+Politics
+
+- Reuters
+- BBC
+- Government Bulletins
+- EU News
+
+Supplier Information
+
+- ERP
+- Supplier Portal
+- Manual Expert
+- Historical Incidents
+
+One Monitoring Capability may use multiple Information Sources.
+
+One Information Source may support multiple Monitoring Capabilities.
+
+---
+
+# Connector Definition
+
+Connector Definition is generated with AI.
+
+Input:
+
+- API documentation
+- Swagger/OpenAPI
+- Sample JSON
+- CSV
+- Excel
+- XML
+- Database schema
+- PDF
+- User description
+
+AI suggests:
+
+- transport
+- authentication
+- ingestion strategy
+- parser
+- polling frequency
+- listening/webhook capability
+- incremental loading
+- field mapping
+- semantic mapping
+- confidence
+
+User reviews and approves.
+
+---
+
+# Connector Instance
+
+Connector Instance configures one execution.
+
+Example
+
+SAP Purchase Orders
+
+↓
+
+Production
+
+↓
+
+Test
+
+↓
+
+Project A
+
+Each instance has:
+
+- endpoint
+- credentials
+- schedule
+- filters
+- status
+- last execution
+
+---
+
+# Raw Record
+
+Raw Record is immutable.
+
+It always preserves original information.
+
+Nothing is lost.
+
+---
+
+# AI Interpretation
+
+AI analyses Raw Records.
+
+It identifies:
+
+- entities
+- observations
+- incidents
+- possible risk factors
+- confidence
+- explanation
+
+No business object is automatically created.
+
+---
+
+# Mapping Suggestion
+
+AI proposes
+
+Create:
+
+- Observation
+- Incident
+- Evidence
+- Entity
+
+Link to:
+
+- Risk Definition
+- Risk Factors
+- Existing Entity
+
+User can approve, modify or reject.
+
+---
+
+# Knowledge Objects
+
+All semantic objects inherit common properties.
+
+Examples:
+
+Entity
+
+Observation
+
+Incident
+
+Evidence
+
+RiskInstance
+
+Relationship
+
+Common fields:
+
+- id
+- objectType
+- source
+- confidence
+- createdAt
+- updatedAt
+- relationships[]
+
+---
+
+# Relationships
+
+Relationships are first-class ontology objects.
+
+Examples
+
+Supplier
+
+SUPPLIES
+
+Project
+
+Weather
+
+AFFECTS
+
+Sea Trial
+
+Politics
+
+CAUSES
+
+Supplier Delay
+
+Observation
+
+SUPPORTS
+
+Risk Instance
+
+Evidence
+
+PROVES
+
+Observation
+
+---
+
+# Processing Flow
+
+Business Need
+
+↓
+
+Select Enterprise Risk Categories
+
+↓
+
+Select Risk Factors
+
+↓
+
+Create Monitoring Capability
+
+↓
+
+AI recommends Information Sources
+
+↓
+
+AI creates Connector Definition
+
+↓
+
+User approves
+
+↓
+
+Connector Instance
+
+↓
+
+Runtime
+
+↓
+
+Raw Records
+
+↓
+
+AI Interpretation
+
+↓
+
+Mapping Suggestions
+
+↓
+
+Knowledge Objects
+
+↓
+
+Risk Intelligence
+
+↓
+
+Dashboard
+
+↓
+
+Recommendations
+
+---
+
+# Demo Scenario
+
+1. Select enterprise risk categories.
+2. Select risk factors to monitor.
+3. AI recommends suitable information sources.
+4. User selects one or more sources.
+5. AI creates connector definitions.
+6. Runtime imports information.
+7. AI creates mapping suggestions.
+8. User approves.
+9. Dashboard updates automatically.

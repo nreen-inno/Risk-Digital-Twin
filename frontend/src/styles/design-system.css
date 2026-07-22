@@ -1,0 +1,262 @@
+/* =============================================================================
+   Risk Digital Twin — Design System
+   A restrained, premium enterprise design language.
+   Tokens first, then primitives. Components consume these; they don't redefine.
+   ============================================================================= */
+
+:root {
+  /* --- Surface & structure --- */
+  --bg: #f7f9fc;
+  --bg-deep: #eef2f8;
+  --surface: #ffffff;
+  --surface-2: #f9fbfd;
+  --surface-inset: #f3f6fb;
+
+  /* --- Lines --- */
+  --border: #e4e9f2;
+  --border-strong: #d3dbe8;
+  --border-focus: #2f6bff;
+
+  /* --- Ink / typography --- */
+  --ink: #0d1b2f; /* near-black navy */
+  --ink-2: #45566e; /* secondary text */
+  --ink-3: #7a8aa3; /* muted / captions */
+  --ink-inv: #f4f8ff;
+
+  /* --- Brand --- */
+  --navy: #14335f;
+  --navy-700: #0f2748;
+  --accent: #2f6bff; /* restrained signal blue */
+  --accent-600: #1f56e0;
+  --ai-1: #3b5bdb; /* AI gradient endpoints */
+  --ai-2: #5f8bff;
+  --ai-3: #35b6c9;
+
+  /* --- Semantic --- */
+  --ok: #1f9d6b;
+  --warn: #c98a17;
+  --danger: #d64545;
+
+  /* --- Source tiers --- */
+  --tier-internal: #2f6bff;
+  --tier-external: #35a0b8;
+  --tier-historical: #8a6dc4;
+
+  /* --- Radii (moderate — not childish) --- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-pill: 999px;
+
+  /* --- Shadows (soft, layered) --- */
+  --sh-1: 0 1px 2px rgba(13, 27, 47, 0.04);
+  --sh-2: 0 2px 6px rgba(13, 27, 47, 0.05), 0 8px 24px rgba(13, 27, 47, 0.05);
+  --sh-3: 0 8px 20px rgba(13, 27, 47, 0.08), 0 24px 48px rgba(13, 27, 47, 0.09);
+  --sh-focus: 0 0 0 3px rgba(47, 107, 255, 0.18);
+
+  /* --- Spacing scale --- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+  --s-8: 64px;
+  --s-9: 96px;
+
+  /* --- Motion --- */
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 0.28s;
+
+  --maxw: 1160px;
+}
+
+/* --- Reset-ish base --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+  line-height: 1.5;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--sh-focus);
+  border-radius: var(--r-sm);
+}
+
+/* =============================================================================
+   Primitives
+   ============================================================================= */
+
+/* --- Buttons --- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease), transform 0.12s var(--ease), color var(--dur);
+  white-space: nowrap;
+}
+.btn:active {
+  transform: translateY(0.5px);
+}
+.btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-600) 100%);
+  color: #fff;
+  box-shadow: var(--sh-1), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.btn--primary:hover {
+  box-shadow: var(--sh-2), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transform: translateY(-1px);
+}
+
+.btn--dark {
+  background: var(--navy);
+  color: #fff;
+}
+.btn--dark:hover {
+  background: var(--navy-700);
+  transform: translateY(-1px);
+}
+
+.btn--ghost {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.btn--ghost:hover {
+  border-color: var(--accent);
+  color: var(--accent-600);
+}
+
+.btn--quiet {
+  background: transparent;
+  color: var(--ink-2);
+  padding: 8px 12px;
+}
+.btn--quiet:hover {
+  color: var(--ink);
+  background: var(--surface-inset);
+}
+
+.btn--lg {
+  padding: 13px 26px;
+  font-size: 15px;
+}
+
+/* --- Card shell --- */
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--sh-1);
+}
+
+/* --- Badge / chip --- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid var(--border);
+  background: var(--surface-inset);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.chip--dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* --- Eyebrow label --- */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* --- Kbd hint --- */
+.kbd {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: 1px 6px;
+  background: var(--surface);
+}
+
+/* --- Utility --- */
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding-left: var(--s-5);
+  padding-right: var(--s-5);
+}
+
+.stack > * + * {
+  margin-top: var(--s-4);
+}
+
+.muted {
+  color: var(--ink-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
