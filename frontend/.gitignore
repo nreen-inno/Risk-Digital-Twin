@@ -11,3 +11,5 @@ yarn-error.log*
 # keep .env.example, ignore real local envs
 .env.local
 .env.*.local
+.env
+Thumbs.db

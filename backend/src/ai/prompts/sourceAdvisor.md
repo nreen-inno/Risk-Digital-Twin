@@ -29,4 +29,30 @@ Important rules:
   - customer or internal access required;
   - file upload or simulated PoC data.
 - Recommendations should complement existing sources, not merely repeat them.
+For every recommendation:
+
+- Assign a unique priority from 1 to the number of recommendations.
+- Priority 1 is the most valuable recommendation for this customer.
+- Do not assign the same priority to multiple recommendations.
+
+Choose one recommendationType:
+
+- Industry Standard
+- Best Practice
+- Compliance
+- AI Discovery
+- Customer Specific
+
+Provide shortReason as one concise sentence suitable for a compact UI card.
+Keep it under approximately 100 characters.
+
+Examples:
+
+- Closes the supplier financial-health coverage gap.
+- Provides official sanctions and restricted-party monitoring.
+- Adds early warning of transport disruptions.
+- Improves visibility into recurring supplier quality problems.
+
+Return the most valuable recommendations first.
+
 - Return only JSON matching the required schema.

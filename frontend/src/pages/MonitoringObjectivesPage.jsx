@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMonitoringObjectives } from "../hooks/useMonitoringObjectives.js";
 import TopBar from "../components/layout/TopBar.jsx";
 import Footer from "../components/layout/Footer.jsx";
@@ -17,6 +18,7 @@ import Toast from "../components/shared/Toast.jsx";
  * is delegated to the useMonitoringObjectives hook and services/api.js.
  */
 export default function MonitoringObjectivesPage() {
+  const navigate = useNavigate();
   const { status, objectives, error, reload } = useMonitoringObjectives();
   const [selectedId, setSelectedId] = useState(null);
   const [toast, setToast] = useState("");
@@ -35,7 +37,7 @@ export default function MonitoringObjectivesPage() {
 
         <div className="section-head">
           <h2>Monitoring objectives</h2>
-          <span>Choose one to begin — you can refine sources in the next step.</span>
+          <span>Choose one to begin — the AI advisor will recommend sources in the next step.</span>
         </div>
 
         {status === "loading" && <LoadingState />}
@@ -62,9 +64,7 @@ export default function MonitoringObjectivesPage() {
             {selected && (
               <SelectedObjectivePanel
                 objective={selected}
-                onContinue={() =>
-                  setToast("Information Source selection will be implemented next.")
-                }
+                onContinue={() => navigate(`/configure/objectives/${selected.id}/source-advisor`)}
               />
             )}
           </>
