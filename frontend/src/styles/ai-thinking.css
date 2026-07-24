@@ -1,0 +1,110 @@
+/* =============================================================================
+   AiThinking — "AI is working" indicator (Precision-gear mark).
+   Full-screen overlay by default; also supports an inline variant.
+   Self-contained; only depends on being imported by AiThinking.jsx.
+   ============================================================================= */
+
+.ait-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: #05070b;
+  animation: aitFade 0.25s ease;
+}
+.ait-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(700px 500px at 50% 42%, rgba(45, 224, 200, 0.1), transparent 70%);
+}
+
+/* inline variant (drop-in where a section-height loader is wanted) */
+.ait-inline {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 360px;
+  margin-top: 24px;
+  background: #05070b;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.ait-inline::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px 420px at 50% 42%, rgba(45, 224, 200, 0.1), transparent 70%);
+}
+
+@keyframes aitFade { from { opacity: 0; } }
+
+.ait-box {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.ait-med {
+  position: relative;
+  width: 184px;
+  height: 184px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 30px;
+}
+.ait-med::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(45, 224, 200, 0.32), rgba(45, 224, 200, 0) 66%);
+  animation: aitPulse 2.8s ease-in-out infinite;
+}
+
+.ait-gear {
+  position: relative;
+  width: 172px;
+  height: 172px;
+  filter: drop-shadow(0 0 9px rgba(45, 224, 200, 0.4));
+}
+.ait-spin { animation: aitSpin 4.6s linear infinite; transform-origin: 0 0; }
+.ait-bezel { animation: aitSpin 22s linear infinite reverse; transform-origin: 0 0; }
+.ait-tw { animation: aitTw 1.7s ease-in-out infinite; }
+.ait-tw2 { animation: aitTw 2.3s ease-in-out infinite; }
+
+@keyframes aitSpin { to { transform: rotate(360deg); } }
+@keyframes aitPulse { 0%, 100% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } }
+@keyframes aitTw { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+.ait-title { font-size: 20px; font-weight: 800; letter-spacing: -0.01em; color: #fff; }
+.ait-sub {
+  font-size: 15px;
+  color: #a7c6c0;
+  margin-top: 10px;
+  min-height: 22px;
+  animation: aitUp 0.4s ease;
+}
+@keyframes aitUp { from { opacity: 0; transform: translateY(4px); } }
+.ait-hint { font-size: 12.5px; color: #5f8079; margin-top: 16px; }
+
+.ait-dots::after { content: ""; animation: aitDots 1.4s steps(4, end) infinite; }
+@keyframes aitDots {
+  0% { content: ""; }
+  25% { content: "."; }
+  50% { content: ".."; }
+  75% { content: "..."; }
+  100% { content: ""; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ait-spin, .ait-bezel, .ait-med::before, .ait-tw, .ait-tw2 {
+    animation-duration: 0.001ms;
+    animation-iteration-count: 1;
+  }
+}
