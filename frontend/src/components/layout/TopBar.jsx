@@ -1,4 +1,4 @@
-import { BrandMark } from "../../lib/icons.jsx";
+import BrandLogo from "./BrandLogo.jsx";
 
 /** Premium application chrome — brand, section nav, environment status. */
 export default function TopBar() {
@@ -7,7 +7,7 @@ export default function TopBar() {
       <div className="container topbar__inner">
         <div className="brand">
           <span className="brand__mark">
-            <BrandMark />
+            <BrandLogo />
           </span>
           <span>
             <span className="brand__name">Risk Digital Twin</span>
