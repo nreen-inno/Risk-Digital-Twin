@@ -203,6 +203,177 @@ export async function createInformationSource(req, res, next) {
   }
 }
 
+export async function createInformationSourceFromRecommendation(
+  req,
+  res,
+  next
+) {
+  try {
+    const {
+      monitoringObjectiveId,
+      recommendation
+    } = req.body || {};
+
+    if (
+      !monitoringObjectiveId ||
+      typeof monitoringObjectiveId !== "string"
+    ) {
+      return res.status(400).json({
+        error: "Validation error",
+        message:
+          "Field 'monitoringObjectiveId' is required."
+      });
+    }
+
+    if (
+      !recommendation ||
+      typeof recommendation !== "object"
+    ) {
+      return res.status(400).json({
+        error: "Validation error",
+        message:
+          "Field 'recommendation' is required."
+      });
+    }
+
+    const {
+      id: sourceRecommendationId,
+      name,
+      provider = "",
+      informationNeed = "",
+      sourceRole = "external",
+      businessValue = "",
+      shortReason = "",
+      availabilityStatus = "unknown",
+      availabilityLabel = "",
+      recommendationType = null,
+      priority = null,
+      confidence = null,
+      nextSteps = [],
+      limitations = []
+    } = recommendation;
+
+    if (!sourceRecommendationId || !name) {
+      return res.status(400).json({
+        error: "Validation error",
+        message:
+          "Recommendation fields 'id' and 'name' are required."
+      });
+    }
+
+    const duplicateQuery = {
+      query: `
+        SELECT *
+        FROM c
+        WHERE c.objectType = @objectType
+          AND c.sourceRecommendationId = @sourceRecommendationId
+          AND ARRAY_CONTAINS(
+            c.monitoringObjectiveIds,
+            @monitoringObjectiveId
+          )
+      `,
+      parameters: [
+        {
+          name: "@objectType",
+          value: "informationSource"
+        },
+        {
+          name: "@sourceRecommendationId",
+          value: sourceRecommendationId
+        },
+        {
+          name: "@monitoringObjectiveId",
+          value: monitoringObjectiveId
+        }
+      ]
+    };
+
+    const { resources: existingSources } =
+      await container.items
+        .query(duplicateQuery)
+        .fetchAll();
+
+    if (existingSources.length > 0) {
+      return res.status(200).json({
+        created: false,
+        duplicate: true,
+        item: cleanCosmosFields(existingSources[0])
+      });
+    }
+
+    const now = new Date().toISOString();
+
+    const informationSource = {
+      id: crypto.randomUUID(),
+      objectType: "informationSource",
+
+      name: name.trim(),
+      description: shortReason,
+      provider,
+
+      sourceKind: "toBeConfirmed",
+      sourceRole,
+
+      documentation: "",
+      documentationUrl: "",
+      sampleData: null,
+
+      monitoringObjectiveIds: [
+        monitoringObjectiveId
+      ],
+
+      informationNeed,
+
+      supportedRiskFactorIds: [],
+      relatedRiskDefinitionIds: [],
+
+      origin: "aiSourceAdvisor",
+      sourceRecommendationId,
+
+      recommendationType,
+      recommendationPriority:
+        normaliseOptionalNumber(priority),
+      recommendationConfidence:
+        normaliseOptionalNumber(confidence),
+
+      businessValue,
+      shortReason,
+
+      availabilityStatus,
+      availabilityLabel,
+      accessState: "notConfirmed",
+
+      nextSteps:
+        normaliseStringArray(nextSteps),
+
+      limitations:
+        normaliseStringArray(limitations),
+
+      status: "draft",
+      tags: [],
+
+      connectorStatus: "notConfigured",
+      requiresUserReview: true,
+
+      createdAt: now,
+      updatedAt: now
+    };
+
+    const { resource } =
+      await container.items.create(
+        informationSource
+      );
+
+    return res.status(201).json({
+      created: true,
+      duplicate: false,
+      item: cleanCosmosFields(resource)
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function getInformationSources(
   req,
   res,
