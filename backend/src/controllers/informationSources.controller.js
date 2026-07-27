@@ -34,7 +34,11 @@ function normaliseStringArray(value) {
 }
 
 function normaliseOptionalNumber(value) {
-  if (value === null || value === undefined || value === "") {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
     return null;
   }
 
@@ -45,14 +49,58 @@ function normaliseOptionalNumber(value) {
     : null;
 }
 
-export async function createInformationSource(req, res, next) {
+function buildDefaultBusinessAccess() {
+  return {
+    accessKnown: "unknown",
+    organisationHasSubscription: "unknown",
+    internalOwner: "",
+    contactDepartment: "",
+    providerPortal: "",
+    notes: "",
+    decisionStatus: "pending",
+    updatedAt: null
+  };
+}
+
+async function findInformationSourceById(id) {
+  const querySpec = {
+    query: `
+      SELECT *
+      FROM c
+      WHERE c.objectType = @objectType
+        AND c.id = @id
+    `,
+    parameters: [
+      {
+        name: "@objectType",
+        value: "informationSource"
+      },
+      {
+        name: "@id",
+        value: id
+      }
+    ]
+  };
+
+  const { resources } =
+    await container.items
+      .query(querySpec)
+      .fetchAll();
+
+  return resources[0] || null;
+}
+
+export async function createInformationSource(
+  req,
+  res,
+  next
+) {
   try {
     const {
       name,
       description = "",
       provider = "",
 
-      // Technical/source-description fields
       sourceKind = "manual",
       documentation = "",
       documentationUrl = "",
@@ -60,12 +108,10 @@ export async function createInformationSource(req, res, next) {
       supportedRiskFactorIds = [],
       tags = [],
 
-      // Monitoring and semantic context
       monitoringObjectiveIds = [],
       informationNeed = "",
       relatedRiskDefinitionIds = [],
 
-      // AI Source Advisor provenance
       origin = "manual",
       sourceRecommendationId = null,
       recommendationType = null,
@@ -74,7 +120,6 @@ export async function createInformationSource(req, res, next) {
       businessValue = "",
       shortReason = "",
 
-      // Business-oriented access guidance
       sourceRole = "external",
       availabilityStatus = "unknown",
       availabilityLabel = "",
@@ -82,11 +127,16 @@ export async function createInformationSource(req, res, next) {
       nextSteps = [],
       limitations = [],
 
-      // Lifecycle
+      businessAccess = null,
+
       status = "draft"
     } = req.body || {};
 
-    if (!name || typeof name !== "string" || !name.trim()) {
+    if (
+      !name ||
+      typeof name !== "string" ||
+      !name.trim()
+    ) {
       return res.status(400).json({
         error: "Validation error",
         message: "Field 'name' is required."
@@ -130,6 +180,9 @@ export async function createInformationSource(req, res, next) {
 
     const now = new Date().toISOString();
 
+    const defaultBusinessAccess =
+      buildDefaultBusinessAccess();
+
     const informationSource = {
       id: crypto.randomUUID(),
       objectType: "informationSource",
@@ -146,24 +199,36 @@ export async function createInformationSource(req, res, next) {
       sampleData,
 
       monitoringObjectiveIds:
-        normaliseStringArray(monitoringObjectiveIds),
+        normaliseStringArray(
+          monitoringObjectiveIds
+        ),
 
       informationNeed,
 
       supportedRiskFactorIds:
-        normaliseStringArray(supportedRiskFactorIds),
+        normaliseStringArray(
+          supportedRiskFactorIds
+        ),
 
       relatedRiskDefinitionIds:
-        normaliseStringArray(relatedRiskDefinitionIds),
+        normaliseStringArray(
+          relatedRiskDefinitionIds
+        ),
 
       origin,
       sourceRecommendationId,
 
       recommendationType,
+
       recommendationPriority:
-        normaliseOptionalNumber(recommendationPriority),
+        normaliseOptionalNumber(
+          recommendationPriority
+        ),
+
       recommendationConfidence:
-        normaliseOptionalNumber(recommendationConfidence),
+        normaliseOptionalNumber(
+          recommendationConfidence
+        ),
 
       businessValue,
       shortReason,
@@ -185,6 +250,21 @@ export async function createInformationSource(req, res, next) {
 
       connectorStatus: "notConfigured",
       requiresUserReview: true,
+
+      businessAccess: {
+        ...defaultBusinessAccess,
+
+        organisationHasSubscription:
+          availabilityStatus === "availableNow"
+            ? "notRequired"
+            : defaultBusinessAccess
+                .organisationHasSubscription,
+
+        ...(businessAccess &&
+        typeof businessAccess === "object"
+          ? businessAccess
+          : {})
+      },
 
       createdAt: now,
       updatedAt: now
@@ -253,7 +333,10 @@ export async function createInformationSourceFromRecommendation(
       limitations = []
     } = recommendation;
 
-    if (!sourceRecommendationId || !name) {
+    if (
+      !sourceRecommendationId ||
+      !name
+    ) {
       return res.status(400).json({
         error: "Validation error",
         message:
@@ -266,7 +349,8 @@ export async function createInformationSourceFromRecommendation(
         SELECT *
         FROM c
         WHERE c.objectType = @objectType
-          AND c.sourceRecommendationId = @sourceRecommendationId
+          AND c.sourceRecommendationId =
+              @sourceRecommendationId
           AND ARRAY_CONTAINS(
             c.monitoringObjectiveIds,
             @monitoringObjectiveId
@@ -297,9 +381,22 @@ export async function createInformationSourceFromRecommendation(
       return res.status(200).json({
         created: false,
         duplicate: true,
-        item: cleanCosmosFields(existingSources[0])
+        item: cleanCosmosFields(
+          existingSources[0]
+        )
       });
     }
+
+    const allowedSourceRoles = [
+      "internal",
+      "external",
+      "historical"
+    ];
+
+    const safeSourceRole =
+      allowedSourceRoles.includes(sourceRole)
+        ? sourceRole
+        : "external";
 
     const now = new Date().toISOString();
 
@@ -307,12 +404,12 @@ export async function createInformationSourceFromRecommendation(
       id: crypto.randomUUID(),
       objectType: "informationSource",
 
-      name: name.trim(),
+      name: String(name).trim(),
       description: shortReason,
       provider,
 
       sourceKind: "toBeConfirmed",
-      sourceRole,
+      sourceRole: safeSourceRole,
 
       documentation: "",
       documentationUrl: "",
@@ -331,8 +428,10 @@ export async function createInformationSourceFromRecommendation(
       sourceRecommendationId,
 
       recommendationType,
+
       recommendationPriority:
         normaliseOptionalNumber(priority),
+
       recommendationConfidence:
         normaliseOptionalNumber(confidence),
 
@@ -355,6 +454,15 @@ export async function createInformationSourceFromRecommendation(
       connectorStatus: "notConfigured",
       requiresUserReview: true,
 
+      businessAccess: {
+        ...buildDefaultBusinessAccess(),
+
+        organisationHasSubscription:
+          availabilityStatus === "availableNow"
+            ? "notRequired"
+            : "unknown"
+      },
+
       createdAt: now,
       updatedAt: now
     };
@@ -364,7 +472,7 @@ export async function createInformationSourceFromRecommendation(
         informationSource
       );
 
-    return res.status(201).json({
+    res.status(201).json({
       created: true,
       duplicate: false,
       item: cleanCosmosFields(resource)
@@ -406,6 +514,7 @@ export async function getInformationSources(
           c.accessState,
           c.nextSteps,
           c.limitations,
+          c.businessAccess,
           c.connectorStatus,
           c.requiresUserReview,
           c.status,
@@ -431,7 +540,9 @@ export async function getInformationSources(
 
     res.status(200).json({
       count: resources.length,
-      items: resources.map(cleanCosmosFields)
+      items: resources.map(
+        cleanCosmosFields
+      )
     });
   } catch (error) {
     next(error);
@@ -444,33 +555,12 @@ export async function getInformationSourceById(
   next
 ) {
   try {
-    const { id } = req.params;
+    const source =
+      await findInformationSourceById(
+        req.params.id
+      );
 
-    const querySpec = {
-      query: `
-        SELECT *
-        FROM c
-        WHERE c.objectType = @objectType
-          AND c.id = @id
-      `,
-      parameters: [
-        {
-          name: "@objectType",
-          value: "informationSource"
-        },
-        {
-          name: "@id",
-          value: id
-        }
-      ]
-    };
-
-    const { resources } =
-      await container.items
-        .query(querySpec)
-        .fetchAll();
-
-    if (resources.length === 0) {
+    if (!source) {
       return res.status(404).json({
         error: "Information source not found"
       });
@@ -478,7 +568,170 @@ export async function getInformationSourceById(
 
     res
       .status(200)
-      .json(cleanCosmosFields(resources[0]));
+      .json(cleanCosmosFields(source));
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateInformationSourceBusinessAccess(
+  req,
+  res,
+  next
+) {
+  try {
+    const { id } = req.params;
+
+    const {
+      accessKnown,
+      organisationHasSubscription,
+      internalOwner,
+      contactDepartment,
+      providerPortal,
+      notes,
+      decisionStatus
+    } = req.body || {};
+
+    const allowedAccessKnown = [
+      "yes",
+      "no",
+      "unknown"
+    ];
+
+    const allowedSubscriptionStates = [
+      "yes",
+      "no",
+      "unknown",
+      "notRequired"
+    ];
+
+    const allowedDecisionStatuses = [
+      "pending",
+      "accessAvailable",
+      "actionRequired",
+      "notProceeding"
+    ];
+
+    if (
+      accessKnown !== undefined &&
+      !allowedAccessKnown.includes(
+        accessKnown
+      )
+    ) {
+      return res.status(400).json({
+        error: "Validation error",
+        message:
+          "accessKnown must be yes, no or unknown."
+      });
+    }
+
+    if (
+      organisationHasSubscription !==
+        undefined &&
+      !allowedSubscriptionStates.includes(
+        organisationHasSubscription
+      )
+    ) {
+      return res.status(400).json({
+        error: "Validation error",
+        message:
+          "organisationHasSubscription must be yes, no, unknown or notRequired."
+      });
+    }
+
+    if (
+      decisionStatus !== undefined &&
+      !allowedDecisionStatuses.includes(
+        decisionStatus
+      )
+    ) {
+      return res.status(400).json({
+        error: "Validation error",
+        message:
+          "decisionStatus contains an unsupported value."
+      });
+    }
+
+    const source =
+      await findInformationSourceById(id);
+
+    if (!source) {
+      return res.status(404).json({
+        error: "Information source not found"
+      });
+    }
+
+    const now = new Date().toISOString();
+
+    const currentBusinessAccess = {
+      ...buildDefaultBusinessAccess(),
+      ...(source.businessAccess || {})
+    };
+
+    source.businessAccess = {
+      ...currentBusinessAccess,
+
+      ...(accessKnown !== undefined
+        ? { accessKnown }
+        : {}),
+
+      ...(organisationHasSubscription !==
+      undefined
+        ? {
+            organisationHasSubscription
+          }
+        : {}),
+
+      ...(internalOwner !== undefined
+        ? {
+            internalOwner:
+              String(internalOwner).trim()
+          }
+        : {}),
+
+      ...(contactDepartment !== undefined
+        ? {
+            contactDepartment:
+              String(
+                contactDepartment
+              ).trim()
+          }
+        : {}),
+
+      ...(providerPortal !== undefined
+        ? {
+            providerPortal:
+              String(providerPortal).trim()
+          }
+        : {}),
+
+      ...(notes !== undefined
+        ? {
+            notes:
+              String(notes).trim()
+          }
+        : {}),
+
+      ...(decisionStatus !== undefined
+        ? { decisionStatus }
+        : {}),
+
+      updatedAt: now
+    };
+
+    source.updatedAt = now;
+
+    const { resource } =
+      await container
+        .item(
+          source.id,
+          source.objectType
+        )
+        .replace(source);
+
+    res
+      .status(200)
+      .json(cleanCosmosFields(resource));
   } catch (error) {
     next(error);
   }
@@ -490,39 +743,17 @@ export async function analyseInformationSource(
   next
 ) {
   try {
-    const { id } = req.params;
+    const source =
+      await findInformationSourceById(
+        req.params.id
+      );
 
-    const sourceQuery = {
-      query: `
-        SELECT *
-        FROM c
-        WHERE c.objectType = @objectType
-          AND c.id = @id
-      `,
-      parameters: [
-        {
-          name: "@objectType",
-          value: "informationSource"
-        },
-        {
-          name: "@id",
-          value: id
-        }
-      ]
-    };
-
-    const { resources } =
-      await container.items
-        .query(sourceQuery)
-        .fetchAll();
-
-    if (resources.length === 0) {
+    if (!source) {
       return res.status(404).json({
         error: "Information source not found"
       });
     }
 
-    const source = resources[0];
     const now = new Date().toISOString();
 
     let connectorAnalysis;
@@ -530,7 +761,9 @@ export async function analyseInformationSource(
 
     try {
       connectorAnalysis =
-        await generateConnectorAnalysis(source);
+        await generateConnectorAnalysis(
+          source
+        );
     } catch (aiError) {
       console.error(
         "AI connector analysis failed. Using fallback:",
@@ -538,7 +771,9 @@ export async function analyseInformationSource(
       );
 
       connectorAnalysis =
-        buildFallbackConnectorAnalysis(source);
+        buildFallbackConnectorAnalysis(
+          source
+        );
 
       generatedBy = "ruleBasedFallback";
     }
@@ -575,7 +810,8 @@ export async function analyseInformationSource(
 
       aiModel:
         generatedBy === "azureOpenAI"
-          ? process.env.AZURE_OPENAI_DEPLOYMENT
+          ? process.env
+              .AZURE_OPENAI_DEPLOYMENT
           : null,
 
       createdAt: now,
@@ -595,7 +831,9 @@ export async function analyseInformationSource(
   }
 }
 
-function buildFallbackConnectorAnalysis(source) {
+function buildFallbackConnectorAnalysis(
+  source
+) {
   const defaultsBySourceKind = {
     restApi: {
       transport: "http",
@@ -603,57 +841,85 @@ function buildFallbackConnectorAnalysis(source) {
       ingestionMode: "polling",
       recommendedInterval: "PT6H"
     },
+
     rss: {
       transport: "http",
       inputFormat: "xml",
       ingestionMode: "polling",
       recommendedInterval: "PT1H"
     },
+
     csv: {
       transport: "file",
       inputFormat: "csv",
       ingestionMode: "fileImport",
       recommendedInterval: "manual"
     },
+
     excel: {
       transport: "file",
       inputFormat: "xlsx",
       ingestionMode: "fileImport",
       recommendedInterval: "manual"
     },
+
     database: {
       transport: "database",
       inputFormat: "records",
       ingestionMode: "databaseQuery",
       recommendedInterval: "PT6H"
     },
+
     manual: {
       transport: "manual",
       inputFormat: "json",
       ingestionMode: "manual",
       recommendedInterval: "manual"
+    },
+
+    commercialService: {
+      transport: "toBeConfirmed",
+      inputFormat: "toBeConfirmed",
+      ingestionMode: "toBeConfirmed",
+      recommendedInterval: "toBeConfirmed"
+    },
+
+    toBeConfirmed: {
+      transport: "toBeConfirmed",
+      inputFormat: "toBeConfirmed",
+      ingestionMode: "toBeConfirmed",
+      recommendedInterval: "toBeConfirmed"
     }
   };
 
   const defaults =
-    defaultsBySourceKind[source.sourceKind] ||
+    defaultsBySourceKind[
+      source.sourceKind
+    ] ||
     defaultsBySourceKind.manual;
 
   return {
     technicalAnalysis: {
       transport: defaults.transport,
-      inputFormat: defaults.inputFormat,
-      authenticationType: "toBeConfirmed",
+      inputFormat:
+        defaults.inputFormat,
+
+      authenticationType:
+        "toBeConfirmed",
 
       ingestionStrategy: {
-        mode: defaults.ingestionMode,
+        mode:
+          defaults.ingestionMode,
+
         recommendedInterval:
           defaults.recommendedInterval,
 
         reason:
           "Fallback suggestion based on source kind.",
 
-        supportsIncrementalLoading: false,
+        supportsIncrementalLoading:
+          false,
+
         incrementalField: null
       },
 
@@ -662,16 +928,20 @@ function buildFallbackConnectorAnalysis(source) {
 
     businessAnalysis: {
       monitoringObjectiveIds:
-        source.monitoringObjectiveIds || [],
+        source.monitoringObjectiveIds ||
+        [],
 
       informationNeed:
         source.informationNeed || "",
 
       suggestedRiskFactors:
-        source.supportedRiskFactorIds || [],
+        source.supportedRiskFactorIds ||
+        [],
 
       suggestedRiskDefinitions:
-        source.relatedRiskDefinitionIds || [],
+        source
+          .relatedRiskDefinitionIds ||
+        [],
 
       suggestedEntityTypes: [],
 
@@ -686,7 +956,9 @@ function buildFallbackConnectorAnalysis(source) {
       missingInformation: [
         "AI analysis was unavailable."
       ],
+
       assumptions: [],
+
       validationRules: []
     },
 

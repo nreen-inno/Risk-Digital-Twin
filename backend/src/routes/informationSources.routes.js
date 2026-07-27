@@ -5,6 +5,7 @@ import {
   createInformationSourceFromRecommendation,
   getInformationSources,
   getInformationSourceById,
+  updateInformationSourceBusinessAccess,
   analyseInformationSource
 } from "../controllers/informationSources.controller.js";
 
@@ -15,12 +16,29 @@ router.post(
   createInformationSourceFromRecommendation
 );
 
-router.post("/", createInformationSource);
+router.post(
+  "/",
+  createInformationSource
+);
 
-router.get("/", getInformationSources);
+router.get(
+  "/",
+  getInformationSources
+);
 
-router.get("/:id", getInformationSourceById);
+router.patch(
+  "/:id/business-access",
+  updateInformationSourceBusinessAccess
+);
 
-router.post("/:id/analyse", analyseInformationSource);
+router.get(
+  "/:id",
+  getInformationSourceById
+);
+
+router.post(
+  "/:id/analyse",
+  analyseInformationSource
+);
 
 export default router;
