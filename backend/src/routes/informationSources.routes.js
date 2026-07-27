@@ -6,7 +6,9 @@ import {
   getInformationSources,
   getInformationSourceById,
   updateInformationSourceBusinessAccess,
-  analyseInformationSource
+  analyseInformationSource,
+  getInformationSourceAccessGuidance,
+  getInformationSourceConnectorAdvice
 } from "../controllers/informationSources.controller.js";
 
 const router = express.Router();
@@ -21,6 +23,7 @@ router.post(
   createInformationSource
 );
 
+
 router.get(
   "/",
   getInformationSources
@@ -30,7 +33,14 @@ router.patch(
   "/:id/business-access",
   updateInformationSourceBusinessAccess
 );
-
+router.get(
+  "/:id/access-guidance",
+  getInformationSourceAccessGuidance
+);
+router.post(
+  "/:id/connector-advice",
+  getInformationSourceConnectorAdvice
+);
 router.get(
   "/:id",
   getInformationSourceById

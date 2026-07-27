@@ -41,17 +41,6 @@ app.get("/api/health/database", async (req, res, next) => {
         next(error);
     }
 });
-app.use((req, res, next) => {
-  console.log("REQUEST", {
-    method: req.method,
-    url: req.originalUrl,
-    origin: req.headers.origin,
-    referer: req.headers.referer,
-    userAgent: req.headers["user-agent"]
-  });
-
-  next();
-});
 
 app.use("/api/ingestion", ingestionRoutes);
 app.use("/api/information-sources", informationSourceRoutes);
