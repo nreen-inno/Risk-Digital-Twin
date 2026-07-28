@@ -1,22 +1,33 @@
 import { useState } from "react";
 import { priorityMeta, statusMeta } from "../../lib/advisor.js";
-import { CheckIcon } from "../../lib/icons.jsx";
+import { CheckIcon, ArrowIcon } from "../../lib/icons.jsx";
 
 /**
- * One AI recommendation. Front shows priority, type, source, provider,
- * availability, short reason and business value. Expands to reveal business
- * value, next steps and limitations. Accept / Reject / Alternative actions.
- * No technical integration details are shown.
+ * One AI recommendation. Accepting it now persists an Information Source
+ * (Sprint 3) and reveals an "Open source details" action. Duplicate acceptance
+ * is treated as success by the parent. No technical integration details shown.
  */
-export default function RecommendationCard({ rec, decision, onAccept, onReject, onAlternative }) {
+export default function RecommendationCard({
+  rec,
+  decision,
+  accept,
+  onAccept,
+  onOpenDetails,
+  onReject,
+  onAlternative,
+}) {
   const [open, setOpen] = useState(false);
   const pm = priorityMeta(rec.priority);
   const am = statusMeta(rec.availabilityStatus);
-  const accepted = decision === "accepted";
+
+  const acceptStatus = accept?.status || "idle";
+  const isAccepting = acceptStatus === "accepting";
+  const isAccepted = acceptStatus === "accepted";
+  const isError = acceptStatus === "error";
   const rejected = decision === "rejected";
 
   return (
-    <article className={`rec ${accepted ? "rec--accepted" : ""} ${rejected ? "rec--rejected" : ""}`}>
+    <article className={`rec ${isAccepted ? "rec--accepted" : ""} ${rejected ? "rec--rejected" : ""}`}>
       <div className="rec__top">
         <span className="rec__prio" style={{ color: pm.color, background: pm.bg, borderColor: pm.bd }}>
           {pm.label}
@@ -79,16 +90,53 @@ export default function RecommendationCard({ rec, decision, onAccept, onReject, 
             <span className={`rec__chev ${open ? "up" : ""}`}>⌄</span>
           </button>
         )}
+
+        {/* Accepted confirmation */}
+        {isAccepted && (
+          <div className="rec__saved fade">
+            <CheckIcon width={14} height={14} />
+            {accept.duplicate
+              ? "Already saved as an Information Source."
+              : "Saved as an Information Source."}
+          </div>
+        )}
+        {isError && (
+          <div className="rec__saveerr fade">Couldn’t save this recommendation. Please retry.</div>
+        )}
       </div>
 
       <div className="rec__actions">
-        <button className={`btn ${accepted ? "btn--accepted" : "btn--accept"}`} onClick={onAccept}>
-          {accepted ? (<><CheckIcon width={14} height={14} /> Accepted</>) : "Accept"}
-        </button>
-        <button className={`btn ${rejected ? "btn--rejected" : "btn--reject"}`} onClick={onReject}>
-          {rejected ? "Rejected" : "Reject"}
-        </button>
-        <button className="btn btn--alt" onClick={onAlternative}>Alternative</button>
+        {isAccepted ? (
+          <>
+            <button className="btn btn--accepted" disabled>
+              <CheckIcon width={14} height={14} /> Accepted
+            </button>
+            <button
+              className="btn btn--primary rec__details"
+              onClick={() => onOpenDetails(accept.sourceId)}
+            >
+              Open source details <ArrowIcon width={14} height={14} />
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              className={`btn ${isError ? "btn--accept" : "btn--accept"}`}
+              onClick={onAccept}
+              disabled={isAccepting}
+            >
+              {isAccepting ? "Saving…" : isError ? "Retry accept" : "Accept"}
+            </button>
+            <button
+              className={`btn ${rejected ? "btn--rejected" : "btn--reject"}`}
+              onClick={onReject}
+              disabled={isAccepting}
+            >
+              {rejected ? "Rejected" : "Reject"}
+            </button>
+            <button className="btn btn--alt" onClick={onAlternative}>Alternative</button>
+          </>
+        )}
       </div>
     </article>
   );

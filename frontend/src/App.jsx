@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MonitoringObjectivesPage from "./pages/MonitoringObjectivesPage.jsx";
 import InformationSourcesPage from "./pages/InformationSourcesPage.jsx";
 import SourceAdvisorPage from "./pages/SourceAdvisorPage.jsx";
+import SourceDetailsPage from "./pages/SourceDetailsPage.jsx";
 
 export default function App() {
   return (
@@ -14,6 +15,8 @@ export default function App() {
           path="/configure/objectives/:objectiveId/source-advisor"
           element={<SourceAdvisorPage />}
         />
+        {/* Source Details — business access, guidance & connector advice (Sprint 3) */}
+        <Route path="/information-sources/:id" element={<SourceDetailsPage />} />
         {/* Earlier manual-selection variant, kept reachable for comparison */}
         <Route
           path="/configure/objectives/:objectiveId/sources"

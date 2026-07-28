@@ -205,3 +205,23 @@
   .asum__actions { width: 100%; }
   .asum__actions .btn { flex: 1; }
 }
+
+/* --- Sprint 3: accept → persisted confirmation --- */
+.rec__saved {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ok);
+}
+.rec__saveerr {
+  margin-top: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--danger);
+}
+.rec__details {
+  margin-left: auto;
+}

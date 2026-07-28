@@ -11,17 +11,23 @@ import { normalizeStatus, priorityRank } from "../lib/advisor.js";
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
+/** Longer timeout for AI-backed requests (may take up to ~90s). */
+export const AI_TIMEOUT = 90000;
+
 /** Structured error so the UI can distinguish "offline" from "bad response". */
 export class ApiError extends Error {
   constructor(message, { status = 0, kind = "http", cause } = {}) {
     super(message);
     this.name = "ApiError";
     this.status = status;
-    this.kind = kind; // "network" | "http" | "parse"
+    this.kind = kind; // "network" | "http" | "parse" | "timeout"
     this.cause = cause;
   }
   get isNetwork() {
     return this.kind === "network";
+  }
+  get isTimeout() {
+    return this.kind === "timeout";
   }
 }
 
@@ -32,7 +38,11 @@ export class ApiError extends Error {
 async function request(path, { method = "GET", signal, timeout = 12000, ...rest } = {}) {
   const url = `${API_BASE_URL}${path}`;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeout);
 
   // Chain an externally-provided signal into our controller.
   if (signal) {
@@ -50,7 +60,13 @@ async function request(path, { method = "GET", signal, timeout = 12000, ...rest 
     });
   } catch (err) {
     clearTimeout(timer);
-    // fetch rejects on DNS failure, connection refused, CORS, or abort/timeout.
+    if (timedOut) {
+      throw new ApiError("The request took too long and was cancelled.", {
+        kind: "timeout",
+        cause: err,
+      });
+    }
+    // fetch rejects on DNS failure, connection refused, CORS, or abort.
     throw new ApiError(
       "The Risk Digital Twin backend could not be reached.",
       { kind: "network", cause: err }
@@ -114,10 +130,82 @@ export async function getSourceRecommendations(objectiveId, { signal } = {}) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
       signal,
-      timeout: 90000
+      timeout: AI_TIMEOUT,
     }
   );
   return normalizeAdvisor(raw);
+}
+
+/**
+ * Accept an AI recommendation → persist it as an Information Source.
+ * POST /api/information-sources/from-recommendation
+ * Both { created:true } and { duplicate:true } are treated as success.
+ */
+export async function acceptRecommendation(objectiveId, recommendation, { signal } = {}) {
+  const body = {
+    monitoringObjectiveId: objectiveId,
+    recommendation:
+      recommendation && recommendation.raw && typeof recommendation.raw === "object"
+        ? recommendation.raw
+        : buildRecommendationPayload(recommendation),
+  };
+  const raw = await request("/api/information-sources/from-recommendation", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  const item = (raw && raw.item) || {};
+  const id = String(pick(item, ["id", "_id", "key"], ""));
+  return {
+    created: !!(raw && raw.created),
+    duplicate: !!(raw && raw.duplicate),
+    id,
+    ok: !!id, // either created or duplicate returns an item id
+  };
+}
+
+/**
+ * Save Business Access answers for an Information Source.
+ * PATCH /api/information-sources/:id/business-access
+ */
+export async function updateBusinessAccess(id, payload, { signal } = {}) {
+  return request(`/api/information-sources/${encodeURIComponent(id)}/business-access`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload || {}),
+    signal,
+  });
+}
+
+/**
+ * Load access guidance (readiness, next actions) for an Information Source.
+ * GET /api/information-sources/:id/access-guidance
+ */
+export async function getAccessGuidance(id, { signal } = {}) {
+  const raw = await request(
+    `/api/information-sources/${encodeURIComponent(id)}/access-guidance`,
+    { signal }
+  );
+  return normalizeAccessGuidance(raw);
+}
+
+/**
+ * Ask the AI Connector Advisor for a recommended connection approach.
+ * POST /api/information-sources/:id/connector-advice  (may take up to ~90s)
+ */
+export async function getConnectorAdvice(id, { signal } = {}) {
+  const raw = await request(
+    `/api/information-sources/${encodeURIComponent(id)}/connector-advice`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+      signal,
+      timeout: AI_TIMEOUT,
+    }
+  );
+  return normalizeConnectorAdvice(raw);
 }
 
 // -----------------------------------------------------------------------------
@@ -288,14 +376,41 @@ function normalizeRecommendation(r, i) {
     recommendationType: pick(r, ["recommendationType", "type", "kind"], "Recommendation"),
     sourceName: pick(r, ["sourceName", "name", "source", "title"], "Suggested source"),
     provider: pick(r, ["provider", "vendor", "publisher"], ""),
+    informationNeed: pick(r, ["informationNeed", "information_need", "need"], ""),
+    sourceRole: pick(r, ["sourceRole", "role"], ""),
     shortReason: pick(r, ["shortReason", "reason", "rationale", "summary"], ""),
     businessValue: pick(r, ["businessValue", "value", "impact"], ""),
+    // normalized (strong/partial/…) for the advisor chip; raw value kept for the flow
     availabilityStatus: normalizeStatus(pick(r, ["availabilityStatus", "availability"], "unknown")),
+    availabilityStatusRaw: pick(r, ["availabilityStatus", "availability"], ""),
     availabilityLabel: pick(r, ["availabilityLabel", "availability"], ""),
     nextSteps: toList(pick(r, ["nextSteps", "next_steps", "steps"], [])),
     limitations: toList(pick(r, ["limitations", "caveats", "risks", "constraints"], [])),
     actions: Array.isArray(r.actions) ? r.actions : [],
     confidence,
+    // Preserve the original object so Accept sends the exact backend contract.
+    raw: r && typeof r === "object" ? r : null,
+  };
+}
+
+/** Fallback payload if the original recommendation object is not available. */
+function buildRecommendationPayload(rec) {
+  if (!rec) return {};
+  return {
+    id: rec.id,
+    name: rec.sourceName,
+    provider: rec.provider,
+    informationNeed: rec.informationNeed || "",
+    sourceRole: rec.sourceRole || "external",
+    businessValue: rec.businessValue,
+    shortReason: rec.shortReason,
+    availabilityStatus: rec.availabilityStatusRaw || rec.availabilityStatus,
+    availabilityLabel: rec.availabilityLabel,
+    recommendationType: rec.recommendationType,
+    priority: rec.priority,
+    confidence: rec.confidence,
+    nextSteps: rec.nextSteps,
+    limitations: rec.limitations,
   };
 }
 
@@ -321,6 +436,63 @@ export function normalizeAdvisor(raw) {
     coverageCounts,
     recommendations,
     assumptions,
+  };
+}
+
+// ---- Access guidance / connector advice normalization ----
+
+export function normalizeAccessGuidance(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const ba = raw.businessAccess || {};
+  const g = raw.guidance || {};
+  return {
+    informationSourceId: pick(raw, ["informationSourceId", "id"], ""),
+    sourceName: pick(raw, ["sourceName", "name"], ""),
+    availabilityStatus: pick(raw, ["availabilityStatus"], ""),
+    businessAccess: {
+      accessKnown: pick(ba, ["accessKnown"], ""),
+      organisationHasSubscription: pick(ba, ["organisationHasSubscription"], ""),
+      internalOwner: pick(ba, ["internalOwner"], ""),
+      contactDepartment: pick(ba, ["contactDepartment"], ""),
+      providerPortal: pick(ba, ["providerPortal"], ""),
+      notes: pick(ba, ["notes"], ""),
+      decisionStatus: pick(ba, ["decisionStatus"], ""),
+    },
+    guidance: {
+      readiness: pick(g, ["readiness"], "unknown"),
+      title: pick(g, ["title"], ""),
+      summary: pick(g, ["summary"], ""),
+      nextActions: toList(pick(g, ["nextActions", "next_actions", "actions"], [])),
+      canProceedToConnector: !!g.canProceedToConnector,
+    },
+  };
+}
+
+export function normalizeConnectorAdvice(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  const ca = raw.connectorAdvice || {};
+  const ra = ca.recommendedApproach || {};
+  const conf = ca.confidence;
+  return {
+    informationSourceId: pick(raw, ["informationSourceId", "id"], ""),
+    sourceName: pick(raw, ["sourceName", "name"], ""),
+    generatedBy: pick(raw, ["generatedBy"], ""),
+    generatedAt: pick(raw, ["generatedAt"], ""),
+    accessReadiness: pick(raw.accessGuidance || {}, ["readiness"], ""),
+    readiness: pick(ca, ["readiness"], "unknown"),
+    summary: pick(ca, ["summary"], ""),
+    recommendedApproach: {
+      connectionMethod: pick(ra, ["connectionMethod"], ""),
+      refreshFrequency: pick(ra, ["refreshFrequency"], ""),
+      expectedData: toList(pick(ra, ["expectedData"], [])),
+      rationale: pick(ra, ["rationale"], ""),
+    },
+    requiredBeforeConnection: toList(pick(ca, ["requiredBeforeConnection"], [])),
+    missingInformation: toList(pick(ca, ["missingInformation"], [])),
+    assumptions: toList(pick(ca, ["assumptions"], [])),
+    estimatedComplexity: pick(ca, ["estimatedComplexity"], "unknown"),
+    canGenerateConnectorDefinition: !!ca.canGenerateConnectorDefinition,
+    confidence: typeof conf === "number" ? (conf > 1 ? conf / 100 : conf) : null,
   };
 }
 
