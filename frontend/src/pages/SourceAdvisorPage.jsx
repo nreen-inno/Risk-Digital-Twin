@@ -5,7 +5,7 @@ import { useSourceRecommendations } from "../hooks/useSourceRecommendations.js";
 import { acceptRecommendation } from "../services/api.js";
 import TopBar from "../components/layout/TopBar.jsx";
 import Footer from "../components/layout/Footer.jsx";
-import LoadingState from "../components/shared/LoadingState.jsx";
+import AiThinking from "../components/shared/AiThinking.jsx";
 import ErrorState from "../components/shared/ErrorState.jsx";
 import Toast from "../components/shared/Toast.jsx";
 import { ObjectiveIcon } from "../lib/icons.jsx";
@@ -166,9 +166,7 @@ export default function SourceAdvisorPage() {
           </div>
         </section>
 
-        {advisor.status === "loading" && (
-          <div className="is-page-pad"><LoadingState /></div>
-        )}
+        {advisor.status === "loading" && <AiThinking />}
 
         {advisor.status === "error" && (
           <div className="is-page-pad">
