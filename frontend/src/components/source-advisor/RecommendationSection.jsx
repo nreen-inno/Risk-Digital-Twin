@@ -1,7 +1,15 @@
 import RecommendationCard from "./RecommendationCard.jsx";
 
 /** AI Source Advisor — recommendations sorted by priority (done in the API). */
-export default function RecommendationSection({ recommendations, decisions, onAccept, onReject, onAlternative }) {
+export default function RecommendationSection({
+  recommendations,
+  decisions,
+  accepts,
+  onAccept,
+  onOpenDetails,
+  onReject,
+  onAlternative,
+}) {
   return (
     <section className="adv-section">
       <div className="section-head">
@@ -16,7 +24,9 @@ export default function RecommendationSection({ recommendations, decisions, onAc
               key={rec.id}
               rec={rec}
               decision={decisions[rec.id] || null}
-              onAccept={() => onAccept(rec.id)}
+              accept={accepts[rec.id] || null}
+              onAccept={() => onAccept(rec)}
+              onOpenDetails={(sourceId) => onOpenDetails(rec, sourceId)}
               onReject={() => onReject(rec.id)}
               onAlternative={() => onAlternative(rec)}
             />
