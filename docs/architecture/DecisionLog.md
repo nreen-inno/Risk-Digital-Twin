@@ -244,3 +244,145 @@ Avoid redesign during demo implementation and focus on feature
 completion and polish.
 
 **Status:** Accepted
+# Sprint 2 Backend Milestone 1
+## AI-assisted Information Source Onboarding
+
+### Date
+2026-07-27
+
+### Status
+Completed
+
+### Motivation
+
+Originally the Risk Digital Twin architecture focused on creating technical connectors immediately after selecting an information source.
+
+Experience during Sprint 2 showed that enterprise customers first need support in selecting, evaluating and preparing information sources before technical integration begins.
+
+The architecture was therefore extended with AI-assisted business onboarding.
+
+---
+
+## New workflow
+
+Monitoring Objective
+
+↓
+
+AI Source Advisor
+
+↓
+
+Accept Recommendation
+
+↓
+
+Information Source
+
+↓
+
+Business Access Review
+
+↓
+
+Business Guidance
+
+↓
+
+AI Connector Advisor
+
+↓
+
+Connector Definition (future Sprint)
+
+---
+
+## New backend capabilities
+
+### AI Source Advisor
+
+Recommends suitable information sources for a selected Monitoring Objective.
+
+### Information Source
+
+Stores accepted recommendations as persistent business objects.
+
+### Business Access Review
+
+Captures organisational readiness including:
+
+- subscription availability
+- internal owner
+- responsible department
+- provider portal
+- business notes
+- decision status
+
+### Business Guidance
+
+Provides business-oriented recommendations based on:
+
+- source availability
+- subscription status
+- organisational access
+
+### AI Connector Advisor
+
+Evaluates technical readiness without generating a connector.
+
+Provides:
+
+- connection approach
+- required actions
+- missing information
+- implementation complexity
+- expected data
+- confidence
+- connector readiness
+
+---
+
+## Architectural decision
+
+Connector generation is intentionally separated from connector advice.
+
+Instead of
+
+Information Source
+
+↓
+
+Connector Definition
+
+the system now follows
+
+Information Source
+
+↓
+
+Business onboarding
+
+↓
+
+Business guidance
+
+↓
+
+Connector advice
+
+↓
+
+Connector Definition
+
+This allows enterprise users to validate business readiness before creating technical integration artefacts.
+
+---
+
+## Benefits
+
+- clearer separation of business and technical concerns
+- AI assists both business users and integration specialists
+- easier user experience
+- prevents premature connector generation
+- supports commercial, internal and public information sources
+- scalable architecture for future AI capabilities
