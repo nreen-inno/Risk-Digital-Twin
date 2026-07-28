@@ -8,7 +8,8 @@ import {
   updateInformationSourceBusinessAccess,
   analyseInformationSource,
   getInformationSourceAccessGuidance,
-  getInformationSourceConnectorAdvice
+  getInformationSourceConnectorAdvice,
+  updateInformationSourceStatus
 } from "../controllers/informationSources.controller.js";
 
 const router = express.Router();
@@ -40,6 +41,10 @@ router.get(
 router.post(
   "/:id/connector-advice",
   getInformationSourceConnectorAdvice
+);
+router.patch(
+  "/:id/status",
+  updateInformationSourceStatus
 );
 router.get(
   "/:id",

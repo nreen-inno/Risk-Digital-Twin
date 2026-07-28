@@ -840,6 +840,72 @@ export async function getInformationSourceConnectorAdvice(
     next(error);
   }
 }
+export async function updateInformationSourceStatus(
+  req,
+  res,
+  next
+) {
+  try {
+    const { id } = req.params;
+    const { status } = req.body || {};
+
+    const allowedStatuses = [
+      "draft",
+      "active",
+      "disabled"
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        error: "Validation error",
+        message:
+          "status must be draft, active or disabled."
+      });
+    }
+
+    const source =
+      await findInformationSourceById(id);
+
+    if (!source) {
+      return res.status(404).json({
+        error: "Information source not found"
+      });
+    }
+
+    const now = new Date().toISOString();
+
+    source.status = status;
+    source.updatedAt = now;
+
+    if (status === "active") {
+      source.activatedAt =
+        source.activatedAt || now;
+    }
+
+    if (status === "disabled") {
+      source.disabledAt = now;
+    }
+
+    if (status !== "disabled") {
+      source.disabledAt = null;
+    }
+
+    const { resource } =
+      await container
+        .item(
+          source.id,
+          source.objectType
+        )
+        .replace(source);
+
+    res.status(200).json(
+      cleanCosmosFields(resource)
+    );
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function analyseInformationSource(
     req,
     res,
