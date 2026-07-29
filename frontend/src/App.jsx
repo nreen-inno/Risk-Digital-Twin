@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MonitoringObjectivesPage from "./pages/MonitoringObjectivesPage.jsx";
+import MonitoringObjectiveWorkspacePage from "./pages/MonitoringObjectiveWorkspacePage.jsx";
 import InformationSourcesPage from "./pages/InformationSourcesPage.jsx";
 import SourceAdvisorPage from "./pages/SourceAdvisorPage.jsx";
 import SourceDetailsPage from "./pages/SourceDetailsPage.jsx";
@@ -10,7 +11,9 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/configure/objectives" replace />} />
         <Route path="/configure/objectives" element={<MonitoringObjectivesPage />} />
-        {/* AI Source Advisor — current second page of the Configure workflow */}
+        {/* Monitoring Objective Workspace — open & manage one objective's sources */}
+        <Route path="/monitoring-objectives/:id" element={<MonitoringObjectiveWorkspacePage />} />
+        {/* AI Source Advisor — earlier standalone advisor flow, kept reachable */}
         <Route
           path="/configure/objectives/:objectiveId/source-advisor"
           element={<SourceAdvisorPage />}

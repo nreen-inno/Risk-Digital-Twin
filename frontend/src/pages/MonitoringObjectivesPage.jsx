@@ -1,12 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMonitoringObjectives } from "../hooks/useMonitoringObjectives.js";
+import { getMonitoringObjectiveInformationSources } from "../services/api.js";
 import TopBar from "../components/layout/TopBar.jsx";
 import Footer from "../components/layout/Footer.jsx";
 import Hero from "../components/monitoring-objectives/Hero.jsx";
 import MonitoringObjectiveCard from "../components/monitoring-objectives/MonitoringObjectiveCard.jsx";
 import CustomObjectiveCard from "../components/monitoring-objectives/CustomObjectiveCard.jsx";
-import SelectedObjectivePanel from "../components/monitoring-objectives/SelectedObjectivePanel.jsx";
 import LoadingState from "../components/shared/LoadingState.jsx";
 import EmptyState from "../components/shared/EmptyState.jsx";
 import ErrorState from "../components/shared/ErrorState.jsx";
@@ -14,19 +14,49 @@ import Toast from "../components/shared/Toast.jsx";
 
 /**
  * Monitoring Objectives — the platform's first-experience page.
- * Owns the page-level composition and selection/toast state; all data loading
- * is delegated to the useMonitoringObjectives hook and services/api.js.
+ * Each objective is a fully-clickable card that opens its workspace. No AI runs
+ * here. Per-objective "Sources in use" counts are fetched from the backend and
+ * fill in as they resolve; a failed count simply leaves the card without a
+ * number (the card still opens).
  */
 export default function MonitoringObjectivesPage() {
   const navigate = useNavigate();
   const { status, objectives, error, reload } = useMonitoringObjectives();
-  const [selectedId, setSelectedId] = useState(null);
+  const [countsById, setCountsById] = useState({});
   const [toast, setToast] = useState("");
+  const acRef = useRef(null);
 
-  const selected = useMemo(
-    () => objectives.find((o) => o.id === selectedId) || null,
-    [objectives, selectedId]
-  );
+  // Once objectives are loaded, pull each objective's source counts in parallel.
+  // Failures are swallowed per-objective so one bad call doesn't blank the grid.
+  useEffect(() => {
+    if (status !== "ready" || objectives.length === 0) return;
+    const ac = new AbortController();
+    acRef.current = ac;
+    let cancelled = false;
+
+    Promise.allSettled(
+      objectives.map((o) =>
+        getMonitoringObjectiveInformationSources(o.id, { signal: ac.signal }).then((res) => ({
+          id: o.id,
+          counts: res.counts,
+        }))
+      )
+    ).then((results) => {
+      if (cancelled) return;
+      const map = {};
+      results.forEach((r) => {
+        if (r.status === "fulfilled" && r.value) map[r.value.id] = r.value.counts;
+      });
+      setCountsById(map);
+    });
+
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [status, objectives]);
+
+  const openObjective = (id) => navigate(`/monitoring-objectives/${encodeURIComponent(id)}`);
 
   return (
     <div className="app">
@@ -37,7 +67,7 @@ export default function MonitoringObjectivesPage() {
 
         <div className="section-head">
           <h2>Monitoring objectives</h2>
-          <span>Choose one to begin — the AI advisor will recommend sources in the next step.</span>
+          <span>Open one to manage the information sources that monitor it.</span>
         </div>
 
         {status === "loading" && <LoadingState />}
@@ -46,13 +76,13 @@ export default function MonitoringObjectivesPage() {
 
         {status === "ready" && (
           <>
-            <div className="grid" role="radiogroup" aria-label="Monitoring objectives">
+            <div className="grid" aria-label="Monitoring objectives">
               {objectives.map((obj) => (
                 <MonitoringObjectiveCard
                   key={obj.id}
                   objective={obj}
-                  selected={obj.id === selectedId}
-                  onSelect={() => setSelectedId(obj.id)}
+                  counts={countsById[obj.id] || null}
+                  onOpen={() => openObjective(obj.id)}
                 />
               ))}
             </div>
@@ -60,13 +90,6 @@ export default function MonitoringObjectivesPage() {
             <CustomObjectiveCard
               onActivate={() => setToast("Custom monitoring objectives are coming in the next iteration.")}
             />
-
-            {selected && (
-              <SelectedObjectivePanel
-                objective={selected}
-                onContinue={() => navigate(`/configure/objectives/${selected.id}/source-advisor`)}
-              />
-            )}
           </>
         )}
       </main>

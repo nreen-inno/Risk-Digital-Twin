@@ -39,6 +39,7 @@ export default function SourceDetailsPage() {
   const context = useMemo(() => readContext(id, location.state), [id, location.state]);
   const recommendation = context.recommendation || null;
   const objectiveId = context.objectiveId || "";
+  const backTo = context.backTo || "";
 
   const [toast, setToast] = useState("");
   const [guidance, setGuidance] = useState({ status: "idle", data: null, error: null });
@@ -101,10 +102,11 @@ export default function SourceDetailsPage() {
     }
   };
 
-  const goBack = () =>
-    objectiveId
-      ? navigate(`/configure/objectives/${encodeURIComponent(objectiveId)}/source-advisor`)
-      : navigate("/configure/objectives");
+  const goBack = () => {
+    if (backTo) return navigate(backTo);
+    if (objectiveId) return navigate(`/configure/objectives/${encodeURIComponent(objectiveId)}/source-advisor`);
+    return navigate("/configure/objectives");
+  };
 
   const overviewRec =
     recommendation || { sourceName: guidance.data?.sourceName || "Information source" };

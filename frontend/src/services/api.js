@@ -118,6 +118,49 @@ export async function getMonitoringObjectiveById(id, { signal } = {}) {
 }
 
 /**
+ * Load the Information Sources already attached to one Monitoring Objective,
+ * grouped by lifecycle. Source of truth for "Sources in use", "Setup in
+ * progress" and "Disabled" — never hardcode these counts.
+ * GET /api/monitoring-capabilities/:id/information-sources
+ */
+export async function getMonitoringObjectiveInformationSources(objectiveId, { signal } = {}) {
+  const raw = await request(
+    `/api/monitoring-capabilities/${encodeURIComponent(objectiveId)}/information-sources`,
+    { signal }
+  );
+  return normalizeObjectiveSources(raw);
+}
+
+/**
+ * Create an Information Source manually (no AI involved), attached to an
+ * objective and starting life in "Setup in progress" (draft).
+ * POST /api/information-sources
+ */
+export async function addInformationSource(objectiveId, input = {}, { signal } = {}) {
+  const body = {
+    monitoringObjectiveId: objectiveId,
+    name: input.name,
+    provider: input.provider || "",
+    sourceKind: input.sourceKind || "manual",
+    informationNeed: input.informationNeed || "",
+    status: "draft",
+  };
+  const raw = await request("/api/information-sources", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  const item = (raw && (raw.item || raw.source)) || raw || {};
+  const normalized = normalizeInformationSource(item, 0);
+  return {
+    ok: !!(normalized && normalized.id) || !!(raw && raw.created),
+    id: normalized ? normalized.id : "",
+    item: normalized,
+  };
+}
+
+/**
  * Ask the AI Source Advisor to assess coverage and recommend information
  * sources for an objective. The response is rendered dynamically.
  * POST /api/monitoring-capabilities/:objectiveId/source-recommendations
@@ -211,6 +254,102 @@ export async function getConnectorAdvice(id, { signal } = {}) {
 // -----------------------------------------------------------------------------
 // Normalization — keep the UI resilient to reasonable backend shape variations.
 // -----------------------------------------------------------------------------
+
+// ---- Objective Information Sources (lifecycle-grouped) ----
+
+const SOURCE_KIND_LABELS = {
+  commercialService: "Commercial service",
+  publicService: "Public service",
+  internalSystem: "Internal system",
+  fileUpload: "File upload",
+  restApi: "REST API",
+  rss: "RSS feed",
+  csv: "CSV export",
+  excel: "Excel export",
+  database: "Database",
+  manual: "Manual entry",
+};
+
+const CONNECTOR_STATUS_LABELS = {
+  notConfigured: "Not configured",
+  configured: "Configured",
+  connected: "Connected",
+  connecting: "Connecting",
+  pending: "Pending",
+  error: "Connection error",
+  disabled: "Disabled",
+};
+
+function sourceKindLabel(kind) {
+  if (!kind) return "";
+  return SOURCE_KIND_LABELS[kind] || humanizeId(kind);
+}
+
+function connectorStatusLabel(status) {
+  if (!status) return "";
+  return CONNECTOR_STATUS_LABELS[status] || humanizeId(status);
+}
+
+/** Extract a readable business-access status whether it's a string or object. */
+function businessAccessStatusOf(s) {
+  const ba = pick(s, ["businessAccessStatus", "businessAccess", "accessStatus", "decisionStatus"], "");
+  if (!ba) return "";
+  if (typeof ba === "string") return humanizeId(ba);
+  const inner = pick(ba, ["decisionStatus", "status", "state"], "");
+  return inner ? humanizeId(inner) : "";
+}
+
+export function normalizeInformationSource(s, i = 0) {
+  if (!s || typeof s !== "object") return null;
+  const statusRaw = String(pick(s, ["status", "lifecycleStatus", "state"], "draft")).toLowerCase();
+  const lifecycle = statusRaw === "active" ? "active" : statusRaw === "disabled" ? "disabled" : "draft";
+  const sourceKind = pick(s, ["sourceKind", "kind", "type"], "");
+  const connectorStatus = String(pick(s, ["connectorStatus", "connector", "integrationStatus"], "notConfigured"));
+  const availabilityRaw = pick(s, ["availabilityLabel", "availability", "availabilityStatus"], "");
+  return {
+    id: String(pick(s, ["id", "_id", "key", "slug"], `source-${i}`)),
+    name: pick(s, ["name", "title", "label", "source"], "Information source"),
+    provider: pick(s, ["provider", "vendor", "publisher", "owner"], ""),
+    sourceKind,
+    sourceKindLabel: sourceKindLabel(sourceKind),
+    connectorStatus,
+    connectorStatusLabel: connectorStatusLabel(connectorStatus),
+    availability: typeof availabilityRaw === "string" ? availabilityRaw : humanizeId(availabilityRaw),
+    informationNeed: pick(s, ["informationNeed", "informationNeedLabel", "need"], ""),
+    businessAccessStatus: businessAccessStatusOf(s),
+    lifecycle,
+    lifecycleLabel:
+      lifecycle === "active" ? "In use" : lifecycle === "disabled" ? "Disabled" : "Setup in progress",
+    raw: s,
+  };
+}
+
+/**
+ * Shape the /information-sources response into { objectiveId, active, draft,
+ * disabled, counts }. Counts come from the backend when present, else derive
+ * from the arrays — never invented.
+ */
+export function normalizeObjectiveSources(raw) {
+  const grouped = (raw && raw.sources) || {};
+  const mapList = (val) =>
+    (Array.isArray(val) ? val : []).map((s, i) => normalizeInformationSource(s, i)).filter(Boolean);
+  const active = mapList(grouped.active);
+  const draft = mapList(grouped.draft);
+  const disabled = mapList(grouped.disabled);
+  const rawCounts = (raw && raw.counts) || {};
+  const num = (v, fallback) => (typeof v === "number" ? v : fallback);
+  return {
+    objectiveId: String(pick(raw || {}, ["monitoringObjectiveId", "objectiveId", "id"], "")),
+    active,
+    draft,
+    disabled,
+    counts: {
+      active: num(rawCounts.active, active.length),
+      draft: num(rawCounts.draft, draft.length),
+      disabled: num(rawCounts.disabled, disabled.length),
+    },
+  };
+}
 
 function extractList(raw) {
   if (Array.isArray(raw)) return raw;
