@@ -50,6 +50,7 @@ export default function MonitoringObjectiveWorkspacePage() {
   const sources = useMonitoringObjectiveSources(id);
 
   const [tab, setTab] = useState("in-use");
+  const [addMode, setAddMode] = useState("choose");
   const [toast, setToast] = useState("");
   const [aiStartToken, setAiStartToken] = useState(0);
   const [modifySource, setModifySource] = useState(null);
@@ -59,7 +60,7 @@ export default function MonitoringObjectiveWorkspacePage() {
   const objective = objectiveQuery.objective;
   const counts = sources.data.counts;
 
-  const openSource = (source) => {
+  const openOnboarding = (source) => {
     const recommendation = {
       sourceName: source.name,
       provider: source.provider,
@@ -94,9 +95,10 @@ export default function MonitoringObjectiveWorkspacePage() {
     }
   };
 
-  const disableSource = (source) => {
-    if (!window.confirm(`Disable “${source.name}”? It will stop being used for this monitoring objective.`)) return;
-    changeStatus(source, "disabled", "Source disabled.");
+  const disableSource = async (source) => {
+    if (!window.confirm(`Disable “${source.name}”? Data collection will stop.`)) return;
+    await changeStatus(source, "disabled", "Source disabled.");
+    setTab("disabled");
   };
 
   const startModify = (source) => {
@@ -114,9 +116,10 @@ export default function MonitoringObjectiveWorkspacePage() {
     setTab("onboarding");
   };
 
-  const removeFromOnboarding = (source) => {
-    if (!window.confirm(`Remove “${source.name}” from onboarding? It will be moved to Disabled sources.`)) return;
-    changeStatus(source, "disabled", "Source removed from onboarding.");
+  const removeFromOnboarding = async (source) => {
+    if (!window.confirm(`Remove “${source.name}” from onboarding? It will move to Disabled.`)) return;
+    await changeStatus(source, "disabled", "Source moved to Disabled.");
+    setTab("disabled");
   };
 
   const restoreSource = async (source) => {
@@ -125,10 +128,16 @@ export default function MonitoringObjectiveWorkspacePage() {
     setTab("onboarding");
   };
 
+  const openAiRecommendations = () => {
+    setAddMode("ai");
+    setAiStartToken((value) => value + 1);
+  };
+
   const tabs = [
     { id: "in-use", label: "Sources in use", count: counts.active },
     { id: "onboarding", label: "Source onboarding", count: counts.draft },
-    { id: "ai", label: "AI recommendations" },
+    { id: "add", label: "Add source" },
+    { id: "disabled", label: "Disabled", count: counts.disabled },
   ];
 
   const renderSourcesError = () => (
@@ -167,23 +176,14 @@ export default function MonitoringObjectiveWorkspacePage() {
         <div className="wsactions">
           <div>
             <h2>Monitoring sources</h2>
-            <p>Add a source you already know, or ask AI to recommend possible sources.</p>
+            <p>Manage active connections, continue onboarding, add new sources, or restore disabled sources.</p>
           </div>
-          <AddSourceMenu
-            objectiveId={id}
-            onAdded={async () => {
-              await sources.refresh();
-              setTab("onboarding");
-              setToast("Source added to onboarding.");
-            }}
-            onAskAi={() => {
-              setTab("ai");
-              setAiStartToken((value) => value + 1);
-            }}
-          />
         </div>
 
-        <ObjectiveSourcesTabs tabs={tabs} active={tab} onChange={setTab} />
+        <ObjectiveSourcesTabs tabs={tabs} active={tab} onChange={(nextTab) => {
+          setTab(nextTab);
+          if (nextTab !== "add") setAddMode("choose");
+        }} />
 
         <div className="wspanel">
           {tab === "in-use" && (
@@ -192,7 +192,7 @@ export default function MonitoringObjectiveWorkspacePage() {
             sources.data.active.length === 0 ? (
               <div className="wsempty">
                 <h3>No sources in use yet</h3>
-                <p>Add a known source or ask AI for recommendations. New sources first appear in Source onboarding.</p>
+                <p>Complete source onboarding and activate a connector to see it here.</p>
               </div>
             ) : (
               <div className="msrc-list">
@@ -200,7 +200,6 @@ export default function MonitoringObjectiveWorkspacePage() {
                   <CurrentSourceCard
                     key={source.id}
                     source={source}
-                    onView={openSource}
                     onModify={startModify}
                     onDisable={disableSource}
                     busy={busySourceId === source.id}
@@ -216,7 +215,7 @@ export default function MonitoringObjectiveWorkspacePage() {
             sources.data.draft.length === 0 ? (
               <div className="wsempty">
                 <h3>No sources in onboarding</h3>
-                <p>Sources appear here after you add one, accept an AI recommendation, restore a source or request a modification.</p>
+                <p>Sources appear here after manual addition, accepted AI recommendation, restoration or modification.</p>
               </div>
             ) : (
               <div className="msrc-list">
@@ -225,7 +224,7 @@ export default function MonitoringObjectiveWorkspacePage() {
                     key={source.id}
                     source={source}
                     onboardingReason={readOnboardingReason(source.id)}
-                    onContinue={openSource}
+                    onContinue={openOnboarding}
                     onRemove={removeFromOnboarding}
                     busy={busySourceId === source.id}
                   />
@@ -234,20 +233,42 @@ export default function MonitoringObjectiveWorkspacePage() {
             )
           )}
 
-          {tab === "ai" && (
-            <AiSuggestionsPanel
+          {tab === "add" && addMode === "choose" && (
+            <AddSourceMenu
               objectiveId={id}
-              objectiveName={objective?.name || ""}
-              onSourcesChanged={sources.refresh}
-              onToast={setToast}
-              startToken={aiStartToken}
+              onAdded={async () => {
+                await sources.refresh();
+                setTab("onboarding");
+                setAddMode("choose");
+                setToast("Source added to onboarding.");
+              }}
+              onAskAi={openAiRecommendations}
+            />
+          )}
+
+          {tab === "add" && addMode === "ai" && (
+            <div className="madd-ai">
+              <button className="btn btn--ghost madd-ai__back" onClick={() => setAddMode("choose")}>← Back to Add source</button>
+              <AiSuggestionsPanel
+                objectiveId={id}
+                objectiveName={objective?.name || ""}
+                onSourcesChanged={sources.refresh}
+                onToast={setToast}
+                startToken={aiStartToken}
+              />
+            </div>
+          )}
+
+          {tab === "disabled" && (
+            sources.status === "loading" ? <LoadingState /> :
+            sources.status === "error" ? renderSourcesError() :
+            <DisabledSourcesSection
+              sources={sources.data.disabled}
+              onReenable={restoreSource}
+              busySourceId={busySourceId}
             />
           )}
         </div>
-
-        {sources.status === "ready" && (
-          <DisabledSourcesSection sources={sources.data.disabled} onOpen={openSource} onReenable={restoreSource} />
-        )}
       </main>
 
       {modifySource && (

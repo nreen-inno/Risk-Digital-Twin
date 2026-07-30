@@ -73,8 +73,14 @@
   height: 172px;
   filter: drop-shadow(0 0 9px rgba(45, 224, 200, 0.4));
 }
-.ait-spin { animation: aitSpin 4.6s linear infinite; transform-origin: 0 0; }
-.ait-bezel { animation: aitSpin 22s linear infinite reverse; transform-origin: 0 0; }
+.ait-spin,
+.ait-bezel {
+  transform-box: fill-box;
+  transform-origin: center;
+  will-change: transform;
+}
+.ait-spin { animation: aitSpin 4.6s linear infinite; }
+.ait-bezel { animation: aitSpin 22s linear infinite reverse; }
 .ait-tw { animation: aitTw 1.7s ease-in-out infinite; }
 .ait-tw2 { animation: aitTw 2.3s ease-in-out infinite; }
 
@@ -102,9 +108,12 @@
   100% { content: ""; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .ait-spin, .ait-bezel, .ait-med::before, .ait-tw, .ait-tw2 {
-    animation-duration: 0.001ms;
-    animation-iteration-count: 1;
-  }
+/* Spinner reliability override: rotating the complete SVG works consistently
+   across Chromium/SVG implementations and avoids static inner-group rendering. */
+.ait-gear {
+  animation: aitWholeGearSpin 4.6s linear infinite !important;
+  transform-origin: 50% 50%;
+  will-change: transform;
 }
+.ait-spin { animation: none !important; }
+@keyframes aitWholeGearSpin { to { transform: rotate(360deg); } }

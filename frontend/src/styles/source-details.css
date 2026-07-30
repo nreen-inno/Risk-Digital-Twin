@@ -202,6 +202,9 @@
   border: 2px solid var(--border-strong, #d3dbe8);
   border-top-color: var(--accent);
   animation: sdspin 0.7s linear infinite;
+  transform-origin: center;
+  will-change: transform;
+  flex: 0 0 auto;
 }
 @keyframes sdspin { to { transform: rotate(360deg); } }
 .sd-error {
@@ -342,4 +345,71 @@
   border-radius: var(--r-md, 12px);
   padding: 14px 16px;
   background: var(--surface-2, #f9fbfd);
+}
+
+/* =============================================================================
+   Onboarding V2 — one-pass AI proposal with optional free-form refinement.
+   ============================================================================= */
+.op-card { overflow: hidden; }
+.op-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; }
+.op-intro { max-width: 760px; margin: -6px 0 0; }
+.op-proposal { display: flex; flex-direction: column; gap: 18px; margin-top: 22px; }
+.op-summary,
+.op-section {
+  padding: 18px;
+  border: 1px solid var(--border, #e4e9f2);
+  border-radius: var(--r-md, 12px);
+  background: var(--surface, #fff);
+}
+.op-summary { background: var(--surface-2, #f9fbfd); }
+.op-summary > p { margin: 8px 0 0; color: var(--ink-2); line-height: 1.65; }
+.op-section h3 { margin: 0 0 13px; font-size: 14px; color: var(--ink); }
+.op-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.op-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid var(--border, #e4e9f2);
+  border-radius: var(--r-sm, 8px);
+  background: var(--surface-2, #f9fbfd);
+}
+.op-row span { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; font-weight: 700; color: var(--ink-3); }
+.op-row strong { font-size: 14px; line-height: 1.45; color: var(--ink); }
+.op-accept {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 18px;
+  border: 1px solid rgba(31, 157, 107, 0.24);
+  border-radius: var(--r-md, 12px);
+  background: rgba(31, 157, 107, 0.07);
+}
+.op-accept strong { color: var(--ink); }
+.op-accept p { margin: 4px 0 0; }
+.op-revision { display: flex; flex-direction: column; gap: 12px; padding-top: 20px; border-top: 1px solid var(--border, #e4e9f2); }
+.op-revision > label { font-size: 15px; font-weight: 700; color: var(--ink); }
+.op-revision > p { margin: -4px 0 0; }
+.op-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--surface, #fff);
+  border: 1px solid var(--border-strong, #d3dbe8);
+  border-radius: var(--r-md, 12px);
+  padding: 13px 14px;
+  outline: none;
+}
+.op-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,107,255,.15); }
+.op-history { display: grid; gap: 7px; font-size: 13px; color: var(--ink-2); }
+.op-history > div { padding: 10px 12px; border-radius: var(--r-sm, 8px); background: var(--surface-2, #f9fbfd); border: 1px solid var(--border, #e4e9f2); }
+@media (max-width: 700px) {
+  .op-head { flex-direction: column; }
+  .op-grid { grid-template-columns: 1fr; }
 }

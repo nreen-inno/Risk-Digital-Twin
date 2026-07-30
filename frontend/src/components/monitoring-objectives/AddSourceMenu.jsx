@@ -12,7 +12,7 @@ const KINDS = [
 ];
 
 export default function AddSourceMenu({ objectiveId, onAdded, onAskAi }) {
-  const [mode, setMode] = useState("closed");
+  const [mode, setMode] = useState("choose");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [form, setForm] = useState({
@@ -24,11 +24,6 @@ export default function AddSourceMenu({ objectiveId, onAdded, onAskAi }) {
   });
 
   const set = (key, value) => setForm((current) => ({ ...current, [key]: value }));
-
-  const close = () => {
-    setMode("closed");
-    setError(null);
-  };
 
   const submit = async (event) => {
     event.preventDefault();
@@ -51,7 +46,7 @@ export default function AddSourceMenu({ objectiveId, onAdded, onAskAi }) {
         /* storage unavailable */
       }
       setForm({ name: "", provider: "", sourceKind: "manual", informationNeed: "", connectionContext: "" });
-      setMode("closed");
+      setMode("choose");
       onAdded(result);
     } catch (err) {
       setError(err);
@@ -60,19 +55,12 @@ export default function AddSourceMenu({ objectiveId, onAdded, onAskAi }) {
     }
   };
 
-  if (mode === "closed") {
-    return (
-      <button className="btn btn--primary mai__addbtn" onClick={() => setMode("choose")}>
-        <PlusIcon width={15} height={15} /> Add source
-      </button>
-    );
-  }
-
   if (mode === "choose") {
     return (
-      <section className="madd madd--choice">
+      <section className="madd madd--choice madd--tab">
         <div className="madd__head">
-          <h4>Add a monitoring source</h4>
+          <span className="eyebrow">Add source</span>
+          <h3>Add a new monitoring source</h3>
           <span className="madd__note">Choose the path that matches what you already know.</span>
         </div>
         <div className="madd__choices">
@@ -80,30 +68,26 @@ export default function AddSourceMenu({ objectiveId, onAdded, onAskAi }) {
             <span className="madd__choice-icon"><PlusIcon width={18} height={18} /></span>
             <span>
               <strong>I have a source in mind</strong>
-              <small>Describe an internal system, website, feed, API, file or service. AI can later identify what is needed to connect it.</small>
+              <small>Describe an internal system, website, feed, API, file or service. It will move directly to Source onboarding.</small>
             </span>
           </button>
-          <button
-            type="button"
-            className="madd__choice"
-            onClick={() => { close(); onAskAi(); }}
-          >
+          <button type="button" className="madd__choice" onClick={onAskAi}>
             <span className="madd__choice-icon"><SparkIcon width={18} height={18} /></span>
             <span>
               <strong>Ask AI to recommend sources</strong>
-              <small>Use AI when you do not yet know which sources could cover this monitoring objective.</small>
+              <small>Let AI assess coverage gaps and identify suitable internal or external sources.</small>
             </span>
           </button>
         </div>
-        <button type="button" className="btn btn--ghost" onClick={close}>Cancel</button>
       </section>
     );
   }
 
   return (
-    <form className="madd" onSubmit={submit}>
+    <form className="madd madd--tab" onSubmit={submit}>
       <div className="madd__head">
-        <h4>I have a source in mind</h4>
+        <span className="eyebrow">Add source</span>
+        <h3>I have a source in mind</h3>
         <span className="madd__note">Describe what you know. The source will be added to Source onboarding.</span>
       </div>
 

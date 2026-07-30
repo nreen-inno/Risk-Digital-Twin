@@ -32,31 +32,22 @@ function ConfidenceMeter({ confidence }) {
   );
 }
 
-/**
- * AI Connector Advisor — recommended connection approach, effort and what's
- * still missing. No technical config forms, no credentials. Connector
- * Definition generation is a Sprint 4 placeholder.
- */
-export default function ConnectorAdvicePanel({ advice, status, error, onGenerate, onRetry }) {
+export default function ConnectorAdvicePanel({ mode = "assessment", advice, status, error, onRetry }) {
+  const isAdvisor = mode === "advisor";
+  const heading = isAdvisor ? "AI Connector Advisor" : "Access Assessment";
+
   return (
     <section className="sd-card surface">
       <div className="sd-card__head">
-        <span className="eyebrow">AI Connector Advisor</span>
+        <span className="eyebrow">{heading}</span>
         {status === "ready" && advice && <ReadinessBadge readiness={advice.readiness} />}
       </div>
 
-      {status === "idle" && (
-        <div className="sd-connector-intro">
-          <p className="sd-muted">
-            When you’re ready, the AI can suggest a suitable connection approach,
-            the effort involved, and what still needs to be obtained.
-          </p>
-          <button className="btn btn--primary" onClick={onGenerate}>Get AI connection advice</button>
-          <p className="sd-hint-sm">This can take up to a minute.</p>
-        </div>
+      {status === "loading" && (
+        <AiLoadingState
+          title={isAdvisor ? "Preparing access guidance" : "Analysing access information"}
+        />
       )}
-
-      {status === "loading" && <AiLoadingState />}
 
       {status === "error" && (
         <div className="sd-error">
@@ -65,7 +56,9 @@ export default function ConnectorAdvicePanel({ advice, status, error, onGenerate
               ? "The AI took too long to respond. You can try again."
               : error && error.isNetwork
               ? "Couldn’t reach the backend. Please try again."
-              : "Couldn’t generate connection advice right now."}
+              : isAdvisor
+              ? "Couldn’t prepare access guidance right now."
+              : "Couldn’t analyse the access information right now."}
           </p>
           <button className="btn btn--primary" onClick={onRetry}>Try again</button>
         </div>
@@ -73,16 +66,31 @@ export default function ConnectorAdvicePanel({ advice, status, error, onGenerate
 
       {status === "ready" && advice && (
         <div className="fade">
+          {isAdvisor && (
+            <p className="sd-mode-explainer">
+              Use this guidance to ask the source owner or provider for the missing
+              technical information. When technical access becomes available, return to this source
+              and select Yes.
+            </p>
+          )}
+
+          {!isAdvisor && (
+            <p className="sd-mode-explainer">
+              AI has reviewed the information you supplied and assessed whether the
+              source is ready for connector generation.
+            </p>
+          )}
+
           {advice.summary && <p className="sd-guide__summary">{advice.summary}</p>}
 
           <div className="sd-approach">
             <div className="sd-approach__row">
               <span className="sd-approach__k">Connection method</span>
-              <span className="sd-approach__v">{advice.recommendedApproach.connectionMethod || "—"}</span>
+              <span className="sd-approach__v">{advice.recommendedApproach.connectionMethod || "Not identified yet"}</span>
             </div>
             <div className="sd-approach__row">
               <span className="sd-approach__k">Refresh frequency</span>
-              <span className="sd-approach__v">{advice.recommendedApproach.refreshFrequency || "—"}</span>
+              <span className="sd-approach__v">{advice.recommendedApproach.refreshFrequency || "Not identified yet"}</span>
             </div>
           </div>
 
@@ -103,7 +111,9 @@ export default function ConnectorAdvicePanel({ advice, status, error, onGenerate
 
           {advice.requiredBeforeConnection.length > 0 && (
             <div className="sd-actions-block">
-              <div className="sd-block-h">Required before connecting</div>
+              <div className="sd-block-h">
+                {isAdvisor ? "Ask the owner or provider for" : "Required before connector generation"}
+              </div>
               <ul className="sd-check-list">
                 {advice.requiredBeforeConnection.map((a, i) => <li key={i}>{a}</li>)}
               </ul>
@@ -118,24 +128,28 @@ export default function ConnectorAdvicePanel({ advice, status, error, onGenerate
             <ConfidenceMeter confidence={advice.confidence} />
           </div>
 
-          <div className="sd-generate">
-            {advice.canGenerateConnectorDefinition ? (
-              <>
-                <button className="btn btn--primary" disabled title="Coming in Sprint 4">
-                  Generate Connector Definition – Sprint 4
-                </button>
-                <span className="sd-hint-sm">Available in the next sprint.</span>
-              </>
-            ) : (
-              <div className="sd-generate__blocked">
-                <div className="sd-block-h">Connector generation isn’t available yet</div>
-                <p className="sd-muted">
-                  Complete the required actions above and obtain the missing
-                  information, then connection advice can be regenerated.
-                </p>
-              </div>
-            )}
-          </div>
+          {!isAdvisor && (
+            <div className="sd-generate">
+              {advice.canGenerateConnectorDefinition ? (
+                <div className="sd-ready-box">
+                  <div>
+                    <div className="sd-ready-box__title">Enough information is available</div>
+                    <p className="sd-muted">Connector generation can begin in the next step.</p>
+                  </div>
+                  <button className="btn btn--primary" disabled title="Connector generation is the next implementation step">
+                    Generate Connector
+                  </button>
+                </div>
+              ) : (
+                <div className="sd-generate__blocked">
+                  <div className="sd-block-h">More information is needed</div>
+                  <p className="sd-muted">
+                    Add the missing information to the form above and run the assessment again.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </section>

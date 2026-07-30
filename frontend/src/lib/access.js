@@ -1,11 +1,8 @@
 // =============================================================================
-// Business-access & connector presentation helpers.
-// Maps the backend's availability status to the right business question, builds
-// the PATCH payload, and provides readiness / complexity / confidence styling.
-// Pure, no side effects.
+// Access-information & connector presentation helpers.
 // =============================================================================
 
-/** Map a raw availabilityStatus to a business "access kind". */
+/** Map a raw availabilityStatus to a broad access kind. */
 export function accessKind(availabilityStatus) {
   const s = String(availabilityStatus || "").toLowerCase();
   if (s.includes("subscription")) return "subscription";
@@ -17,77 +14,35 @@ export function accessKind(availabilityStatus) {
   return "unknown";
 }
 
-export const DEPARTMENTS = ["Finance", "Procurement", "Compliance", "IT", "Quality", "Other"];
-
-/** The primary yes/no/unknown question for each access kind (null = no question). */
-export function accessQuestion(kind) {
-  switch (kind) {
-    case "subscription":
-      return {
-        label: "Does your organisation already have a subscription?",
-        helper: "So we know whether a commercial subscription still needs to be arranged.",
-      };
-    case "registration":
-      return {
-        label: "Does your organisation already have an authorised account?",
-        helper: "Some sources need a registered organisation account before access.",
-      };
-    case "customer":
-      return {
-        label: "Has internal access to this source already been confirmed?",
-        helper: "This source is reached through an existing customer or internal channel.",
-      };
-    case "upload":
-      return {
-        label: "Can you obtain a sample export or file from this source?",
-        helper: "This source is provided as an upload — a sample file will be needed later.",
-      };
-    case "available":
-      return null; // no subscription question for public / available-now sources
-    default:
-      return {
-        label: "Do you already have access to this source?",
-        helper: "Tell us what you know so we can advise the next practical steps.",
-      };
-  }
-}
-
 export const ANSWER_OPTIONS = [
   { value: "yes", label: "Yes" },
-  { value: "no", label: "No" },
-  { value: "unknown", label: "I don’t know" },
+  { value: "unknown", label: "No / Not sure" },
 ];
 
-/** Build the backend Business Access payload from kind + answer + optional fields. */
-export function buildBusinessAccessPayload(kind, answer, fields = {}) {
-  const optional = {
-    internalOwner: fields.internalOwner || "",
-    contactDepartment: fields.contactDepartment || "",
-    providerPortal: fields.providerPortal || "",
-    notes: fields.notes || "",
+/**
+ * Build the existing backend business-access contract while storing the new
+ * flexible access description in notes. No secrets should be entered here.
+ */
+export function buildBusinessAccessPayload(answer, accessInformation = "") {
+  const a = answer === "yes" ? "yes" : "unknown";
+  return {
+    accessKnown: a,
+    organisationHasSubscription: "notRequired",
+    internalOwner: "",
+    contactDepartment: "",
+    providerPortal: "",
+    notes: accessInformation.trim(),
+    decisionStatus: a === "yes" ? "accessAvailable" : "pending",
   };
-  if (kind === "available") {
-    return {
-      accessKnown: "yes",
-      organisationHasSubscription: "notRequired",
-      ...optional,
-      decisionStatus: "accessAvailable",
-    };
-  }
-  const a = answer || "unknown";
-  const decisionStatus = a === "yes" ? "accessAvailable" : a === "no" ? "actionRequired" : "pending";
-  const organisationHasSubscription = kind === "subscription" ? a : "notRequired";
-  return { accessKnown: a, organisationHasSubscription, ...optional, decisionStatus };
 }
 
-/** Recover the primary answer from stored Business Access (for form prefill). */
-export function primaryAnswerFromBusinessAccess(kind, ba = {}) {
-  if (kind === "available") return "yes";
-  if (kind === "subscription") {
-    const sub = ba.organisationHasSubscription;
-    if (sub && sub !== "notRequired") return sub;
-  }
-  return ba.accessKnown || "";
+/** Recover the technical-access answer from stored Business Access. */
+export function primaryAnswerFromBusinessAccess(ba = {}) {
+  return ba.accessKnown === "yes" || ba.decisionStatus === "accessAvailable"
+    ? "yes"
+    : ba.accessKnown
+      ? "unknown"
+      : "";
 }
 
 // ---- Readiness / complexity badge meta ----
@@ -115,7 +70,6 @@ export function complexityMeta(complexity) {
   return { label: "Unknown", ...BADGE.muted };
 }
 
-/** Confidence as a qualitative level + percentage for a bar (never a raw decimal). */
 export function confidenceLevel(conf) {
   if (typeof conf !== "number") return { label: "Not provided", pct: 0, tone: "var(--ink-3)" };
   const pct = Math.round(conf > 1 ? conf : conf * 100);

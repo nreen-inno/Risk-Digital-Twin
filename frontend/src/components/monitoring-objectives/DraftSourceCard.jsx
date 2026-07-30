@@ -1,6 +1,6 @@
 import { ArrowIcon } from "../../lib/icons.jsx";
 
-export default function DraftSourceCard({ source, onboardingReason, onContinue, onRemove }) {
+export default function DraftSourceCard({ source, onboardingReason, onContinue, onRemove, busy = false }) {
   const meta = [
     ["Provider", source.provider],
     ["Source kind", source.sourceKindLabel],
@@ -36,11 +36,11 @@ export default function DraftSourceCard({ source, onboardingReason, onContinue, 
       )}
 
       <div className="msrc__actions">
-        <button className="btn btn--primary" onClick={() => onContinue(source)}>
+        <button className="btn btn--primary" onClick={() => onContinue(source)} disabled={busy}>
           Continue onboarding <ArrowIcon width={14} height={14} />
         </button>
-        <button className="btn btn--quiet" onClick={() => onRemove(source)}>
-          Remove
+        <button className="btn btn--quiet" onClick={() => onRemove(source)} disabled={busy}>
+          {busy ? "Updating…" : "Remove"}
         </button>
       </div>
     </article>
