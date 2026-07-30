@@ -1,17 +1,11 @@
 import { ArrowIcon } from "../../lib/icons.jsx";
 
-/**
- * Tab 1 — an Information Source that is In use (sources.active).
- * Overview + navigation only: actions route to the existing Source Details
- * workflow. No AI recommendation controls, and no invented coverage-fit values.
- */
-export default function CurrentSourceCard({ source, onOpen, onDisable }) {
+export default function CurrentSourceCard({ source, onView, onModify, onDisable }) {
   const meta = [
     ["Provider", source.provider],
     ["Source kind", source.sourceKindLabel],
     ["Information need", source.informationNeed],
-    ["Connector", source.connectorStatusLabel],
-  ].filter(([, v]) => v);
+  ].filter(([, value]) => value);
 
   return (
     <article className="msrc msrc--active">
@@ -25,24 +19,21 @@ export default function CurrentSourceCard({ source, onOpen, onDisable }) {
 
       {meta.length > 0 && (
         <dl className="msrc__meta">
-          {meta.map(([k, v]) => (
-            <div className="msrc__meta-row" key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
+          {meta.map(([key, value]) => (
+            <div className="msrc__meta-row" key={key}>
+              <dt>{key}</dt>
+              <dd>{value}</dd>
             </div>
           ))}
         </dl>
       )}
 
       <div className="msrc__actions">
-        <button className="btn btn--primary" onClick={() => onOpen(source, "overview")}>
-          Open source <ArrowIcon width={14} height={14} />
+        <button className="btn btn--primary" onClick={() => onView(source)}>
+          View <ArrowIcon width={14} height={14} />
         </button>
-        <button className="btn btn--ghost" onClick={() => onOpen(source, "access")}>
-          Review access
-        </button>
-        <button className="btn btn--ghost" onClick={() => onOpen(source, "connector")}>
-          Connector setup
+        <button className="btn btn--ghost" onClick={() => onModify(source)}>
+          Modify
         </button>
         <button className="btn btn--quiet" onClick={() => onDisable(source)}>
           Disable

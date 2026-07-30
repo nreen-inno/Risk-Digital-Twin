@@ -5,7 +5,7 @@ import {
     generateConnectorAnalysis
 } from "../services/aiConnectorBuilder.service.js";
 import {
-  generateConnectorAdvice
+    generateConnectorAdvice
 } from "../ai/services/aiConnectorAdvisor.service.js";
 
 function cleanCosmosFields(item) {
@@ -111,6 +111,7 @@ export async function createInformationSource(
             supportedRiskFactorIds = [],
             tags = [],
 
+            monitoringObjectiveId = null,
             monitoringObjectiveIds = [],
             informationNeed = "",
             relatedRiskDefinitionIds = [],
@@ -202,9 +203,26 @@ export async function createInformationSource(
             sampleData,
 
             monitoringObjectiveIds:
-                normaliseStringArray(
-                    monitoringObjectiveIds
-                ),
+                (() => {
+                    const ids = normaliseStringArray(
+                        monitoringObjectiveIds
+                    );
+
+                    if (ids.length > 0) {
+                        return ids;
+                    }
+
+                    if (
+                        typeof monitoringObjectiveId === "string" &&
+                        monitoringObjectiveId.trim()
+                    ) {
+                        return [
+                            monitoringObjectiveId.trim()
+                        ];
+                    }
+
+                    return [];
+                })(),
 
             informationNeed,
 
@@ -781,129 +799,129 @@ export async function getInformationSourceAccessGuidance(
 }
 
 export async function getInformationSourceConnectorAdvice(
-  req,
-  res,
-  next
+    req,
+    res,
+    next
 ) {
-  try {
-    const source =
-      await findInformationSourceById(
-        req.params.id
-      );
-
-    if (!source) {
-      return res.status(404).json({
-        error: "Information source not found"
-      });
-    }
-
-    const accessGuidance =
-      buildAccessGuidance(
-        source,
-        {
-          ...buildDefaultBusinessAccess(),
-          ...(source.businessAccess || {})
-        }
-      );
-
-    let connectorAdvice;
-    let generatedBy = "azureOpenAI";
-
     try {
-      connectorAdvice =
-        await generateConnectorAdvice(source);
-    } catch (aiError) {
-      console.error(
-        "AI connector advice failed. Using fallback:",
-        aiError.message
-      );
+        const source =
+            await findInformationSourceById(
+                req.params.id
+            );
 
-      connectorAdvice =
-        buildFallbackConnectorAdvice(
-          source,
-          accessGuidance
-        );
+        if (!source) {
+            return res.status(404).json({
+                error: "Information source not found"
+            });
+        }
 
-      generatedBy = "ruleBasedFallback";
+        const accessGuidance =
+            buildAccessGuidance(
+                source,
+                {
+                    ...buildDefaultBusinessAccess(),
+                    ...(source.businessAccess || {})
+                }
+            );
+
+        let connectorAdvice;
+        let generatedBy = "azureOpenAI";
+
+        try {
+            connectorAdvice =
+                await generateConnectorAdvice(source);
+        } catch (aiError) {
+            console.error(
+                "AI connector advice failed. Using fallback:",
+                aiError.message
+            );
+
+            connectorAdvice =
+                buildFallbackConnectorAdvice(
+                    source,
+                    accessGuidance
+                );
+
+            generatedBy = "ruleBasedFallback";
+        }
+
+        res.status(200).json({
+            informationSourceId: source.id,
+            sourceName: source.name,
+            generatedBy,
+            generatedAt:
+                new Date().toISOString(),
+            accessGuidance,
+            connectorAdvice
+        });
+    } catch (error) {
+        next(error);
     }
-
-    res.status(200).json({
-      informationSourceId: source.id,
-      sourceName: source.name,
-      generatedBy,
-      generatedAt:
-        new Date().toISOString(),
-      accessGuidance,
-      connectorAdvice
-    });
-  } catch (error) {
-    next(error);
-  }
 }
 export async function updateInformationSourceStatus(
-  req,
-  res,
-  next
+    req,
+    res,
+    next
 ) {
-  try {
-    const { id } = req.params;
-    const { status } = req.body || {};
+    try {
+        const { id } = req.params;
+        const { status } = req.body || {};
 
-    const allowedStatuses = [
-      "draft",
-      "active",
-      "disabled"
-    ];
+        const allowedStatuses = [
+            "draft",
+            "active",
+            "disabled"
+        ];
 
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        error: "Validation error",
-        message:
-          "status must be draft, active or disabled."
-      });
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({
+                error: "Validation error",
+                message:
+                    "status must be draft, active or disabled."
+            });
+        }
+
+        const source =
+            await findInformationSourceById(id);
+
+        if (!source) {
+            return res.status(404).json({
+                error: "Information source not found"
+            });
+        }
+
+        const now = new Date().toISOString();
+
+        source.status = status;
+        source.updatedAt = now;
+
+        if (status === "active") {
+            source.activatedAt =
+                source.activatedAt || now;
+        }
+
+        if (status === "disabled") {
+            source.disabledAt = now;
+        }
+
+        if (status !== "disabled") {
+            source.disabledAt = null;
+        }
+
+        const { resource } =
+            await container
+                .item(
+                    source.id,
+                    source.objectType
+                )
+                .replace(source);
+
+        res.status(200).json(
+            cleanCosmosFields(resource)
+        );
+    } catch (error) {
+        next(error);
     }
-
-    const source =
-      await findInformationSourceById(id);
-
-    if (!source) {
-      return res.status(404).json({
-        error: "Information source not found"
-      });
-    }
-
-    const now = new Date().toISOString();
-
-    source.status = status;
-    source.updatedAt = now;
-
-    if (status === "active") {
-      source.activatedAt =
-        source.activatedAt || now;
-    }
-
-    if (status === "disabled") {
-      source.disabledAt = now;
-    }
-
-    if (status !== "disabled") {
-      source.disabledAt = null;
-    }
-
-    const { resource } =
-      await container
-        .item(
-          source.id,
-          source.objectType
-        )
-        .replace(source);
-
-    res.status(200).json(
-      cleanCosmosFields(resource)
-    );
-  } catch (error) {
-    next(error);
-  }
 }
 
 export async function analyseInformationSource(
@@ -1198,110 +1216,110 @@ function buildAccessGuidance(
 }
 
 function buildFallbackConnectorAdvice(
-  source,
-  accessGuidance
+    source,
+    accessGuidance
 ) {
-  const sourceKind =
-    source.sourceKind || "toBeConfirmed";
+    const sourceKind =
+        source.sourceKind || "toBeConfirmed";
 
-  const approachByKind = {
-    restApi: {
-      connectionMethod:
-        "Provider-supported API connection",
-      refreshFrequency: "Daily"
-    },
-    rss: {
-      connectionMethod:
-        "Public feed monitoring",
-      refreshFrequency: "Hourly"
-    },
-    csv: {
-      connectionMethod:
-        "Scheduled file import",
-      refreshFrequency: "As provided"
-    },
-    excel: {
-      connectionMethod:
-        "Scheduled file import",
-      refreshFrequency: "As provided"
-    },
-    database: {
-      connectionMethod:
-        "Read-only database connection",
-      refreshFrequency: "Daily"
-    },
-    manual: {
-      connectionMethod:
-        "Manual or assisted data upload",
-      refreshFrequency: "As needed"
-    },
-    commercialService: {
-      connectionMethod:
-        "Provider-supported data connection",
-      refreshFrequency: "Daily"
-    },
-    publicService: {
-      connectionMethod:
-        "Public data connection",
-      refreshFrequency: "Daily"
-    },
-    toBeConfirmed: {
-      connectionMethod:
-        "Connection method to be confirmed",
-      refreshFrequency:
-        "To be confirmed"
-    }
-  };
+    const approachByKind = {
+        restApi: {
+            connectionMethod:
+                "Provider-supported API connection",
+            refreshFrequency: "Daily"
+        },
+        rss: {
+            connectionMethod:
+                "Public feed monitoring",
+            refreshFrequency: "Hourly"
+        },
+        csv: {
+            connectionMethod:
+                "Scheduled file import",
+            refreshFrequency: "As provided"
+        },
+        excel: {
+            connectionMethod:
+                "Scheduled file import",
+            refreshFrequency: "As provided"
+        },
+        database: {
+            connectionMethod:
+                "Read-only database connection",
+            refreshFrequency: "Daily"
+        },
+        manual: {
+            connectionMethod:
+                "Manual or assisted data upload",
+            refreshFrequency: "As needed"
+        },
+        commercialService: {
+            connectionMethod:
+                "Provider-supported data connection",
+            refreshFrequency: "Daily"
+        },
+        publicService: {
+            connectionMethod:
+                "Public data connection",
+            refreshFrequency: "Daily"
+        },
+        toBeConfirmed: {
+            connectionMethod:
+                "Connection method to be confirmed",
+            refreshFrequency:
+                "To be confirmed"
+        }
+    };
 
-  const approach =
-    approachByKind[sourceKind] ||
-    approachByKind.toBeConfirmed;
+    const approach =
+        approachByKind[sourceKind] ||
+        approachByKind.toBeConfirmed;
 
-  return {
-    readiness:
-      accessGuidance.canProceedToConnector
-        ? "partiallyReady"
-        : "actionRequired",
+    return {
+        readiness:
+            accessGuidance.canProceedToConnector
+                ? "partiallyReady"
+                : "actionRequired",
 
-    summary:
-      accessGuidance.summary,
+        summary:
+            accessGuidance.summary,
 
-    recommendedApproach: {
-      connectionMethod:
-        approach.connectionMethod,
+        recommendedApproach: {
+            connectionMethod:
+                approach.connectionMethod,
 
-      refreshFrequency:
-        approach.refreshFrequency,
+            refreshFrequency:
+                approach.refreshFrequency,
 
-      expectedData: [
-        source.informationNeed ||
-          "Monitoring evidence"
-      ],
+            expectedData: [
+                source.informationNeed ||
+                "Monitoring evidence"
+            ],
 
-      rationale:
-        "Fallback recommendation based on the known source type and business access status."
-    },
+            rationale:
+                "Fallback recommendation based on the known source type and business access status."
+        },
 
-    requiredBeforeConnection:
-      accessGuidance.nextActions || [],
+        requiredBeforeConnection:
+            accessGuidance.nextActions || [],
 
-    missingInformation: [
-      "Provider technical documentation",
-      "Representative sample data or response",
-      "Authorised connection details"
-    ],
+        missingInformation: [
+            "Provider technical documentation",
+            "Representative sample data or response",
+            "Authorised connection details"
+        ],
 
-    assumptions: [
-      "AI Connector Advisor was unavailable.",
-      "The recommended approach is provisional."
-    ],
+        assumptions: [
+            "AI Connector Advisor was unavailable.",
+            "The recommended approach is provisional."
+        ],
 
-    estimatedComplexity: "unknown",
+        estimatedComplexity: "unknown",
 
-    canGenerateConnectorDefinition: false,
+        canGenerateConnectorDefinition: false,
 
-    confidence: 0.3
-  };
+        confidence: 0.3
+    };
 }
 function buildFallbackConnectorAnalysis(
     source

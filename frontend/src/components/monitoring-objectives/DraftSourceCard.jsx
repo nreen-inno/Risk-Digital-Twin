@@ -1,18 +1,11 @@
 import { ArrowIcon } from "../../lib/icons.jsx";
 
-/**
- * Tab 2 — an Information Source still in Setup in progress (sources.draft).
- * Continuation routes into the existing Source Details workflow (business
- * access → access guidance → AI connector advice).
- */
-export default function DraftSourceCard({ source, onOpen }) {
+export default function DraftSourceCard({ source, onboardingReason, onContinue, onRemove }) {
   const meta = [
     ["Provider", source.provider],
-    ["Availability", source.availability],
+    ["Source kind", source.sourceKindLabel],
     ["Information need", source.informationNeed],
-    ["Business access", source.businessAccessStatus],
-    ["Connector", source.connectorStatusLabel],
-  ].filter(([, v]) => v);
+  ].filter(([, value]) => value);
 
   return (
     <article className="msrc msrc--draft">
@@ -21,29 +14,33 @@ export default function DraftSourceCard({ source, onOpen }) {
           <h4 className="msrc__name">{source.name}</h4>
           {source.provider && <span className="msrc__provider">{source.provider}</span>}
         </div>
-        <span className="msrc__life msrc__life--setup">Setup in progress</span>
+        <span className="msrc__life msrc__life--setup">Source onboarding</span>
       </div>
+
+      {onboardingReason && (
+        <div className="msrc__reason">
+          <strong>Why this source is here</strong>
+          <span>{onboardingReason}</span>
+        </div>
+      )}
 
       {meta.length > 0 && (
         <dl className="msrc__meta">
-          {meta.map(([k, v]) => (
-            <div className="msrc__meta-row" key={k}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
+          {meta.map(([key, value]) => (
+            <div className="msrc__meta-row" key={key}>
+              <dt>{key}</dt>
+              <dd>{value}</dd>
             </div>
           ))}
         </dl>
       )}
 
       <div className="msrc__actions">
-        <button className="btn btn--primary" onClick={() => onOpen(source, "access")}>
-          Continue setup <ArrowIcon width={14} height={14} />
+        <button className="btn btn--primary" onClick={() => onContinue(source)}>
+          Continue onboarding <ArrowIcon width={14} height={14} />
         </button>
-        <button className="btn btn--ghost" onClick={() => onOpen(source, "access")}>
-          Review access
-        </button>
-        <button className="btn btn--ghost" onClick={() => onOpen(source, "connector")}>
-          View AI connector advice
+        <button className="btn btn--quiet" onClick={() => onRemove(source)}>
+          Remove
         </button>
       </div>
     </article>

@@ -209,6 +209,19 @@ export async function acceptRecommendation(objectiveId, recommendation, { signal
 }
 
 /**
+ * Move an Information Source between the existing demo lifecycle states.
+ * PATCH /api/information-sources/:id/status
+ */
+export async function updateInformationSourceStatus(id, status, { signal } = {}) {
+  return request(`/api/information-sources/${encodeURIComponent(id)}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+    signal,
+  });
+}
+
+/**
  * Save Business Access answers for an Information Source.
  * PATCH /api/information-sources/:id/business-access
  */
