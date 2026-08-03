@@ -468,3 +468,16 @@
 .onb-conf__label { font-size: 13px; font-weight: 800; white-space: nowrap; }
 .onb-conf__bar { flex: 1; max-width: 260px; height: 7px; border-radius: 999px; background: var(--surface-inset, #f3f6fb); overflow: hidden; }
 .onb-conf__bar i { display: block; height: 100%; border-radius: 999px; }
+
+/* Onboarding v2 — recommendation alternatives, classification notes, readiness */
+.onb-note { font-size: 12px; margin: -2px 0 8px; }
+.onb-alts { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
+.onb-alt { display: flex; align-items: baseline; gap: 10px; font-size: 12.5px; color: var(--ink-2, #4a5567); }
+.onb-alt__tag {
+  flex: none; font-size: 11px; font-weight: 800; letter-spacing: .02em; padding: 3px 9px; border-radius: 999px; border: 1px solid;
+}
+.onb-alt__tag.is-ok { color: var(--ok, #2E8B57); background: rgba(46,139,87,.08); border-color: rgba(46,139,87,.26); }
+.onb-alt__tag.is-no { color: var(--ink-3, #7c8798); background: var(--surface-inset, #f3f6fb); border-color: var(--border, #e4e9f2); }
+.onb-alt__reason { color: var(--ink-3, #7c8798); }
+.onb-decisions { border: 1px solid #dce6f4; background: linear-gradient(180deg,#f7faff,#f2f6fc); border-radius: var(--r-md, 12px); padding: 14px 16px; }
+.onb-decisions h3 { margin-top: 0; }

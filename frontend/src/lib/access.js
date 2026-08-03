@@ -70,6 +70,20 @@ export function complexityMeta(complexity) {
   return { label: "Unknown", ...BADGE.muted };
 }
 
+/**
+ * Connector readiness state (onboarding v2). A proposal is acceptable as a
+ * Connector Specification once it is proposal-ready or better — being unverified
+ * is NOT "not ready"; automated testing verifies the rest later.
+ */
+export function readinessStateMeta(state) {
+  const s = String(state || "").toLowerCase().replace(/[\s_]+/g, "-");
+  if (s.includes("ready-for-activation")) return { key: "ready-for-activation", label: "Ready for activation", acceptable: true, ...BADGE.ok };
+  if (s.includes("ready-for-test")) return { key: "ready-for-test", label: "Ready for test", acceptable: true, ...BADGE.ok };
+  if (s.includes("test-failed")) return { key: "test-failed", label: "Test failed", acceptable: false, ...BADGE.danger };
+  if (s.includes("proposal-ready")) return { key: "proposal-ready", label: "Proposal ready", acceptable: true, ...BADGE.warn };
+  return { key: "unknown", label: "In progress", acceptable: false, ...BADGE.muted };
+}
+
 export function confidenceLevel(conf) {
   if (typeof conf !== "number") return { label: "Not provided", pct: 0, tone: "var(--ink-3)" };
   const pct = Math.round(conf > 1 ? conf : conf * 100);
