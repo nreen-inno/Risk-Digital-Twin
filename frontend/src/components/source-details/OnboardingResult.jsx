@@ -1,13 +1,12 @@
 import { useState } from "react";
 import AiLoadingState from "../shared/AiLoadingState.jsx";
-import ReadinessBadge from "../shared/ReadinessBadge.jsx";
 import { CheckIcon } from "../../lib/icons.jsx";
-import { confidenceLevel } from "../../lib/access.js";
+import { confidenceLevel, readinessStateMeta } from "../../lib/access.js";
 
-function CheckList({ items }) {
+function CheckList({ items, warn }) {
   if (!items || !items.length) return null;
   return (
-    <ul className="sd-check-list">
+    <ul className={warn ? "sd-plain-list sd-plain-list--warn" : "sd-check-list"}>
       {items.map((item, i) => <li key={i}>{item}</li>)}
     </ul>
   );
@@ -22,7 +21,7 @@ function Tags({ items }) {
   );
 }
 
-function ConfigGrid({ rows }) {
+function Grid({ rows }) {
   const filled = rows.filter(([, v]) => v);
   if (!filled.length) return null;
   return (
@@ -38,46 +37,27 @@ function ConfigGrid({ rows }) {
 }
 
 /**
- * Shared structured renderer for both onboarding branches. Reads the normalized
- * connector-advice and lays it out as concise sections a risk manager can read:
- * what AI knows, what it assumes, what is missing, and whether the connector
- * can be generated. `variant` reorders/relabels sections per the spec:
- *   - "ai": Purpose / Information source / Recommended connector / Monitoring /
- *           Available information / AI assumptions / Information that would
- *           improve connector quality / Connector readiness.
- *   - "technical": Available information / AI assumptions / Missing information /
- *           Connector readiness.
+ * Structured Connector Proposal renderer (onboarding v2).
+ * Presents the AI recommendation, technical & monitoring configuration, and —
+ * crucially — the three-way classification of uncertainty so nothing reads as
+ * "user homework": the automated test verifies technical facts, the risk
+ * manager approves business decisions, and only genuinely-undiscoverable public
+ * facts are flagged as unresolved. Readiness uses proper states, so a proposal
+ * can be accepted for testing before every field is live-validated.
  */
-export default function OnboardingResult({
-  advice,
-  variant,
-  recommendation,
-  accepted,
-  onAccept,
-  onRefine,
-  onRetry,
-}) {
+export default function OnboardingResult({ advice, variant, recommendation, accepted, onAccept, onRefine, onRetry }) {
   const [revision, setRevision] = useState("");
 
   if (advice.status === "loading") {
     return (
       <AiLoadingState
-        title={variant === "technical" ? "AI is analysing your technical information" : "AI is onboarding the source"}
-        steps={
-          variant === "technical"
-            ? [
-                "Reading the technical information you provided",
-                "Identifying available details and formats",
-                "Inferring assumptions and spotting gaps",
-                "Assessing connector readiness",
-              ]
-            : [
-                "Identifying the source and its official access options",
-                "Designing monitoring scope and collection frequency",
-                "Defining risk filtering, evidence and processing",
-                "Preparing an actionable connector proposal",
-              ]
-        }
+        title={variant === "technical" ? "AI is analysing your technical information" : "AI is preparing the connector proposal"}
+        steps={[
+          "Resolving official provider, documentation and endpoints",
+          "Choosing the connection method and sensible defaults",
+          "Proposing monitoring scope, languages and risk mappings",
+          "Separating test tasks from decisions you need to approve",
+        ]}
       />
     );
   }
@@ -86,11 +66,9 @@ export default function OnboardingResult({
     return (
       <div className="sd-error">
         <p>
-          {advice.error?.isNetwork
-            ? "Couldn’t reach the backend."
-            : advice.error?.isTimeout
-            ? "The AI request took too long."
-            : "AI could not complete the analysis."}
+          {advice.error?.isNetwork ? "Couldn’t reach the backend."
+            : advice.error?.isTimeout ? "The AI request took too long."
+            : "AI could not complete the proposal."}
         </p>
         <button className="btn btn--primary" type="button" onClick={onRetry}>Try again</button>
       </div>
@@ -100,13 +78,19 @@ export default function OnboardingResult({
   if (advice.status !== "ready" || !advice.data) return null;
 
   const d = advice.data;
-  const ra = d.recommendedApproach || {};
+  const rec = d.recommendation || {};
+  const tc = d.technicalConfiguration || {};
+  const mc = d.monitoringConfiguration || {};
+  const mp = mc.monitoringProfile || {};
+  const rr = d.retentionRecommendation || {};
   const conf = confidenceLevel(d.confidence);
-  const canGenerate = !!d.canGenerateConnectorDefinition;
+  const state = readinessStateMeta(d.connectorReadiness);
 
-  const purpose = ra.purpose || d.purpose || recommendation?.informationNeed;
-  const languages = (ra.languages || []).join(", ");
-  const available = [d.summary].filter(Boolean);
+  const retentionRows = [
+    typeof rr.storeFeedMetadata === "boolean" && ["Store source metadata", rr.storeFeedMetadata ? "Yes" : "No"],
+    typeof rr.storeRawFeedItem === "boolean" && ["Store raw record", rr.storeRawFeedItem ? "Yes" : "No"],
+    typeof rr.scrapeFullArticle === "boolean" && ["Scrape full article", rr.scrapeFullArticle ? "Yes" : "No"],
+  ].filter(Boolean);
 
   const submitRevision = (e) => {
     e.preventDefault();
@@ -119,74 +103,93 @@ export default function OnboardingResult({
   return (
     <div className="op-proposal fade" aria-live="polite">
       <div className="op-head">
-        <span className="eyebrow">{variant === "technical" ? "AI analysis" : "AI proposal"}</span>
-        <ReadinessBadge readiness={canGenerate ? "ready" : d.readiness || "partiallyReady"} />
+        <span className="eyebrow">Connector proposal</span>
+        <span className="rd-badge" style={{ color: state.color, background: state.bg, borderColor: state.bd }}>
+          <i style={{ background: state.color }} /> {state.label}
+        </span>
       </div>
 
-      {variant === "ai" && (
-        <>
-          {purpose && (
-            <section className="op-section">
-              <h3>Purpose</h3>
-              <p className="sd-muted">{purpose}</p>
-            </section>
-          )}
-          <section className="op-section">
-            <h3>Information source</h3>
-            <ConfigGrid rows={[
-              ["Source", recommendation?.sourceName],
-              ["Provider", recommendation?.provider],
-            ]} />
-          </section>
-          <section className="op-section">
-            <h3>Recommended connector</h3>
-            <ConfigGrid rows={[
-              ["Connector type", ra.connectorType || d.connectorType],
-              ["Connection method", ra.connectionMethod],
-              ["Authentication", ra.authentication || ra.authenticationType || d.authenticationType],
-              ["Collection frequency", ra.refreshFrequency || ra.frequency],
-            ]} />
-            {ra.rationale && <p className="sd-rationale">{ra.rationale}</p>}
-          </section>
-          <section className="op-section">
-            <h3>Monitoring</h3>
-            <ConfigGrid rows={[
-              ["Language", languages],
-              ["Content scope", ra.contentScope || d.contentScope],
-            ]} />
-            {ra.topics?.length > 0 && (<><div className="sd-block-h">Topics</div><Tags items={ra.topics} /></>)}
-            {ra.keywords?.length > 0 && (<><div className="sd-block-h">Suggested keywords</div><Tags items={ra.keywords} /></>)}
-          </section>
-        </>
-      )}
+      {d.summary && <p className="sd-muted">{d.summary}</p>}
 
-      <section className="op-section">
-        <h3>Available information</h3>
-        {available.map((p, i) => <p className="sd-muted" key={i}>{p}</p>)}
-        {variant === "technical" && (
-          <ConfigGrid rows={[
-            ["Connector type", ra.connectorType || d.connectorType],
-            ["Connection method", ra.connectionMethod],
-            ["Authentication", ra.authentication || ra.authenticationType || d.authenticationType],
-            ["Collection frequency", ra.refreshFrequency || ra.frequency],
-          ]} />
-        )}
-        <CheckList items={ra.expectedData || d.expectedData} />
-      </section>
-
-      {(d.assumptions?.length > 0) && (
+      {(rec.connectionMethod || rec.rationale) && (
         <section className="op-section">
-          <h3>AI assumptions</h3>
-          <CheckList items={d.assumptions} />
+          <h3>Recommendation</h3>
+          <Grid rows={[["Connection method", rec.connectionMethod]]} />
+          {rec.rationale && <p className="sd-rationale">{rec.rationale}</p>}
+          {rec.alternativeMethods?.length > 0 && (
+            <div className="onb-alts">
+              {rec.alternativeMethods.map((a, i) => (
+                <div className="onb-alt" key={i}>
+                  <span className={`onb-alt__tag ${a.status === "recommended" ? "is-ok" : "is-no"}`}>{a.method}</span>
+                  <span className="onb-alt__reason">{a.status === "recommended" ? "Alternative" : "Not recommended"}{a.reason ? ` — ${a.reason}` : ""}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
-      {(d.missingInformation?.length > 0 || d.requiredBeforeConnection?.length > 0) && (
+      <section className="op-section">
+        <h3>Technical configuration</h3>
+        <Grid rows={[
+          ["Endpoint", tc.endpoint],
+          ["Documentation", tc.documentationUrl],
+          ["Authentication", tc.authenticationType],
+          ["Poll interval", tc.pollInterval],
+          ["Response format", tc.responseFormat],
+        ]} />
+      </section>
+
+      <section className="op-section">
+        <h3>Monitoring configuration</h3>
+        <Grid rows={[
+          ["Languages", (mc.languages || []).join(", ")],
+          ["Geographic scope", (mc.geographicScope || []).join(", ")],
+          ["Sensitivity", mc.sensitivity],
+        ]} />
+        {mc.riskCategoryMappings?.length > 0 && (<><div className="sd-block-h">Risk-category mappings</div><Tags items={mc.riskCategoryMappings} /></>)}
+        {mp.includeTerms?.length > 0 && (<><div className="sd-block-h">Include terms</div><Tags items={mp.includeTerms} /></>)}
+        {mp.excludeTerms?.length > 0 && (<><div className="sd-block-h">Exclude terms</div><Tags items={mp.excludeTerms} /></>)}
+        {mp.entities?.length > 0 && (<><div className="sd-block-h">Entities</div><Tags items={mp.entities} /></>)}
+        {mp.locations?.length > 0 && (<><div className="sd-block-h">Locations</div><Tags items={mp.locations} /></>)}
+      </section>
+
+      {(retentionRows.length > 0 || rr.reason) && (
         <section className="op-section">
-          <h3>{variant === "technical" ? "Missing information" : "Information that would improve connector quality"}</h3>
-          <ul className="sd-plain-list sd-plain-list--warn">
-            {[...(d.missingInformation || []), ...(d.requiredBeforeConnection || [])].map((item, i) => <li key={i}>{item}</li>)}
-          </ul>
+          <h3>Retention</h3>
+          <Grid rows={retentionRows} />
+          {rr.reason && <p className="sd-rationale">{rr.reason}</p>}
+        </section>
+      )}
+
+      {d.automatedValidationPlan?.length > 0 && (
+        <section className="op-section">
+          <h3>Automated validation plan</h3>
+          <p className="sd-muted onb-note">The connector test will verify these automatically — nothing for you to do.</p>
+          <CheckList items={d.automatedValidationPlan} />
+        </section>
+      )}
+
+      {d.decisionsRequiringUserApproval?.length > 0 && (
+        <section className="op-section onb-decisions">
+          <h3>Decisions requiring your approval</h3>
+          <p className="sd-muted onb-note">Business choices only you can approve. Accept as-is, or describe changes below.</p>
+          <CheckList items={d.decisionsRequiringUserApproval} />
+        </section>
+      )}
+
+      {d.businessAssumptions?.length > 0 && (
+        <section className="op-section">
+          <h3>Assumptions</h3>
+          <CheckList items={d.businessAssumptions} />
+        </section>
+      )}
+
+      {d.unresolvedTechnicalFacts?.length > 0 && (
+        <section className="op-section">
+          <h3>Unresolved technical facts</h3>
+          <p className="sd-muted onb-note">Public facts AI could not reliably confirm.</p>
+          <CheckList items={d.unresolvedTechnicalFacts} warn />
         </section>
       )}
 
@@ -196,10 +199,12 @@ export default function OnboardingResult({
           <span className="onb-conf__label" style={{ color: conf.tone }}>Confidence: {conf.pct}%</span>
           <span className="onb-conf__bar"><i style={{ width: `${conf.pct}%`, background: conf.tone }} /></span>
         </div>
-        <p className={`sd-proceed ${canGenerate ? "sd-proceed--ok" : "sd-proceed--wait"}`}>
-          {canGenerate
-            ? "Ready — connector generation can begin."
-            : "Not ready — additional information is recommended before generating the connector."}
+        <p className={`sd-proceed ${state.acceptable ? "sd-proceed--ok" : "sd-proceed--wait"}`}>
+          {state.key === "ready-for-activation" ? "Automated test passed — ready for activation."
+            : state.key === "ready-for-test" ? "A Connector Specification can be created and automatically tested."
+            : state.key === "proposal-ready" ? "Enough information to accept as a specification; the connector test verifies the rest."
+            : state.key === "test-failed" ? "The automated test did not pass — review the changes below."
+            : "The proposal is still being prepared."}
         </p>
       </section>
 
@@ -208,7 +213,7 @@ export default function OnboardingResult({
           <strong>{accepted ? "Accepted as Connector Specification" : "Proposal ready for review"}</strong>
           <p className="sd-muted">
             {accepted
-              ? "This specification is ready for the next stage — connector generation."
+              ? "This specification is ready for the automated connector test."
               : "Accept it as the connector specification, or describe changes below."}
           </p>
         </div>
@@ -221,8 +226,8 @@ export default function OnboardingResult({
             className="btn btn--primary"
             type="button"
             onClick={onAccept}
-            disabled={!canGenerate}
-            title={canGenerate ? "" : "Enabled once AI concludes connector generation can begin"}
+            disabled={!state.acceptable}
+            title={state.acceptable ? "" : "Enabled once the proposal is ready"}
           >
             Accept as Connector Specification
           </button>
@@ -232,7 +237,7 @@ export default function OnboardingResult({
       <form className="op-revision" onSubmit={submitRevision}>
         <label htmlFor="onboarding-revision">Describe changes</label>
         <p className="sd-muted">
-          Optional. AI will regenerate the complete {variant === "technical" ? "analysis" : "proposal"} with your correction; no interview is required.
+          Optional. AI regenerates the complete proposal with your correction; no interview is required.
         </p>
         <textarea
           id="onboarding-revision"
@@ -240,13 +245,11 @@ export default function OnboardingResult({
           rows="3"
           value={revision}
           onChange={(e) => setRevision(e.target.value)}
-          placeholder={variant === "technical"
-            ? "Example: Treat this as an OAuth2 client-credentials API and poll hourly."
-            : "Example: Use the Finnish RSS feed, poll hourly, and add Wärtsilä and Baltic logistics to the keywords."}
+          placeholder="Example: Use the Finnish RSS feed, poll hourly, and add Wärtsilä and Baltic logistics to the monitoring profile."
         />
         <div className="ba-actions">
           <button className="btn btn--secondary" type="submit" disabled={revision.trim().length < 2}>
-            Update Analysis
+            Update proposal with AI
           </button>
         </div>
       </form>

@@ -625,6 +625,19 @@ export function normalizeConnectorAdvice(raw) {
   const ca = raw.connectorAdvice || {};
   const ra = ca.recommendedApproach || {};
   const conf = ca.confidence;
+  // Items may be plain strings or objects ({statement, verificationStep, ...}).
+  const strings = (value) =>
+    (Array.isArray(value) ? value : toList(value))
+      .map((x) => (typeof x === "string" ? x : (x && (x.statement || x.step || x.text || x.label || x.reason || x.verificationStep)) || ""))
+      .filter(Boolean);
+  const from = (keys, fallback = []) => strings(pick(ca, keys, pick(raw, keys, fallback)));
+  const obj = (keys) => {
+    for (const k of keys) {
+      if (ca[k] && typeof ca[k] === "object") return ca[k];
+      if (raw[k] && typeof raw[k] === "object") return raw[k];
+    }
+    return {};
+  };
   return {
     informationSourceId: pick(raw, ["informationSourceId", "id"], ""),
     sourceName: pick(raw, ["sourceName", "name"], ""),
@@ -665,6 +678,78 @@ export function normalizeConnectorAdvice(raw) {
     estimatedComplexity: pick(ca, ["estimatedComplexity"], "unknown"),
     canGenerateConnectorDefinition: !!ca.canGenerateConnectorDefinition,
     confidence: typeof conf === "number" ? (conf > 1 ? conf / 100 : conf) : null,
+
+    // ---- Connector Proposal structured model (onboarding v2 schema) ----
+    // Read the new schema when the backend provides it; otherwise fall back to
+    // the existing recommendedApproach fields so the UI degrades gracefully.
+    source: (() => {
+      const s = obj(["source"]);
+      return {
+        name: pick(s, ["name"], pick(raw, ["sourceName", "name"], "")),
+        provider: pick(s, ["provider"], ""),
+        sourceType: pick(s, ["sourceType", "type"], ""),
+      };
+    })(),
+    recommendation: (() => {
+      const rc = obj(["recommendation"]);
+      const alts = Array.isArray(rc.alternativeMethods) ? rc.alternativeMethods : [];
+      return {
+        connectionMethod: pick(rc, ["connectionMethod", "method"], pick(ra, ["connectionMethod", "method"], "")),
+        rationale: pick(rc, ["rationale"], pick(ra, ["rationale"], "")),
+        alternativeMethods: alts.map((m) => ({
+          method: pick(m, ["method"], ""),
+          status: pick(m, ["status"], ""),
+          reason: pick(m, ["reason"], ""),
+        })).filter((m) => m.method),
+      };
+    })(),
+    technicalConfiguration: (() => {
+      const tc = obj(["technicalConfiguration"]);
+      return {
+        endpoint: pick(tc, ["endpoint", "url"], ""),
+        documentationUrl: pick(tc, ["documentationUrl", "docsUrl"], ""),
+        authenticationType: pick(tc, ["authenticationType", "authType"], pick(ra, ["authentication", "authenticationType"], "")),
+        pollInterval: pick(tc, ["pollInterval", "frequency"], pick(ra, ["refreshFrequency", "frequency"], "")),
+        responseFormat: pick(tc, ["responseFormat", "format"], ""),
+        proposedFieldMapping: tc.proposedFieldMapping && typeof tc.proposedFieldMapping === "object" ? tc.proposedFieldMapping : {},
+      };
+    })(),
+    monitoringConfiguration: (() => {
+      const mc = obj(["monitoringConfiguration"]);
+      const mp = (mc.monitoringProfile && typeof mc.monitoringProfile === "object") ? mc.monitoringProfile : {};
+      return {
+        languages: strings(pick(mc, ["languages"], pick(ra, ["languages"], []))),
+        geographicScope: strings(pick(mc, ["geographicScope", "geography"], [])),
+        sensitivity: pick(mc, ["sensitivity"], ""),
+        riskCategoryMappings: strings(pick(mc, ["riskCategoryMappings"], [])),
+        monitoringProfile: {
+          includeTerms: strings(mp.includeTerms),
+          excludeTerms: strings(mp.excludeTerms),
+          entities: strings(mp.entities),
+          locations: strings(mp.locations),
+        },
+      };
+    })(),
+    retentionRecommendation: (() => {
+      const rr = obj(["retentionRecommendation"]);
+      return {
+        storeFeedMetadata: rr.storeFeedMetadata,
+        storeRawFeedItem: rr.storeRawFeedItem,
+        scrapeFullArticle: rr.scrapeFullArticle,
+        reason: pick(rr, ["reason"], ""),
+      };
+    })(),
+    // The three-way classification of uncertainty.
+    automatedValidationPlan: from(["automatedValidationPlan"]),
+    decisionsRequiringUserApproval: from(["decisionsRequiringUserApproval"]),
+    unresolvedTechnicalFacts: from(["unresolvedTechnicalFacts"], strings(pick(ca, ["missingInformation"], []))),
+    businessAssumptions: from(["assumptions", "businessAssumptions"]),
+    connectorReadiness: (() => {
+      const s = String(pick(ca, ["connectorReadiness"], pick(raw, ["connectorReadiness"], "")) || "");
+      if (s) return s;
+      if (ca.canGenerateConnectorDefinition) return "ready-for-test";
+      return (ca.summary || ca.recommendedApproach || raw.recommendation) ? "proposal-ready" : "";
+    })(),
   };
 }
 
