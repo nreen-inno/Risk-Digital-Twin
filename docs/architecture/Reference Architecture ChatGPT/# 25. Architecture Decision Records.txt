@@ -1,0 +1,545 @@
+# 25. Architecture Decision Records & Future Roadmap
+
+---
+
+# Purpose
+
+This chapter captures the key architectural decisions that shaped the AI Knowledge & Risk Intelligence Platform and outlines the long-term evolution of the platform.
+
+Architecture Decision Records (ADRs) explain why important design choices were made. They preserve architectural knowledge, support future development and help new team members understand the rationale behind the platform.
+
+The Future Roadmap describes the intended evolution of the platform while preserving its architectural principles.
+
+---
+
+# Why Architecture Decision Records?
+
+Architecture evolves continuously.
+
+Without documenting important decisions, future developers may unknowingly reverse or duplicate previous work.
+
+ADRs capture:
+
+- the problem
+- the alternatives considered
+- the chosen solution
+- the rationale
+- the expected consequences
+
+Each ADR should remain short, focused and immutable.
+
+---
+
+# ADR-001
+
+## Title
+
+Platform-Oriented Architecture
+
+### Status
+
+Accepted
+
+### Decision
+
+The solution is designed as a reusable platform rather than a single application.
+
+### Rationale
+
+A platform supports multiple business domains, extension points and future capabilities without redesigning the core architecture.
+
+### Consequences
+
+- Higher initial architectural effort
+- Greater long-term flexibility
+- Reusable business services
+
+---
+
+# ADR-002
+
+## Title
+
+Knowledge as a Canonical Business Object
+
+### Status
+
+Accepted
+
+### Decision
+
+Knowledge is treated as an independent organisational asset.
+
+### Rationale
+
+Knowledge should outlive:
+
+- connectors
+- AI models
+- dashboards
+- monitoring objectives
+
+Multiple business capabilities should reuse the same Knowledge object.
+
+### Consequences
+
+- Reduced duplication
+- Better explainability
+- Improved AI consistency
+
+---
+
+# ADR-003
+
+## Title
+
+AI Gateway
+
+### Status
+
+Accepted
+
+### Decision
+
+All Artificial Intelligence requests pass through the AI Gateway.
+
+### Rationale
+
+Centralising AI enables:
+
+- governance
+- prompt management
+- provider abstraction
+- caching
+- cost optimisation
+- security
+
+### Consequences
+
+Business services remain independent from AI technologies.
+
+---
+
+# ADR-004
+
+## Title
+
+Context Builder
+
+### Status
+
+Accepted
+
+### Decision
+
+Context construction is separated from prompt engineering.
+
+### Rationale
+
+Business services define business questions.
+
+The Context Builder determines the information required to answer them.
+
+### Consequences
+
+Improved AI quality.
+
+Reusable business context.
+
+Future RAG support.
+
+---
+
+# ADR-005
+
+## Title
+
+Workspace-Oriented User Experience
+
+### Status
+
+Accepted
+
+### Decision
+
+The Presentation Platform is organised around workspaces rather than pages.
+
+### Rationale
+
+Business users perform complete workflows within a single workspace.
+
+Artificial Intelligence becomes a collaborative participant rather than an external tool.
+
+### Consequences
+
+Lower cognitive load.
+
+Better usability.
+
+Simpler onboarding.
+
+---
+
+# ADR-006
+
+## Title
+
+Canonical Domain Objects
+
+### Status
+
+Accepted
+
+### Decision
+
+Every business concept has one canonical representation.
+
+### Rationale
+
+All platforms communicate through shared domain objects.
+
+### Consequences
+
+Consistent APIs.
+
+Reusable services.
+
+Simplified integrations.
+
+---
+
+# ADR-007
+
+## Title
+
+Event-Driven Internal Communication
+
+### Status
+
+Accepted
+
+### Decision
+
+Platform components communicate through business events whenever appropriate.
+
+### Rationale
+
+Loose coupling.
+
+Scalability.
+
+Independent evolution.
+
+### Consequences
+
+Future support for:
+
+- Service Bus
+- Event Grid
+- Kafka
+- CloudEvents
+
+---
+
+# ADR-008
+
+## Title
+
+Extension Framework
+
+### Status
+
+Accepted
+
+### Decision
+
+Platform capabilities are extended through plugins.
+
+### Rationale
+
+Connectors represent only one extension type.
+
+Future extensions include:
+
+- AI Providers
+- AI Agents
+- Knowledge Processors
+- Dashboard Widgets
+- Notification Channels
+
+### Consequences
+
+Stable Platform Core.
+
+Continuous extensibility.
+
+---
+
+# ADR-009
+
+## Title
+
+Evidence-Based Intelligence
+
+### Status
+
+Accepted
+
+### Decision
+
+Every business recommendation must be traceable to supporting evidence.
+
+### Rationale
+
+Trust depends on transparency.
+
+Business users must understand why recommendations were generated.
+
+### Consequences
+
+Complete explainability.
+
+Auditability.
+
+Regulatory readiness.
+
+---
+
+# ADR-010
+
+## Title
+
+AI Engineering as a Platform Capability
+
+### Status
+
+Accepted
+
+### Decision
+
+Artificial Intelligence is engineered through dedicated platform services.
+
+### Rationale
+
+Enterprise AI requires:
+
+- prompt lifecycle
+- evaluation
+- governance
+- continuous improvement
+
+rather than isolated API calls.
+
+### Consequences
+
+Consistent AI quality.
+
+Lower operational risk.
+
+Improved maintainability.
+
+---
+
+# Architectural Summary
+
+The platform is organised around five cooperating business platforms.
+
+```
+Business Platform
+
+↓
+
+Acquisition Platform
+
+↓
+
+Knowledge Platform
+
+↓
+
+Intelligence Platform
+
+↓
+
+Presentation Platform
+```
+
+Supported by:
+
+```
+Storage
+
+Backend Services
+
+Cross-Cutting Services
+
+AI Gateway
+
+Infrastructure
+```
+
+Together they form a modular, extensible and technology-independent enterprise platform.
+
+---
+
+# Future Roadmap
+
+The architecture is designed for continuous evolution.
+
+---
+
+## Phase 1 – Foundation
+
+Objectives
+
+- Core Platform
+- AI Gateway
+- Source Workspace
+- RSS Connectors
+- Monitoring Objectives
+- Knowledge Repository
+
+Primary outcome
+
+Operational MVP.
+
+---
+
+## Phase 2 – Enterprise Platform
+
+Objectives
+
+- REST Connectors
+- Email Connectors
+- ERP Connectors
+- Operational Dashboard
+- AI Evaluation
+- Semantic Search
+
+Primary outcome
+
+Enterprise-ready platform.
+
+---
+
+## Phase 3 – Advanced Intelligence
+
+Objectives
+
+- Knowledge Graph
+- Predictive Risk Assessment
+- Cross-source Correlation
+- Advanced Recommendations
+- AI Experimentation
+
+Primary outcome
+
+Enterprise Knowledge Intelligence.
+
+---
+
+## Phase 4 – Autonomous Platform
+
+Objectives
+
+- AI Agents
+- Multi-Agent Collaboration
+- Autonomous Monitoring
+- Intelligent Planning
+- Policy-Aware AI
+
+Primary outcome
+
+Autonomous enterprise intelligence platform.
+
+---
+
+# Long-Term Vision
+
+The platform is intended to become an enterprise knowledge intelligence platform capable of transforming heterogeneous information into explainable, reusable and actionable business intelligence.
+
+The architecture deliberately separates business capabilities from implementation technologies so that future innovations—including new AI models, cloud providers, databases and interaction channels—can be incorporated without redesigning the platform.
+
+---
+
+# Success Criteria
+
+The platform succeeds when it enables organisations to:
+
+- monitor information continuously
+- transform information into organisational knowledge
+- generate explainable business intelligence
+- support informed decision making
+- evolve continuously through AI and platform extensions
+
+---
+
+# Final Architectural Principles
+
+Throughout this document several guiding principles have emerged.
+
+- Business before technology.
+- Knowledge before intelligence.
+- Intelligence before automation.
+- AI as a governed engineering capability.
+- Evidence before recommendation.
+- Extensions instead of modifications.
+- Explainability before autonomy.
+- Workspaces instead of pages.
+- Canonical domain objects instead of implementation-specific models.
+- Stable architecture with evolving capabilities.
+
+These principles collectively define the architectural identity of the AI Knowledge & Risk Intelligence Platform.
+
+---
+
+# Closing Statement
+
+The AI Knowledge & Risk Intelligence Platform is designed as an extensible enterprise platform that combines software engineering, data engineering and AI engineering into a unified architecture.
+
+Its purpose is not simply to collect information or generate AI responses, but to create trusted organisational knowledge and transform that knowledge into explainable business intelligence.
+
+By separating business capabilities from implementation technologies and by treating Artificial Intelligence as a governed platform capability, the architecture provides a foundation for long-term evolution while preserving consistency, transparency and trust.
+
+---
+
+# Final Guiding Principle
+
+> **Collect information. Build knowledge. Generate intelligence. Support trusted decisions. Continuously evolve.**
+
+
+One final recommendation
+
+After reading the complete architecture we've created together, I would not leave it as a single 200-page document.
+
+I would split it into three complementary documents:
+
+Volume I – Architecture (what we've just written)
+
+For architects, customers, partners, Horizon proposals and technical leadership.
+
+Volume II – Technical Design Specification
+
+For developers. This would contain:
+
+REST endpoints
+TypeScript interfaces
+JSON schemas
+Cosmos DB collections
+Event contracts
+AI prompt templates
+Azure resources
+deployment configuration
+coding conventions
+Volume III – Developer Handbook
+
+For onboarding new developers and AI coding assistants:
+
+"How to build a connector"
+"How to add a workspace"
+"How to create a Knowledge Processor"
+"How to create a Risk Assessment Engine"
+"How to add a new AI model"
+Examples and best practices
+
+I think this three-volume structure would be much easier to maintain over time. The architecture (Volume I) would change relatively slowly, while the technical specification and developer handbook could evolve rapidly with the implementation without diluting the architectural vision.

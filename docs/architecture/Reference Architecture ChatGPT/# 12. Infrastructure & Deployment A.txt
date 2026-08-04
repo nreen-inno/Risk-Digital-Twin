@@ -1,0 +1,546 @@
+# 12. Infrastructure & Deployment Architecture
+
+---
+
+# Purpose
+
+The Infrastructure & Deployment Architecture defines how the AI Knowledge & Risk Intelligence Platform is hosted, operated, monitored and scaled.
+
+Unlike previous chapters, which describe business capabilities and software architecture, this chapter focuses on the physical execution environment required to operate the platform reliably.
+
+The infrastructure architecture remains independent from cloud vendors wherever practical while providing an Azure reference implementation.
+
+---
+
+# Infrastructure Goals
+
+The infrastructure shall provide:
+
+- reliability
+- scalability
+- security
+- observability
+- resilience
+- maintainability
+- cost efficiency
+- cloud portability
+
+---
+
+# Architectural Layers
+
+The infrastructure consists of four logical layers.
+
+```
+
+Presentation Layer
+
+↓
+
+Application Layer
+
+↓
+
+Data Layer
+
+↓
+
+Infrastructure Layer
+
+```
+
+Each layer may evolve independently.
+
+---
+
+# Reference Deployment
+
+```
+
+Users
+
+↓
+
+Presentation Platform
+
+↓
+
+REST APIs
+
+↓
+
+Business Services
+
+↓
+
+Acquisition Platform
+
+↓
+
+Knowledge Platform
+
+↓
+
+Intelligence Platform
+
+↓
+
+Storage Platform
+
+```
+
+All services communicate through well-defined interfaces.
+
+---
+
+# Azure Reference Architecture
+
+Current reference implementation.
+
+```
+
+React Frontend
+
+↓
+
+Azure App Service
+
+↓
+
+Node.js Backend
+
+↓
+
+Azure OpenAI
+
+↓
+
+Cosmos DB
+
+↓
+
+Blob Storage
+
+↓
+
+Key Vault
+
+↓
+
+Application Insights
+
+```
+
+Future deployment models may replace individual services without changing business architecture.
+
+---
+
+# Compute Layer
+
+Compute resources host platform services.
+
+Examples:
+
+- Web applications
+- Backend APIs
+- Background workers
+- Connector runtime
+- AI processing
+
+Preferred characteristics:
+
+- stateless
+- independently deployable
+- horizontally scalable
+
+---
+
+# AI Infrastructure
+
+Artificial Intelligence is an infrastructure capability.
+
+Current implementation:
+
+- Azure AI Foundry
+- Azure OpenAI
+
+Future implementations may include:
+
+- local LLMs
+- multiple AI providers
+- specialised models
+- hybrid AI
+
+The business architecture remains independent from AI providers.
+
+---
+
+# Storage Infrastructure
+
+Infrastructure components include:
+
+Configuration Storage
+
+Runtime Storage
+
+Knowledge Repository
+
+Intelligence Repository
+
+Blob Storage
+
+Semantic Index (future)
+
+Vector Store (future)
+
+Storage technologies may evolve independently.
+
+---
+
+# Networking
+
+Recommended logical network.
+
+```
+
+Internet
+
+↓
+
+Frontend
+
+↓
+
+API Gateway
+
+↓
+
+Backend Services
+
+↓
+
+Storage
+
+```
+
+Future deployments may introduce:
+
+- private networking
+- virtual networks
+- service mesh
+- internal APIs
+
+---
+
+# Secrets Management
+
+Secrets are never stored inside application configuration.
+
+Examples:
+
+- API keys
+- connector credentials
+- database passwords
+- certificates
+
+Current implementation:
+
+Azure Key Vault
+
+Future implementations may use alternative secret managers.
+
+---
+
+# Configuration Management
+
+Configuration categories include:
+
+Application configuration
+
+↓
+
+Connector configuration
+
+↓
+
+Environment configuration
+
+↓
+
+Secrets
+
+Each category should be managed independently.
+
+---
+
+# Background Processing
+
+Long-running operations execute asynchronously.
+
+Examples:
+
+- Connector Runtime
+- Knowledge Processing
+- Risk Assessment
+- Recommendation Generation
+
+Workers should be independently scalable.
+
+---
+
+# Scheduling
+
+Scheduled tasks include:
+
+- connector execution
+- health checks
+- cleanup
+- backup
+- maintenance
+
+Current implementation:
+
+Node scheduler
+
+Future implementations:
+
+Azure Functions
+
+Azure Container Apps Jobs
+
+Kubernetes CronJobs
+
+---
+
+# Scalability
+
+The architecture supports horizontal scaling.
+
+Candidate services include:
+
+Connector Runtime
+
+Knowledge Processing
+
+Risk Assessment
+
+Recommendation Generation
+
+Presentation APIs
+
+Scaling should not require application redesign.
+
+---
+
+# High Availability
+
+Critical services should support:
+
+- automatic restart
+- health monitoring
+- redundancy
+- graceful recovery
+
+Failures in one platform should not stop unrelated platform capabilities.
+
+---
+
+# Disaster Recovery
+
+The infrastructure should support:
+
+- automated backups
+- point-in-time recovery
+- geo-redundant storage
+- infrastructure recreation
+- configuration recovery
+
+Knowledge should be considered organisational memory and protected accordingly.
+
+---
+
+# Observability
+
+Infrastructure observability includes:
+
+- logs
+- metrics
+- traces
+- connector health
+- API performance
+- AI performance
+- storage metrics
+
+Application Insights provides the initial implementation.
+
+---
+
+# Logging Strategy
+
+Logs are divided into:
+
+Application Logs
+
+Connector Logs
+
+Knowledge Processing Logs
+
+AI Logs
+
+Security Logs
+
+Audit Logs
+
+Operational Logs
+
+Each log category supports different operational needs.
+
+---
+
+# CI/CD
+
+Deployment should be fully automated.
+
+Typical pipeline:
+
+```
+
+Developer
+
+↓
+
+Git
+
+↓
+
+Build
+
+↓
+
+Tests
+
+↓
+
+Deploy
+
+↓
+
+Smoke Tests
+
+↓
+
+Production
+
+```
+
+Infrastructure should be deployable through Infrastructure-as-Code.
+
+---
+
+# Security
+
+Infrastructure security includes:
+
+- identity
+- authentication
+- authorisation
+- encryption
+- network isolation
+- secrets
+- audit
+
+Business security policies remain independent from deployment technology.
+
+---
+
+# Cost Optimisation
+
+Infrastructure should minimise operational cost through:
+
+- shared services
+- elastic scaling
+- asynchronous processing
+- AI request optimisation
+- connector scheduling
+
+Cost efficiency is considered an architectural quality attribute.
+
+---
+
+# Future Infrastructure
+
+The architecture anticipates future technologies including:
+
+- Kubernetes
+- distributed workers
+- event streaming
+- semantic search infrastructure
+- Knowledge Graph databases
+- vector databases
+- autonomous AI agents
+
+Infrastructure evolution should not require redesign of business architecture.
+
+---
+
+# Reference Azure Services
+
+| Capability | Current Technology |
+|------------|-------------------|
+| Frontend | Azure App Service |
+| Backend | Azure App Service |
+| AI | Azure AI Foundry / Azure OpenAI |
+| Configuration | Cosmos DB |
+| Runtime | Cosmos DB |
+| Knowledge | Cosmos DB |
+| Intelligence | Cosmos DB |
+| Binary Storage | Azure Blob Storage |
+| Secrets | Azure Key Vault |
+| Monitoring | Application Insights |
+
+These mappings represent the current implementation rather than mandatory technology choices.
+
+---
+
+# Architectural Decisions
+
+The infrastructure is organised around business capabilities rather than deployment technologies.
+
+Application services remain stateless where possible.
+
+Infrastructure concerns are isolated from business logic.
+
+Deployment technology should remain replaceable.
+
+Observability is considered a first-class architectural capability.
+
+---
+
+# Guiding Principle
+
+> **Infrastructure should enable the platform, not define it. Business architecture must remain stable while deployment technologies evolve.**
+One more architectural improvement
+
+After writing all these chapters, I think there is one concept missing that would make this document comparable to enterprise architecture documentation from Microsoft or Siemens:
+
+Cross-cutting Platform Services
+
+Instead of scattering things like authentication, logging, notifications, audit, configuration, and AI access across multiple chapters, I would introduce a dedicated chapter (perhaps Chapter 13) called:
+
+Cross-cutting Platform Services
+
+It would define services used by every platform, for example:
+
+Identity & Access Service
+Audit Service
+Configuration Service
+Notification Service
+AI Gateway Service
+Logging Service
+Metrics Service
+File Service
+Search Service
+
+These are not business capabilities, but they are essential infrastructure services that every other platform depends on.
+
+I actually think this will make the architecture significantly cleaner than describing those concerns separately in Backend, API, and Infrastructure chapters. It also gives you a natural place later to introduce an AI Gateway, which could handle prompt templates, model routing, caching, cost control, and provider abstraction for all AI interactions across the platform. That will become increasingly valuable as the system grows and starts using multiple models or providers.

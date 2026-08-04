@@ -1,0 +1,550 @@
+# 17. Workspace Architecture & User Experience
+
+---
+
+# Purpose
+
+The Workspace Architecture defines how users interact with the AI Knowledge & Risk Intelligence Platform.
+
+Rather than organising the user interface around technical components or database objects, the platform is organised around business workspaces.
+
+A workspace represents a complete business activity where users, Artificial Intelligence and platform services collaborate to accomplish a specific task.
+
+The workspace becomes the primary interaction model of the platform.
+
+---
+
+# Design Philosophy
+
+Traditional enterprise applications organise functionality around pages.
+
+Examples include:
+
+- Connector Page
+- Configuration Page
+- Reports Page
+
+Users continuously navigate between unrelated screens.
+
+The AI Knowledge & Risk Intelligence Platform instead organises functionality around complete business workflows.
+
+Examples include:
+
+- Source Workspace
+- Monitoring Workspace
+- Knowledge Workspace
+- Risk Workspace
+
+Users remain within the same workspace throughout the lifecycle of a task.
+
+---
+
+# Workspace Principles
+
+Every workspace follows the same principles.
+
+## Business-Oriented
+
+A workspace represents a business capability rather than a software module.
+
+Examples:
+
+✓ Source Onboarding
+
+✓ Risk Assessment
+
+✓ Knowledge Exploration
+
+rather than
+
+✗ Connector Configuration
+
+✗ Database Objects
+
+✗ API Calls
+
+---
+
+## AI-First Collaboration
+
+Artificial Intelligence is an integrated participant within every workspace.
+
+Users collaborate with AI instead of switching to external AI tools.
+
+AI assists by:
+
+- explaining
+- recommending
+- validating
+- refining
+- generating
+- summarising
+
+The user remains in control of decisions.
+
+---
+
+## Progressive Disclosure
+
+The interface initially presents only the information required to complete the current task.
+
+Additional technical details become available only when needed.
+
+Example:
+
+```
+Source
+
+↓
+
+AI Recommendation
+
+↓
+
+Connector Proposal
+
+↓
+
+Advanced Configuration
+```
+
+Most users should never need to access advanced configuration.
+
+---
+
+## Workspace Continuity
+
+A business activity should remain within a single workspace whenever possible.
+
+The user should not navigate between multiple pages to complete one task.
+
+---
+
+# Workspace Model
+
+```
+Navigation
+
+↓
+
+Workspace
+
+↓
+
+Business Process
+
+↓
+
+Platform Services
+
+↓
+
+Platform APIs
+```
+
+Each workspace orchestrates business capabilities rather than implementing business logic.
+
+---
+
+# Primary Workspaces
+
+---
+
+# Dashboard Workspace
+
+Purpose
+
+Provide a high-level overview of the organisation.
+
+Typical information includes:
+
+- Monitoring Objectives
+- Active Sources
+- Active Risk Signals
+- Recommendations
+- Business Trends
+
+The Dashboard serves as the entry point for business users.
+
+---
+
+# Source Workspace
+
+Purpose
+
+Manage the complete lifecycle of an Information Source.
+
+Lifecycle
+
+```
+Create Source
+
+↓
+
+AI Onboarding
+
+↓
+
+Connector Proposal
+
+↓
+
+Review
+
+↓
+
+Testing
+
+↓
+
+Activation
+
+↓
+
+Monitoring
+
+↓
+
+Knowledge Generated
+
+↓
+
+Risk Signals
+```
+
+Capabilities
+
+- create source
+- AI-assisted onboarding
+- upload technical documentation
+- review connector proposal
+- refine proposal
+- approve proposal
+- test connector
+- activate connector
+- monitor runtime health
+
+The Source Workspace becomes the single location for all connector-related activities.
+
+---
+
+# Monitoring Workspace
+
+Purpose
+
+Configure organisational monitoring.
+
+Capabilities
+
+- Monitoring Objectives
+- Monitoring Profiles
+- Risk taxonomy mapping
+- Source assignments
+- Scope configuration
+
+---
+
+# Knowledge Workspace
+
+Purpose
+
+Explore organisational knowledge.
+
+Capabilities
+
+- browse Knowledge objects
+- search entities
+- inspect relationships
+- trace evidence
+- semantic search (future)
+- knowledge visualisation (future)
+
+Knowledge is presented independently from individual information sources.
+
+---
+
+# Risk Workspace
+
+Purpose
+
+Analyse business impact.
+
+Capabilities
+
+- browse Risk Signals
+- investigate evidence
+- review recommendations
+- compare historical trends
+- acknowledge or dismiss signals
+
+Every Risk Signal should provide direct access to the underlying Knowledge and evidence.
+
+---
+
+# Operational Workspace
+
+Purpose
+
+Support platform administration.
+
+Capabilities
+
+- connector health
+- AI Gateway monitoring
+- runtime monitoring
+- execution history
+- storage health
+- API performance
+
+This workspace is intended for administrators rather than business users.
+
+---
+
+# Administration Workspace
+
+Purpose
+
+Manage platform configuration.
+
+Capabilities
+
+- user management
+- permissions
+- platform settings
+- connector templates
+- AI configuration
+- audit logs
+
+---
+
+# AI Collaboration Model
+
+Artificial Intelligence participates within every workspace.
+
+Example:
+
+```
+User
+
+↓
+
+Workspace
+
+↓
+
+AI Assistant
+
+↓
+
+Business Service
+
+↓
+
+AI Gateway
+```
+
+The workspace never communicates directly with an LLM.
+
+All AI interaction is routed through the AI Gateway.
+
+---
+
+# Workspace Components
+
+Each workspace is composed of reusable business components.
+
+Examples include:
+
+- AI Conversation Panel
+- Evidence Viewer
+- Recommendation Panel
+- Activity Timeline
+- Search Panel
+- Properties Panel
+- Status Indicator
+- Validation Summary
+
+Components are shared across workspaces whenever possible.
+
+---
+
+# Navigation
+
+Navigation is organised around business capabilities.
+
+Suggested structure:
+
+```
+Dashboard
+
+Monitoring
+
+Information Sources
+
+Knowledge
+
+Risk Signals
+
+Reports
+
+Administration
+```
+
+Future workspaces may be introduced without redesigning the navigation model.
+
+---
+
+# State Management
+
+Three categories of state are recognised.
+
+Application State
+
+Shared configuration and user session.
+
+Workspace State
+
+Current business context.
+
+Component State
+
+Temporary user interaction.
+
+Business data always originates from backend services.
+
+---
+
+# User Roles
+
+Different user roles interact with different workspaces.
+
+Examples:
+
+Risk Manager
+
+Primary workspaces:
+
+- Dashboard
+- Monitoring
+- Risk
+
+Connector Developer
+
+Primary workspaces:
+
+- Source
+- Operational
+
+Administrator
+
+Primary workspaces:
+
+- Operational
+- Administration
+
+Researcher
+
+Primary workspaces:
+
+- Knowledge
+- Dashboard
+
+---
+
+# Explainability
+
+Every workspace should provide access to the complete evidence chain.
+
+Example:
+
+Recommendation
+
+↓
+
+Risk Signal
+
+↓
+
+Knowledge
+
+↓
+
+Raw Record
+
+↓
+
+Information Source
+
+Users should never encounter conclusions without supporting evidence.
+
+---
+
+# Future Evolution
+
+The Workspace Architecture supports additional interaction channels including:
+
+- Mobile applications
+- Microsoft Teams
+- Copilot extensions
+- Voice assistants
+- Future AI Agents
+
+All channels use the same backend services and AI Gateway.
+
+---
+
+# Architectural Decisions
+
+The platform is organised around business workspaces.
+
+Artificial Intelligence is integrated into every workspace.
+
+Business logic remains outside the presentation layer.
+
+Workspaces orchestrate user interaction but do not implement business rules.
+
+Reusable business components should be preferred over page-specific implementations.
+
+---
+
+# Guiding Principle
+
+> **Users work in business workspaces. Artificial Intelligence collaborates within those workspaces. The platform transforms complex processes into simple, explainable and goal-oriented user experiences.**
+
+I think we've discovered one final UX principle
+
+While writing this, I realized the platform actually has three types of workspaces, not one:
+
+1. Operational Workspaces
+
+Examples:
+
+Source Workspace
+Monitoring Workspace
+Administration
+
+These are used to configure and operate the platform.
+
+2. Intelligence Workspaces
+
+Examples:
+
+Knowledge Workspace
+Risk Workspace
+Recommendation Investigation
+
+These are used to understand and analyse information.
+
+3. Executive Workspaces
+
+Examples:
+
+Dashboard
+Executive Reports
+KPIs
+Trends
+
+These are used to make decisions.
+
+This separation is valuable because it aligns naturally with different user roles and levels of responsibility, while still using the same underlying platforms and services. It also provides a clear roadmap for expanding the UI without losing consistency.
+

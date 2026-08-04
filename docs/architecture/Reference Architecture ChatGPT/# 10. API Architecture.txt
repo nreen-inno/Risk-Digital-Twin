@@ -1,0 +1,472 @@
+# 10. API Architecture
+
+---
+
+# Purpose
+
+The API Architecture defines how platform capabilities are exposed to external consumers.
+
+The API is the primary contract between frontend applications, AI assistants, external systems and backend services.
+
+It is designed to expose business capabilities rather than database objects.
+
+The API should remain stable even if the internal implementation evolves.
+
+---
+
+# Design Principles
+
+The API follows several fundamental principles.
+
+## Business-Oriented
+
+Endpoints represent business concepts.
+
+Good examples:
+
+```
+/monitoring-objectives
+
+/information-sources
+
+/connectors
+
+/knowledge
+
+/risk-signals
+```
+
+Avoid exposing implementation details such as database collections or storage structures.
+
+---
+
+## Resource-Based
+
+Resources represent domain objects.
+
+Examples:
+
+- Monitoring Objective
+- Information Source
+- Connector
+- Knowledge
+- Risk Signal
+- Recommendation
+
+Each resource has its own lifecycle.
+
+---
+
+## Stateless
+
+Each request contains all information required for processing.
+
+No client session state is stored by the backend.
+
+---
+
+## Versioned
+
+API versions are explicit.
+
+Example:
+
+```
+/api/v1/...
+```
+
+Future incompatible changes create new versions rather than breaking existing clients.
+
+---
+
+## Consistent
+
+All resources follow the same conventions.
+
+GET
+
+POST
+
+PATCH
+
+DELETE
+
+Responses follow a common format.
+
+---
+
+# API Platforms
+
+The API is organised around business capabilities.
+
+```
+Business API
+
+Acquisition API
+
+Knowledge API
+
+Intelligence API
+
+Presentation API
+```
+
+Each platform exposes its own resources.
+
+---
+
+# Business API
+
+Purpose
+
+Manage business configuration.
+
+Resources:
+
+```
+/monitoring-objectives
+
+/monitoring-profiles
+
+/information-sources
+```
+
+---
+
+# Acquisition API
+
+Purpose
+
+Manage connector lifecycle.
+
+Resources:
+
+```
+/connector-proposals
+
+/connector-specifications
+
+/connector-definitions
+
+/connector-tests
+
+/connector-runtime
+```
+
+---
+
+# Knowledge API
+
+Purpose
+
+Access organisational knowledge.
+
+Resources:
+
+```
+/knowledge
+
+/knowledge/search
+
+/knowledge/{id}
+```
+
+Future extensions:
+
+```
+/knowledge/semantic-search
+
+/knowledge/similar
+```
+
+---
+
+# Intelligence API
+
+Purpose
+
+Business intelligence.
+
+Resources:
+
+```
+/risk-signals
+
+/recommendations
+
+/risk-assessments
+```
+
+---
+
+# Presentation API
+
+Purpose
+
+Optimised data for user interfaces.
+
+Resources:
+
+```
+/dashboard
+
+/analytics
+
+/statistics
+
+/activity
+```
+
+Presentation APIs aggregate information rather than exposing storage structures.
+
+---
+
+# Resource Relationships
+
+```
+Monitoring Objective
+
+↓
+
+Information Source
+
+↓
+
+Connector
+
+↓
+
+Knowledge
+
+↓
+
+Risk Signal
+
+↓
+
+Recommendation
+```
+
+The API mirrors the domain model.
+
+---
+
+# Common Response Format
+
+Every response follows a common structure.
+
+```json
+{
+  "success": true,
+  "data": { },
+  "metadata": { },
+  "links": { }
+}
+```
+
+Errors follow the same structure.
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "...",
+    "message": "...",
+    "details": []
+  }
+}
+```
+
+---
+
+# Pagination
+
+Collections should support:
+
+- page
+- pageSize
+- sorting
+- filtering
+
+Large datasets should never be returned in a single response.
+
+---
+
+# Filtering
+
+Filtering should be expressive.
+
+Examples:
+
+```
+?status=active
+
+?source=YLE
+
+?language=en
+
+?risk=operational
+```
+
+Future semantic filtering should be supported.
+
+---
+
+# Search
+
+Two search mechanisms are supported.
+
+Traditional filtering
+
+↓
+
+Metadata search
+
+Future
+
+↓
+
+Semantic search
+
+Semantic search should operate on the Knowledge Repository rather than raw documents.
+
+---
+
+# Long Running Operations
+
+Operations such as:
+
+- connector testing
+- connector generation
+- AI reasoning
+
+may execute asynchronously.
+
+The API returns:
+
+```
+Operation ID
+```
+
+Clients monitor progress.
+
+---
+
+# AI Operations
+
+AI is exposed as business operations rather than model endpoints.
+
+Example:
+
+```
+POST
+
+/recommend-connector
+```
+
+instead of
+
+```
+POST
+
+/openai/chat
+```
+
+Clients should never know which AI model is used.
+
+---
+
+# Security
+
+Every endpoint supports:
+
+- authentication
+- authorization
+- audit logging
+
+Sensitive configuration is never returned to clients.
+
+---
+
+# API Evolution
+
+New capabilities should be added without breaking existing clients.
+
+Preferred strategy:
+
+- add resources
+- add fields
+- avoid changing semantics
+
+---
+
+# Architectural Decisions
+
+The API exposes business capabilities.
+
+The API hides storage implementation.
+
+The API hides AI implementation.
+
+The API follows the domain model.
+
+The API remains stable while internal services evolve.
+
+---
+
+# Guiding Principle
+
+> **Expose business capabilities rather than implementation details.**
+
+
+
+One architectural improvement
+
+I would make one major simplification compared to most REST APIs.
+
+Instead of exposing dozens of connector-specific endpoints like:
+
+POST /connector-tests
+
+POST /connector-runtime
+
+POST /connector-definition
+
+I would expose actions on the resource:
+
+POST /connectors/{id}/test
+
+POST /connectors/{id}/activate
+
+POST /connectors/{id}/disable
+
+POST /connectors/{id}/recommend
+
+POST /connectors/{id}/regenerate
+
+Similarly:
+
+POST /knowledge/{id}/reprocess
+
+POST /knowledge/{id}/reclassify
+
+POST /knowledge/{id}/explain
+
+and:
+
+POST /risk-signals/{id}/reassess
+
+POST /risk-signals/{id}/dismiss
+
+This keeps the API resource-oriented, while still supporting rich business operations.
+
+Where I think the architecture is heading
+
+At this point, I think the complete platform naturally consists of four architectural views:
+
+Business View — objectives, sources, risks, recommendations.
+Processing View — acquisition → knowledge → intelligence.
+Implementation View — backend services, APIs, storage, deployment.
+Operational View — monitoring, health, logging, scaling, security.
+
+Those four views are exactly how enterprise architecture is usually documented. I would use them to organize the final document, making it much easier for different audiences to navigate: business stakeholders focus on the Business View, developers on the Implementation View, and operators on the Operational View.

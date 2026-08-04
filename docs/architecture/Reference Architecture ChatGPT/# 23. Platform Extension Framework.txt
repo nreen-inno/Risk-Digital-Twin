@@ -1,0 +1,499 @@
+# 23. Platform Extension Framework & Connector SDK
+
+---
+
+# Purpose
+
+The Platform Extension Framework defines how new capabilities are added to the AI Knowledge & Risk Intelligence Platform without modifying the core architecture.
+
+The framework enables developers, partners and future AI coding assistants to extend the platform by implementing well-defined extension points.
+
+Connectors represent the first implementation of this framework, but the same architectural principles apply to future extension types such as AI Providers, Knowledge Processors, AI Agents and Notification Channels.
+
+---
+
+# Design Principles
+
+The Extension Framework follows several architectural principles.
+
+- Open for extension
+- Closed for modification
+- Strong contracts
+- Canonical data model
+- Independent deployment
+- Version compatibility
+- Automated validation
+- Self-description
+
+Extensions should integrate with the platform rather than modify it.
+
+---
+
+# Extension Architecture
+
+```
+                Platform Core
+                      │
+                      ▼
+            Extension Framework
+                      │
+      ┌───────────────┼────────────────┐
+      ▼               ▼                ▼
+ Connectors      AI Providers     AI Agents
+      │               │                │
+      ▼               ▼                ▼
+ Knowledge       Search Engines   Notification
+Processors                        Channels
+```
+
+The Platform Core remains unchanged while new extensions are added.
+
+---
+
+# Extension Types
+
+## Connector Extensions
+
+Purpose
+
+Acquire information from external or internal systems.
+
+Examples
+
+- RSS
+- REST
+- Database
+- Email
+- MQTT
+- Azure IoT Hub
+- OPC-UA
+- File Import
+
+Output
+
+Raw Records
+
+---
+
+## AI Provider Extensions
+
+Purpose
+
+Connect the AI Gateway to AI providers.
+
+Examples
+
+- Azure OpenAI
+- Azure AI Foundry
+- OpenAI
+- Anthropic
+- Gemini
+- Local Models
+
+Output
+
+AI Responses
+
+---
+
+## Knowledge Processor Extensions
+
+Purpose
+
+Transform Raw Records into Knowledge.
+
+Examples
+
+- Entity Extraction
+- Event Detection
+- Relationship Extraction
+- Translation
+- Language Detection
+
+Output
+
+Knowledge Objects
+
+---
+
+## Intelligence Extensions
+
+Purpose
+
+Create business intelligence.
+
+Examples
+
+- Risk Assessment
+- Recommendation Engines
+- Trend Detection
+- Predictive Analytics
+
+Output
+
+Risk Signals
+
+Recommendations
+
+---
+
+## Notification Extensions
+
+Purpose
+
+Deliver platform notifications.
+
+Examples
+
+- Email
+- Microsoft Teams
+- Slack
+- SMS
+- Webhooks
+
+---
+
+## Dashboard Extensions
+
+Purpose
+
+Provide reusable dashboard components.
+
+Examples
+
+- KPI Widgets
+- Trend Charts
+- Heat Maps
+- Timeline Views
+- Knowledge Graph Views
+
+---
+
+# Connector SDK
+
+The Connector SDK provides a standard framework for implementing connectors.
+
+Every connector follows the same lifecycle.
+
+```
+Connector Definition
+
+↓
+
+Validation
+
+↓
+
+Test
+
+↓
+
+Activation
+
+↓
+
+Execution
+
+↓
+
+Monitoring
+
+↓
+
+Retirement
+```
+
+---
+
+# Connector Responsibilities
+
+A connector is responsible for:
+
+- connecting
+- authenticating
+- collecting data
+- parsing
+- mapping
+- producing Raw Records
+
+A connector is NOT responsible for:
+
+- Knowledge Processing
+- Risk Assessment
+- AI reasoning
+- Recommendations
+- Dashboard logic
+
+---
+
+# Connector Interface
+
+Every connector implements the same interface.
+
+```typescript
+interface Connector {
+
+    validateConfiguration()
+
+    discoverCapabilities()
+
+    testConnection()
+
+    fetch()
+
+    parse()
+
+    mapToRawRecords()
+
+    health()
+
+}
+```
+
+Future methods may include:
+
+- discoverSchema()
+- estimateRateLimits()
+- incrementalSync()
+
+---
+
+# Connector Manifest
+
+Every connector provides a manifest describing its capabilities.
+
+Example
+
+```json
+{
+  "name": "YLE RSS Connector",
+  "version": "1.0",
+  "adapter": "RSS",
+  "supportsAuthentication": false,
+  "supportsIncrementalSync": true,
+  "supportedLanguages": ["en", "fi"],
+  "output": "RawRecord"
+}
+```
+
+The platform uses the manifest during onboarding and validation.
+
+---
+
+# Connector Registration
+
+A connector becomes available through registration.
+
+Registration includes:
+
+- unique identifier
+- version
+- capabilities
+- supported authentication methods
+- supported schedules
+- supported output types
+
+Registration should be automatic.
+
+---
+
+# Connector Testing
+
+Every connector must pass automated validation before activation.
+
+Validation includes:
+
+- connectivity
+- authentication
+- schema discovery
+- parser validation
+- duplicate detection
+- sample Raw Record generation
+
+Testing should be repeatable and independent of business logic.
+
+---
+
+# Connector Versioning
+
+Connector implementations are versioned.
+
+```
+YLE RSS
+
+↓
+
+v1.0
+
+↓
+
+v1.1
+
+↓
+
+v2.0
+```
+
+Historical executions remain associated with the connector version used at execution time.
+
+---
+
+# Extension Discovery
+
+The platform should discover extensions automatically.
+
+Example
+
+```
+Platform Startup
+
+↓
+
+Extension Discovery
+
+↓
+
+Capability Registration
+
+↓
+
+Platform Ready
+```
+
+Developers should not modify platform code when installing a new extension.
+
+---
+
+# Extension Metadata
+
+Every extension provides metadata.
+
+Examples
+
+- identifier
+- version
+- owner
+- description
+- supported capabilities
+- dependencies
+- compatibility
+- documentation URL
+
+---
+
+# AI Coding Assistant Support
+
+Extensions should expose sufficient metadata to allow AI coding assistants to:
+
+- generate configuration
+- generate documentation
+- validate implementations
+- generate test cases
+- explain capabilities
+
+The Extension Framework is designed to support AI-assisted software development.
+
+---
+
+# Development Guidelines
+
+Every extension should:
+
+- implement only one business capability
+- use canonical domain objects
+- avoid platform-specific assumptions
+- remain stateless where possible
+- expose health information
+- generate structured logs
+- support automated testing
+
+---
+
+# Example: YLE RSS Connector
+
+```
+Information Source
+
+↓
+
+YLE RSS Connector
+
+↓
+
+RSS Adapter
+
+↓
+
+Raw Record
+
+↓
+
+Knowledge Platform
+```
+
+Responsibilities:
+
+- retrieve RSS feed
+- parse XML
+- map articles to Raw Records
+- preserve source metadata
+- report execution status
+
+The connector does not classify articles or assess risk.
+
+---
+
+# Future Extension Points
+
+The framework anticipates future extensions including:
+
+- AI Agents
+- Knowledge Graph Processors
+- Semantic Search Providers
+- Predictive Models
+- Simulation Engines
+- Workflow Automation
+- External Decision Engines
+
+No changes to the Platform Core should be required.
+
+---
+
+# Architectural Decisions
+
+Platform capabilities are extended through plugins rather than modifications.
+
+Connectors represent one extension type within a broader framework.
+
+Extensions communicate using canonical domain objects.
+
+The platform remains open for future AI and analytics capabilities.
+
+Extension lifecycle management is standardised across all extension types.
+
+---
+
+# Guiding Principle
+
+> **The Platform Core remains stable while capabilities evolve through independently developed extensions.**
+
+The Platform Extension Framework enables continuous platform evolution without compromising architectural integrity, making the AI Knowledge & Risk Intelligence Platform adaptable to new technologies, providers and business requirements.
+Platform Core
+│
+├── Business Extensions
+│
+├── Connector Extensions
+│
+├── AI Provider Extensions
+│
+├── Knowledge Processor Extensions
+│
+├── Intelligence Extensions
+│
+├── AI Agent Extensions
+│
+├── Notification Extensions
+│
+├── Dashboard Extensions
+│
+└── Future Extensions

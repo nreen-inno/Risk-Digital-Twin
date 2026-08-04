@@ -1,0 +1,497 @@
+# 14. Operational Architecture & Observability
+
+---
+
+# Purpose
+
+The Operational Architecture defines how the platform is monitored, maintained and operated in production.
+
+The purpose is to ensure that platform health, connector execution, knowledge processing, AI services and business intelligence remain observable, measurable and explainable throughout the entire lifecycle.
+
+Operational capabilities are considered first-class architectural components rather than implementation details.
+
+---
+
+# Operational Objectives
+
+The platform shall provide:
+
+- complete operational visibility
+- proactive monitoring
+- health assessment
+- performance metrics
+- diagnostics
+- auditing
+- operational analytics
+- automated alerting
+- incident investigation
+- continuous improvement
+
+---
+
+# Operational Architecture
+
+```
+Infrastructure
+
+↓
+
+Platform Services
+
+↓
+
+Operational Services
+
+↓
+
+Dashboards
+
+↓
+
+Operators
+```
+
+Business users and system operators have different operational views.
+
+---
+
+# Operational Domains
+
+The platform monitors five operational domains.
+
+```
+Infrastructure
+
+↓
+
+Acquisition
+
+↓
+
+Knowledge
+
+↓
+
+Intelligence
+
+↓
+
+Presentation
+```
+
+Each domain exposes health independently.
+
+---
+
+# Infrastructure Health
+
+Examples:
+
+- CPU
+- Memory
+- Storage
+- Network
+- Availability
+- AI Provider
+- Database
+
+These metrics are infrastructure specific.
+
+---
+
+# Acquisition Health
+
+Monitors:
+
+- Connector status
+- Execution duration
+- Success rate
+- Last execution
+- Next execution
+- Retry count
+- Parsing failures
+- Rate limits
+
+Typical dashboard:
+
+```
+Connector
+
+Healthy
+
+Last run
+
+Records
+
+Failures
+```
+
+---
+
+# Knowledge Health
+
+Monitors:
+
+- Raw Records received
+- Knowledge generated
+- Processing latency
+- Duplicate detection
+- Translation quality
+- Entity extraction quality
+- Confidence distribution
+
+The Knowledge Platform should expose its own operational metrics.
+
+---
+
+# Intelligence Health
+
+Monitors:
+
+- Risk Signals generated
+- Recommendations generated
+- Assessment latency
+- Confidence
+- AI utilisation
+
+Examples:
+
+```
+Knowledge
+
+↓
+
+Risk Signal
+
+↓
+
+Recommendation
+```
+
+Average processing time.
+
+---
+
+# AI Gateway Health
+
+The AI Gateway exposes operational information.
+
+Examples:
+
+- Requests
+- Tokens
+- Cost
+- Cache hit ratio
+- Provider latency
+- Provider failures
+- Model usage
+- Prompt versions
+
+The Gateway becomes the operational centre of AI.
+
+---
+
+# API Health
+
+Monitors:
+
+- response time
+- throughput
+- errors
+- availability
+
+Each API endpoint exposes health independently.
+
+---
+
+# Storage Health
+
+Monitors:
+
+- Cosmos performance
+- Blob usage
+- Repository growth
+- Backup status
+
+Future:
+
+Semantic Index
+
+Vector Store
+
+Knowledge Graph
+
+---
+
+# Business Health
+
+Operational metrics should not be limited to infrastructure.
+
+Examples:
+
+- Active Monitoring Objectives
+- Active Information Sources
+- Active Connectors
+- Knowledge Objects
+- Risk Signals
+- Recommendations
+
+These indicators describe business activity.
+
+---
+
+# Logging
+
+Logs are divided into categories.
+
+Application
+
+Connector
+
+Knowledge
+
+AI Gateway
+
+Risk Assessment
+
+Security
+
+Audit
+
+Infrastructure
+
+Each category follows a common format.
+
+---
+
+# Correlation IDs
+
+Every operation receives a Correlation ID.
+
+Example:
+
+```
+Connector
+
+↓
+
+Knowledge
+
+↓
+
+Risk Signal
+
+↓
+
+Recommendation
+```
+
+The Correlation ID remains unchanged.
+
+This enables complete traceability.
+
+---
+
+# Metrics
+
+Examples:
+
+Infrastructure
+
+↓
+
+CPU
+
+Memory
+
+Storage
+
+---
+
+Platform
+
+↓
+
+Connectors
+
+Knowledge
+
+Risk Signals
+
+Recommendations
+
+---
+
+AI
+
+↓
+
+Prompt
+
+Model
+
+Tokens
+
+Cost
+
+Latency
+
+---
+
+Business
+
+↓
+
+Objectives
+
+Sources
+
+Signals
+
+Alerts
+
+---
+
+# Alerting
+
+Alerts are generated for:
+
+Connector failures
+
+Repeated retries
+
+Knowledge processing failures
+
+AI provider failures
+
+Storage issues
+
+Security events
+
+High operational cost
+
+Alerts should include:
+
+severity
+
+timestamp
+
+recommended action
+
+---
+
+# Audit
+
+Every important action should be auditable.
+
+Examples:
+
+Connector approved
+
+Connector activated
+
+Monitoring Objective changed
+
+Prompt version changed
+
+Recommendation accepted
+
+Audit records are immutable.
+
+---
+
+# Explainability
+
+Operational users should always be able to answer:
+
+What happened?
+
+↓
+
+Why?
+
+↓
+
+Where?
+
+↓
+
+Which component?
+
+↓
+
+What evidence?
+
+This principle applies to operational incidents as well as business recommendations.
+
+---
+
+# Future Evolution
+
+Future capabilities include:
+
+Predictive operational monitoring
+
+AI-assisted diagnostics
+
+Automatic incident correlation
+
+Self-healing connectors
+
+Autonomous optimisation
+
+Operational AI agents
+
+---
+
+# Architectural Decisions
+
+Operations are treated as a platform capability.
+
+Health is measured independently for each platform.
+
+AI operations are monitored through the AI Gateway.
+
+Business metrics complement technical metrics.
+
+Operational visibility extends from infrastructure to recommendations.
+
+---
+
+# Guiding Principle
+
+> **If a capability cannot be observed, measured and explained, it cannot be trusted.**
+
+Operational Architecture provides continuous visibility into every layer of the platform while preserving the separation between infrastructure, knowledge and business intelligence.
+
+I think we've now reached another important insight
+
+While writing this, I realized there are actually two completely different dashboards in your product.
+
+1. Business Dashboard
+
+Used by Risk Managers.
+
+Shows:
+
+Monitoring Objectives
+Risk Signals
+Recommendations
+Trends
+Business KPIs
+2. Operational Dashboard
+
+Used by administrators and developers.
+
+Shows:
+
+Connector health
+AI Gateway
+Knowledge processing
+Runtime
+Storage
+API latency
+Cost
+Logs
+
+These should be completely separate. A Risk Manager should never see CPU usage or token consumption, and an operator doesn't need to start from business recommendations.

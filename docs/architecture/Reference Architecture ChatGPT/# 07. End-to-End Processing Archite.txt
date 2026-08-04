@@ -1,0 +1,334 @@
+# 07. End-to-End Processing Architecture
+
+---
+
+# Purpose
+
+This chapter describes how information flows through the platform from its original source to actionable business intelligence.
+
+Rather than focusing on individual components, this chapter explains how the complete platform operates as an integrated system.
+
+It provides the conceptual processing pipeline that connects all architectural platforms.
+
+---
+
+# End-to-End Processing Pipeline
+
+```
+Business Platform
+        │
+        ▼
+Acquisition Platform
+        │
+        ▼
+Knowledge Platform
+        │
+        ▼
+Intelligence Platform
+        │
+        ▼
+Presentation Platform
+```
+
+Each platform performs a clearly defined transformation.
+
+---
+
+# Step 1 — Business Configuration
+
+The process begins with business users.
+
+Business users define:
+
+- Monitoring Objectives
+- Information Sources
+- Monitoring Profiles
+
+These objects describe **what** the organisation wants to monitor.
+
+No technical implementation exists yet.
+
+---
+
+# Step 2 — AI Connector Design
+
+For every Information Source the platform generates a Connector Proposal.
+
+The proposal contains:
+
+- recommended connection method
+- technical assumptions
+- business scope
+- monitoring configuration
+- validation plan
+
+The user may:
+
+- accept
+- modify
+- regenerate
+
+Once accepted, the proposal becomes a Connector Specification.
+
+---
+
+# Step 3 — Connector Generation
+
+The platform automatically generates a Connector Definition.
+
+The Connector Definition contains executable runtime information.
+
+Examples include:
+
+- adapter type
+- polling schedule
+- parser
+- authentication
+- field mapping
+
+The Definition becomes part of the Acquisition Platform.
+
+---
+
+# Step 4 — Connector Validation
+
+Before activation the platform performs automated testing.
+
+Validation includes:
+
+- endpoint availability
+- authentication
+- parser validation
+- schema discovery
+- sample data collection
+- duplicate detection
+
+Successful validation produces a Connector Test Result.
+
+---
+
+# Step 5 — Information Acquisition
+
+Active connectors execute according to schedule.
+
+Runtime responsibilities include:
+
+- connecting
+- downloading
+- parsing
+- mapping
+
+Every collected item becomes a Raw Record.
+
+The runtime does not perform business interpretation.
+
+---
+
+# Step 6 — Knowledge Processing
+
+Raw Records are submitted to the Knowledge Platform.
+
+Knowledge Processing performs:
+
+- language detection
+- translation
+- metadata normalisation
+- entity recognition
+- event extraction
+- relationship extraction
+- topic classification
+
+The output is a reusable Knowledge object.
+
+Knowledge Processing may combine:
+
+- AI
+- deterministic rules
+- NLP services
+- future processing technologies
+
+The platform stores Knowledge rather than AI-specific outputs.
+
+---
+
+# Step 7 — Risk Assessment
+
+Knowledge objects are evaluated against active Monitoring Objectives.
+
+The Risk Assessment Service combines:
+
+- Knowledge
+- Monitoring Objectives
+- Monitoring Profiles
+- Enterprise Risk Taxonomy
+- Business Rules
+
+The output is one or more Risk Signals.
+
+One Knowledge object may generate multiple Risk Signals.
+
+---
+
+# Step 8 — Recommendation Generation
+
+Recommendations are generated from Risk Signals.
+
+Examples include:
+
+- notify stakeholders
+- increase monitoring frequency
+- contact supplier
+- investigate further
+
+Recommendations always reference:
+
+- Risk Signal
+- Knowledge
+- Evidence
+
+---
+
+# Step 9 — Presentation
+
+The Presentation Platform displays:
+
+- dashboards
+- alerts
+- trends
+- evidence
+- recommendations
+
+The Presentation Platform never communicates directly with connectors.
+
+It consumes Risk Signals and Recommendations only.
+
+---
+
+# Processing Responsibilities
+
+| Platform | Input | Output |
+|-----------|--------|---------|
+| Business Platform | User decisions | Configuration |
+| Acquisition Platform | Information Sources | Raw Records |
+| Knowledge Platform | Raw Records | Knowledge |
+| Intelligence Platform | Knowledge | Risk Signals & Recommendations |
+| Presentation Platform | Risk Signals | Decision Support |
+
+---
+
+# Information Flow
+
+```
+Information Source
+
+↓
+
+Connector
+
+↓
+
+Raw Record
+
+↓
+
+Knowledge
+
+↓
+
+Risk Signal
+
+↓
+
+Recommendation
+
+↓
+
+Dashboard
+```
+
+Each stage represents a transformation.
+
+No stage should bypass another.
+
+---
+
+# Traceability
+
+Every Recommendation is fully traceable.
+
+```
+Recommendation
+
+↓
+
+Risk Signal
+
+↓
+
+Knowledge
+
+↓
+
+Raw Record
+
+↓
+
+Connector Execution
+
+↓
+
+Connector Definition
+
+↓
+
+Information Source
+```
+
+This provides complete explainability.
+
+---
+
+# Processing Independence
+
+Each platform is independent.
+
+For example:
+
+The Knowledge Platform can evolve without modifying connectors.
+
+The Intelligence Platform can adopt new AI models without modifying the Knowledge Platform.
+
+Presentation can evolve independently from business logic.
+
+This separation reduces coupling and simplifies long-term evolution.
+
+---
+
+# Future Evolution
+
+The architecture supports future capabilities including:
+
+- Knowledge Graph
+- Semantic Search
+- Autonomous AI Agents
+- Predictive Risk Analysis
+- Cross-source reasoning
+- Human feedback loops
+
+These capabilities extend existing platforms rather than replacing them.
+
+---
+
+# Guiding Principle
+
+> **Collect information once. Build knowledge once. Reuse knowledge many times. Generate intelligence where it creates business value.**
+
+Business Intent
+        ↓
+Information
+        ↓
+Knowledge
+        ↓
+Intelligence
+        ↓
+Decision Support

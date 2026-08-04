@@ -1,0 +1,703 @@
+# 19. Reference Business Scenarios
+
+---
+
+# Purpose
+
+This chapter demonstrates how the AI Knowledge & Risk Intelligence Platform operates in realistic business scenarios.
+
+Unlike functional use cases, these scenarios validate the interaction between architectural platforms, services, canonical data objects and the AI Gateway.
+
+Each scenario follows complete end-to-end processing from user interaction through knowledge generation and business intelligence.
+
+The scenarios serve as reference implementations for developers, solution architects and AI coding assistants.
+
+---
+
+# Scenario Structure
+
+Every scenario documents:
+
+- Business Goal
+- Participating Platforms
+- Primary Actors
+- Business Flow
+- AI Gateway Interaction
+- Domain Objects
+- Platform Events
+- Result
+
+---
+
+# UC-01 Information Source Onboarding (YLE News)
+
+## Business Goal
+
+A Risk Manager wants to monitor English-language news published by YLE for geopolitical, regulatory and economic events relevant to shipbuilding.
+
+---
+
+## Participating Platforms
+
+- Business Platform
+- Acquisition Platform
+- AI Gateway
+- Presentation Platform
+
+---
+
+## Primary Actor
+
+Risk Manager
+
+---
+
+## Flow
+
+```
+Create Information Source
+
+↓
+
+Select
+"Let AI analyse the source"
+
+↓
+
+AI Gateway analyses YLE
+
+↓
+
+Connector Proposal generated
+
+↓
+
+User reviews proposal
+
+↓
+
+Optional refinements
+
+↓
+
+Connector Specification approved
+
+↓
+
+Connector Definition generated
+
+↓
+
+Connector Test
+
+↓
+
+Connector activated
+```
+
+---
+
+## AI Gateway Responsibilities
+
+- analyse provider
+- recommend connector type
+- identify assumptions
+- estimate confidence
+- generate Connector Proposal
+
+---
+
+## Domain Objects
+
+InformationSource
+
+↓
+
+ConnectorProposal
+
+↓
+
+ConnectorSpecification
+
+↓
+
+ConnectorDefinition
+
+---
+
+## Events
+
+InformationSourceCreated
+
+ConnectorProposalGenerated
+
+ConnectorApproved
+
+ConnectorActivated
+
+---
+
+## Result
+
+Operational connector ready for execution.
+
+---
+
+# UC-02 Connector Runtime Execution
+
+## Business Goal
+
+Automatically collect new information.
+
+---
+
+## Flow
+
+```
+Scheduler
+
+↓
+
+Connector Runtime
+
+↓
+
+RSS Adapter
+
+↓
+
+YLE RSS
+
+↓
+
+Raw Record
+
+↓
+
+Knowledge Platform
+```
+
+---
+
+## Domain Objects
+
+ConnectorExecution
+
+↓
+
+RawRecord
+
+---
+
+## Events
+
+ConnectorExecutionStarted
+
+RawRecordCreated
+
+ConnectorExecutionCompleted
+
+---
+
+## Result
+
+New information enters the platform.
+
+---
+
+# UC-03 Knowledge Generation
+
+## Business Goal
+
+Transform collected information into reusable organisational knowledge.
+
+---
+
+## Flow
+
+```
+Raw Record
+
+↓
+
+Knowledge Processing
+
+↓
+
+Entity Recognition
+
+↓
+
+Relationship Extraction
+
+↓
+
+Knowledge Repository
+```
+
+---
+
+## AI Gateway Responsibilities
+
+- language detection
+- summarisation
+- entity extraction
+- classification
+
+---
+
+## Domain Objects
+
+RawRecord
+
+↓
+
+Knowledge
+
+---
+
+## Events
+
+KnowledgeCreated
+
+KnowledgeIndexed
+
+---
+
+## Result
+
+Reusable Knowledge Object stored.
+
+---
+
+# UC-04 Risk Assessment
+
+## Business Goal
+
+Determine business impact.
+
+---
+
+## Flow
+
+```
+Knowledge
+
+↓
+
+Monitoring Objectives
+
+↓
+
+Risk Assessment
+
+↓
+
+Risk Signals
+```
+
+---
+
+## AI Gateway
+
+Context Builder
+
+↓
+
+Risk Assessment Prompt
+
+↓
+
+Model Router
+
+↓
+
+Provider
+
+---
+
+## Domain Objects
+
+Knowledge
+
+↓
+
+RiskSignal
+
+---
+
+## Events
+
+RiskSignalGenerated
+
+---
+
+## Result
+
+Business impact identified.
+
+---
+
+# UC-05 Recommendation Generation
+
+## Business Goal
+
+Suggest appropriate actions.
+
+---
+
+## Flow
+
+```
+Risk Signal
+
+↓
+
+Recommendation Service
+
+↓
+
+Recommendation
+
+↓
+
+Dashboard
+```
+
+---
+
+## Example Recommendation
+
+Increase monitoring frequency.
+
+Notify Project Manager.
+
+Review supplier contracts.
+
+---
+
+## Domain Objects
+
+RiskSignal
+
+↓
+
+Recommendation
+
+---
+
+## Events
+
+RecommendationGenerated
+
+---
+
+## Result
+
+Actionable recommendation presented.
+
+---
+
+# UC-06 Evidence Investigation
+
+## Business Goal
+
+Understand why a recommendation was generated.
+
+---
+
+## Flow
+
+```
+Recommendation
+
+↓
+
+Risk Signal
+
+↓
+
+Knowledge
+
+↓
+
+Raw Record
+
+↓
+
+Information Source
+```
+
+---
+
+## Result
+
+Complete explainability.
+
+---
+
+# UC-07 Multiple Monitoring Objectives
+
+## Business Goal
+
+Reuse Knowledge across multiple business contexts.
+
+---
+
+## Flow
+
+```
+Knowledge
+
+↓
+
+Supplier Stability
+
+↓
+
+Risk Signal A
+
+Knowledge
+
+↓
+
+Logistics
+
+↓
+
+Risk Signal B
+
+Knowledge
+
+↓
+
+Political Risk
+
+↓
+
+Risk Signal C
+```
+
+---
+
+## Result
+
+Single Knowledge object reused multiple times.
+
+---
+
+# UC-08 Connector Evolution
+
+## Business Goal
+
+Improve connector after deployment.
+
+---
+
+## Flow
+
+```
+Existing Connector
+
+↓
+
+AI Review
+
+↓
+
+Updated Proposal
+
+↓
+
+Approval
+
+↓
+
+New Version
+
+↓
+
+Deployment
+```
+
+Historical executions remain unchanged.
+
+---
+
+# UC-09 Human + AI Collaboration
+
+## Business Goal
+
+Improve AI recommendation.
+
+---
+
+## Flow
+
+```
+AI Proposal
+
+↓
+
+Human Comments
+
+↓
+
+AI Refinement
+
+↓
+
+Approval
+```
+
+AI assists.
+
+Human decides.
+
+---
+
+# UC-10 Future Autonomous Agent
+
+## Business Goal
+
+Automatically reassess geopolitical developments.
+
+---
+
+## Flow
+
+```
+KnowledgeCreated
+
+↓
+
+Political Agent
+
+↓
+
+Risk Assessment
+
+↓
+
+Recommendation
+
+↓
+
+Notify Users
+```
+
+The same architecture supports future autonomous agents without modification.
+
+---
+
+# Cross-Scenario Architecture
+
+All scenarios follow the same processing pipeline.
+
+```
+Business
+
+↓
+
+Acquisition
+
+↓
+
+Knowledge
+
+↓
+
+Intelligence
+
+↓
+
+Presentation
+```
+
+AI interaction always passes through the AI Gateway.
+
+---
+
+# Canonical Objects Used
+
+MonitoringObjective
+
+InformationSource
+
+ConnectorProposal
+
+ConnectorSpecification
+
+ConnectorDefinition
+
+ConnectorExecution
+
+RawRecord
+
+Knowledge
+
+RiskSignal
+
+Recommendation
+
+---
+
+# Common Platform Events
+
+InformationSourceCreated
+
+ConnectorProposalGenerated
+
+ConnectorActivated
+
+RawRecordCreated
+
+KnowledgeCreated
+
+RiskSignalGenerated
+
+RecommendationGenerated
+
+---
+
+# Architectural Validation
+
+These scenarios demonstrate that:
+
+- business platforms remain independent
+- AI is accessed only through the AI Gateway
+- knowledge is reusable
+- recommendations remain traceable
+- connectors remain technology independent
+- business logic remains outside the Presentation Platform
+
+---
+
+# Guiding Principle
+
+> **Every business scenario follows the same architectural pipeline, ensuring consistency, traceability and reuse across the entire platform.**
+I think we've reached the final conceptual breakthrough
+
+While writing this chapter, I realized the Context Builder is actually the heart of the entire platform, not the LLM.
+
+The LLM is interchangeable.
+
+The Context Builder is not.
+
+It becomes the component that understands what information is required for a business decision.
+
+I would actually expand it into its own subsystem:
+
+Context Builder
+│
+├── Knowledge Retriever
+├── Monitoring Objective Resolver
+├── Risk Taxonomy Resolver
+├── Semantic Search
+├── Conversation Memory
+├── Evidence Collector
+├── Prompt Variable Resolver
+├── Context Optimizer
+└── Context Validator
+
+This is where your platform becomes fundamentally different from a generic chatbot. Instead of simply sending user prompts to an LLM, it constructs a rich, governed, business-specific context package that enables consistent and explainable AI reasoning. I think this is one of the strongest architectural ideas we've developed across the entire document.

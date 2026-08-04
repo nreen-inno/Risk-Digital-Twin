@@ -1,0 +1,604 @@
+# 21. AI Engineering & Prompt Engineering Architecture
+
+---
+
+# Purpose
+
+This chapter defines how Artificial Intelligence capabilities are designed, developed, evaluated, deployed and continuously improved within the AI Knowledge & Risk Intelligence Platform.
+
+Artificial Intelligence is treated as an engineering discipline rather than an external service.
+
+The objective is to ensure that AI capabilities remain reliable, explainable, reusable, measurable and continuously improvable throughout the lifecycle of the platform.
+
+---
+
+# AI Engineering Principles
+
+The platform follows several fundamental principles.
+
+## AI is a Platform Capability
+
+Artificial Intelligence is not embedded inside individual business services.
+
+Instead, every AI interaction is managed through the AI Gateway.
+
+Business services ask business questions.
+
+The AI Gateway determines:
+
+- context
+- prompts
+- models
+- providers
+- governance
+- caching
+
+---
+
+## Prompts are Software Assets
+
+Prompt templates are considered first-class software artefacts.
+
+Every prompt has:
+
+- identifier
+- owner
+- version
+- status
+- purpose
+- documentation
+
+Prompts follow the same lifecycle as application code.
+
+---
+
+## Context is More Important than the Model
+
+Large Language Models provide reasoning capability.
+
+The Context Builder provides business intelligence.
+
+The quality of AI responses depends primarily on:
+
+- relevant context
+- structured knowledge
+- business objectives
+- enterprise taxonomy
+- evidence
+
+rather than on the specific AI model.
+
+---
+
+## AI must be Explainable
+
+Every AI-generated output must reference:
+
+- prompt version
+- context package
+- model
+- evidence
+- confidence
+
+No recommendation should be generated without traceability.
+
+---
+
+# AI Architecture
+
+```
+Business Platform
+
+↓
+
+AI Gateway
+
+↓
+
+Context Builder
+
+↓
+
+Prompt Composer
+
+↓
+
+Model Router
+
+↓
+
+Provider Adapter
+
+↓
+
+LLM
+
+↓
+
+Evaluation
+
+↓
+
+Business Platform
+```
+
+---
+
+# Prompt Lifecycle
+
+Prompt development follows a managed lifecycle.
+
+```
+Draft
+
+↓
+
+Review
+
+↓
+
+Testing
+
+↓
+
+Evaluation
+
+↓
+
+Approval
+
+↓
+
+Production
+
+↓
+
+Monitoring
+
+↓
+
+Improvement
+```
+
+Prompt evolution should remain fully traceable.
+
+---
+
+# Prompt Registry
+
+The Prompt Registry manages all prompt templates.
+
+Typical metadata includes:
+
+- Prompt ID
+- Name
+- Description
+- Version
+- Owner
+- Business Capability
+- AI Task
+- Status
+- Created Date
+- Last Modified
+
+Prompt templates should never be embedded directly inside application code.
+
+---
+
+# Prompt Categories
+
+Typical prompt categories include:
+
+Connector Recommendation
+
+Knowledge Processing
+
+Entity Extraction
+
+Relationship Detection
+
+Risk Assessment
+
+Recommendation Generation
+
+Summarisation
+
+Classification
+
+Translation
+
+Explanation
+
+Semantic Search
+
+Agent Planning
+
+Future Prompt Categories may be introduced without architectural changes.
+
+---
+
+# Context Engineering
+
+The Context Builder constructs the information package required for AI reasoning.
+
+Typical inputs include:
+
+- Knowledge Objects
+- Monitoring Objectives
+- Monitoring Profiles
+- Enterprise Risk Taxonomy
+- Historical Knowledge
+- Previous Risk Signals
+- User Role
+- Platform Configuration
+- Semantic Search Results
+- Conversation Context
+
+The Context Builder determines what the AI should know before reasoning begins.
+
+---
+
+# Prompt Composition
+
+The Prompt Composer assembles:
+
+```
+Prompt Template
+
++
+
+Context Package
+
++
+
+Runtime Parameters
+
+↓
+
+Final Prompt
+```
+
+Prompt templates remain independent from business data.
+
+---
+
+# Model Selection
+
+Different AI tasks require different models.
+
+Examples:
+
+Reasoning
+
+↓
+
+Large reasoning model
+
+Knowledge Extraction
+
+↓
+
+Balanced model
+
+Translation
+
+↓
+
+Small model
+
+Summarisation
+
+↓
+
+Low-cost model
+
+Classification
+
+↓
+
+Fast model
+
+The Model Router selects the optimal model according to platform policies.
+
+---
+
+# AI Evaluation
+
+Every AI execution should be evaluated.
+
+Evaluation dimensions include:
+
+Accuracy
+
+Relevance
+
+Consistency
+
+Completeness
+
+Latency
+
+Token Usage
+
+Cost
+
+Confidence
+
+Business Value
+
+Evaluation supports continuous improvement.
+
+---
+
+# Human Feedback
+
+Human users may provide feedback on AI outputs.
+
+Examples:
+
+Accepted
+
+Rejected
+
+Modified
+
+Ignored
+
+Feedback becomes input for prompt improvement.
+
+---
+
+# Prompt Improvement
+
+Prompt evolution should be evidence-driven.
+
+Typical improvement sources include:
+
+- user feedback
+- operational metrics
+- evaluation results
+- AI experimentation
+- new business requirements
+
+Prompt modifications should be version controlled.
+
+---
+
+# AI Experimentation
+
+The platform supports controlled experimentation.
+
+Examples:
+
+Prompt A
+
+↓
+
+Prompt B
+
+↓
+
+Comparison
+
+↓
+
+Evaluation
+
+↓
+
+Deployment
+
+Future capabilities may include:
+
+- A/B testing
+- Shadow evaluation
+- Automatic benchmarking
+
+---
+
+# AI Cost Optimisation
+
+The AI Gateway continuously optimises AI usage.
+
+Strategies include:
+
+- response caching
+- context optimisation
+- prompt optimisation
+- batching
+- provider selection
+- model selection
+
+Cost optimisation should never compromise business quality.
+
+---
+
+# AI Quality Metrics
+
+Typical platform metrics include:
+
+Prompt Success Rate
+
+Recommendation Acceptance Rate
+
+Knowledge Extraction Quality
+
+Hallucination Rate
+
+Average Confidence
+
+Average Cost
+
+Average Latency
+
+Prompt Reuse
+
+Context Size
+
+Token Consumption
+
+These metrics support AI engineering rather than business reporting.
+
+---
+
+# Multi-Model Strategy
+
+The architecture supports multiple AI models simultaneously.
+
+Examples:
+
+General Reasoning Model
+
+Knowledge Extraction Model
+
+Translation Model
+
+Summarisation Model
+
+Classification Model
+
+Planning Model
+
+Future Local Models
+
+The AI Gateway determines model selection.
+
+---
+
+# AI Testing
+
+Prompt testing should include:
+
+Expected Outputs
+
+Regression Tests
+
+Business Validation
+
+Edge Cases
+
+Performance
+
+Cost
+
+Repeatability
+
+AI testing should become part of the development lifecycle.
+
+---
+
+# AI Governance Integration
+
+The AI Gateway integrates with:
+
+Prompt Registry
+
+Context Builder
+
+Model Router
+
+AI Cache
+
+AI Audit
+
+Cost Manager
+
+Governance Engine
+
+Together these components provide enterprise-grade AI management.
+
+---
+
+# Future Evolution
+
+Future AI capabilities may include:
+
+Autonomous Agents
+
+Collaborative Multi-Agent Systems
+
+Knowledge Graph Reasoning
+
+Continuous Learning
+
+Policy-Aware AI
+
+Autonomous Context Optimisation
+
+These capabilities extend the architecture without changing business services.
+
+---
+
+# Architectural Decisions
+
+Artificial Intelligence is engineered rather than embedded.
+
+Prompts are version-controlled assets.
+
+Context engineering is separated from prompt engineering.
+
+AI evaluation is continuous.
+
+Human feedback drives prompt improvement.
+
+AI remains explainable and governed.
+
+---
+
+# Guiding Principle
+
+> **Successful enterprise AI depends more on high-quality context, governance and continuous engineering than on the choice of language model.**
+
+The AI Engineering Architecture ensures that Artificial Intelligence evolves as a managed engineering capability that remains transparent, measurable and aligned with business objectives.
+One final observation
+
+After writing almost the entire architecture, I think the platform is built around three engineering disciplines, not one:
+
+1. Software Engineering
+Backend
+Frontend
+APIs
+Storage
+Deployment
+2. Data Engineering
+Acquisition
+Knowledge
+Intelligence
+Semantic Index
+Event Flow
+3. AI Engineering
+AI Gateway
+Context Builder
+Prompt Registry
+Model Router
+Evaluation
+Governance
+Agents
+
+This is significant because it means future teams can be organized around these disciplines while working against the same architecture. It also reflects the reality of modern AI platforms: success depends not only on software engineering, but equally on data engineering and AI engineering working together. I think making that explicit in the introduction or conclusion of the document would strengthen the overall architecture.
+One final observation
+
+After writing almost the entire architecture, I think the platform is built around three engineering disciplines, not one:
+
+1. Software Engineering
+Backend
+Frontend
+APIs
+Storage
+Deployment
+2. Data Engineering
+Acquisition
+Knowledge
+Intelligence
+Semantic Index
+Event Flow
+3. AI Engineering
+AI Gateway
+Context Builder
+Prompt Registry
+Model Router
+Evaluation
+Governance
+Agents
+
+This is significant because it means future teams can be organized around these disciplines while working against the same architecture. It also reflects the reality of modern AI platforms: success depends not only on software engineering, but equally on data engineering and AI engineering working together. I think making that explicit in the introduction or conclusion of the document would strengthen the overall architecture.

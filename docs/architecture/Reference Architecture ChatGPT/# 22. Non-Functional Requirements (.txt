@@ -1,0 +1,356 @@
+# 22. Non-Functional Requirements (Quality Attributes)
+
+---
+
+# Purpose
+
+This chapter defines the quality attributes of the AI Knowledge & Risk Intelligence Platform.
+
+While previous chapters describe what the platform does, this chapter defines how well it must perform.
+
+These requirements guide architectural decisions throughout the platform lifecycle and provide measurable objectives for implementation, testing and operations.
+
+---
+
+# Quality Attribute Categories
+
+The platform is designed to satisfy the following quality attributes.
+
+- Availability
+- Reliability
+- Scalability
+- Performance
+- Security
+- Maintainability
+- Extensibility
+- Explainability
+- Observability
+- Cost Efficiency
+- Portability
+- Usability
+- AI Quality
+
+---
+
+# Availability
+
+## Objective
+
+The platform should remain continuously available for business users.
+
+Typical targets
+
+| Capability | Target |
+|------------|---------|
+| Business Portal | 99.9% |
+| API Services | 99.9% |
+| AI Gateway | 99.5% |
+| Connector Runtime | 99.5% |
+| Knowledge Platform | 99.9% |
+
+Failures in one subsystem should not affect unrelated platform capabilities.
+
+---
+
+# Reliability
+
+The platform shall:
+
+- recover gracefully from failures
+- support retries
+- preserve data integrity
+- prevent data loss
+- continue processing after transient failures
+
+Runtime processing should never silently discard information.
+
+---
+
+# Performance
+
+Typical targets
+
+| Capability | Target |
+|------------|----------|
+| REST Response | <500 ms |
+| Dashboard Loading | <2 seconds |
+| Connector Proposal | <60 seconds |
+| Knowledge Processing | <30 seconds |
+| Risk Assessment | <15 seconds |
+
+Performance targets should remain configurable.
+
+---
+
+# Scalability
+
+The platform shall support horizontal scaling.
+
+Candidate services include:
+
+- Connector Runtime
+- Knowledge Processing
+- AI Gateway
+- Risk Assessment
+- Dashboard Services
+
+Scaling one service should not require scaling unrelated services.
+
+---
+
+# Maintainability
+
+The architecture supports maintainability through:
+
+- modular services
+- canonical domain objects
+- reusable adapters
+- versioned prompts
+- platform APIs
+- documented schemas
+
+Business logic should remain isolated.
+
+---
+
+# Extensibility
+
+New capabilities should be added without redesign.
+
+Examples
+
+New connector
+
+↓
+
+New AI provider
+
+↓
+
+New Monitoring Objective
+
+↓
+
+New dashboard
+
+↓
+
+New AI Agent
+
+The architecture should favour extension over modification.
+
+---
+
+# Explainability
+
+Every business conclusion shall remain explainable.
+
+Required traceability
+
+Recommendation
+
+↓
+
+Risk Signal
+
+↓
+
+Knowledge
+
+↓
+
+Raw Record
+
+↓
+
+Information Source
+
+↓
+
+Connector Execution
+
+↓
+
+Connector Definition
+
+No recommendation should exist without supporting evidence.
+
+---
+
+# Security
+
+The platform shall provide:
+
+- authentication
+- authorization
+- encryption
+- audit
+- secrets management
+- AI governance
+- secure communications
+
+Security requirements apply to every platform.
+
+---
+
+# Observability
+
+Every platform shall expose:
+
+- health
+- metrics
+- logs
+- traces
+- diagnostics
+
+Operational visibility is considered a core platform capability.
+
+---
+
+# Portability
+
+Business architecture shall remain independent from:
+
+- cloud provider
+- database
+- AI provider
+- messaging platform
+- frontend technology
+
+Technology choices should remain replaceable.
+
+---
+
+# Cost Efficiency
+
+The platform shall optimise:
+
+- AI cost
+- infrastructure cost
+- connector execution
+- storage usage
+- token consumption
+
+The AI Gateway is responsible for AI cost optimisation.
+
+---
+
+# AI Quality
+
+The platform continuously measures:
+
+- confidence
+- relevance
+- consistency
+- hallucination rate
+- user acceptance
+- prompt quality
+- recommendation quality
+
+AI quality should improve continuously through engineering rather than relying solely on newer models.
+
+---
+
+# Knowledge Quality
+
+Knowledge objects should include:
+
+- confidence
+- completeness
+- evidence
+- provenance
+- validation status
+
+Knowledge quality directly influences business intelligence quality.
+
+---
+
+# Usability
+
+The platform shall:
+
+- minimise technical complexity
+- provide progressive disclosure
+- support workspace-oriented interaction
+- integrate AI naturally
+- reduce cognitive load
+
+Business users should focus on decisions rather than technology.
+
+---
+
+# Testability
+
+Every major platform capability should be independently testable.
+
+Examples include:
+
+- Connector testing
+- Knowledge validation
+- AI prompt evaluation
+- Risk assessment validation
+- API testing
+
+Automated testing should be preferred whenever possible.
+
+---
+
+# Disaster Recovery
+
+The platform shall support:
+
+- automated backups
+- point-in-time recovery
+- infrastructure recreation
+- configuration recovery
+- knowledge preservation
+
+Knowledge should be treated as a strategic organisational asset.
+
+---
+
+# Compliance
+
+The architecture supports future compliance with:
+
+- GDPR
+- ISO 27001
+- NIS2
+- organisational governance policies
+
+Compliance mechanisms should remain configurable.
+
+---
+
+# Future Readiness
+
+The architecture anticipates:
+
+- Knowledge Graph
+- Multi-agent AI
+- Semantic Search
+- Event Streaming
+- Hybrid AI
+- Edge Processing
+
+Future technologies should extend rather than replace existing architecture.
+
+---
+
+# Architectural Decisions
+
+Quality attributes drive architectural decisions.
+
+Business capabilities remain independent from implementation technologies.
+
+Knowledge is treated as a long-term organisational asset.
+
+Artificial Intelligence is engineered as a governed platform capability.
+
+Operational visibility and explainability are considered essential quality attributes.
+
+---
+
+# Guiding Principle
+
+> **The quality of the platform is determined not only by the features it provides, but by the reliability, transparency, maintainability and trustworthiness with which those features are delivered.**

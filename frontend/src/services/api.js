@@ -75,10 +75,21 @@ async function request(path, { method = "GET", signal, timeout = 12000, ...rest 
   clearTimeout(timer);
 
   if (!res.ok) {
-    throw new ApiError(`Request failed with status ${res.status}.`, {
+    let serverMessage = "";
+    let verification = null;
+    try {
+      const body = await res.json();
+      serverMessage = body?.message || body?.error || "";
+      verification = body?.verification || null;
+    } catch {
+      // ignore parse failures for error bodies
+    }
+    const err = new ApiError(serverMessage || `Request failed with status ${res.status}.`, {
       status: res.status,
       kind: "http",
     });
+    if (verification) err.verification = verification;
+    throw err;
   }
 
   try {
@@ -264,6 +275,73 @@ export async function getConnectorAdvice(id, { signal } = {}) {
   return normalizeConnectorAdvice(raw);
 }
 
+/**
+ * Accept the Connector Proposal as Specification + Definition.
+ * For RSS, backend also runs an automated test fetch when possible.
+ * POST /api/information-sources/:id/accept-connector-specification
+ */
+export async function acceptConnectorSpecification(id, proposal, { signal, runTest = true, limit = 15 } = {}) {
+  return request(
+    `/api/information-sources/${encodeURIComponent(id)}/accept-connector-specification`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proposal, runTest, limit }),
+      signal,
+      timeout: AI_TIMEOUT,
+    }
+  );
+}
+
+/**
+ * Re-run connector test / fetch for a source.
+ * POST /api/information-sources/:id/connector/test
+ */
+export async function testConnector(id, { signal, limit = 15 } = {}) {
+  return request(
+    `/api/information-sources/${encodeURIComponent(id)}/connector/test`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ limit }),
+      signal,
+      timeout: 60000,
+    }
+  );
+}
+
+/**
+ * Approve collected sample evidence → move source to In use (active).
+ * POST /api/information-sources/:id/approve-sample
+ */
+export async function approveSourceSample(id, { signal } = {}) {
+  return request(
+    `/api/information-sources/${encodeURIComponent(id)}/approve-sample`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+      signal,
+    }
+  );
+}
+
+/**
+ * List canonical Raw Records collected for a source.
+ * GET /api/information-sources/:id/raw-records
+ */
+export async function getSourceRawRecords(id, { signal, limit = 25 } = {}) {
+  const raw = await request(
+    `/api/information-sources/${encodeURIComponent(id)}/raw-records?limit=${encodeURIComponent(limit)}`,
+    { signal }
+  );
+  return {
+    informationSourceId: raw.informationSourceId || id,
+    count: raw.count || (raw.items || []).length,
+    items: Array.isArray(raw.items) ? raw.items : [],
+  };
+}
+
 // -----------------------------------------------------------------------------
 // Normalization — keep the UI resilient to reasonable backend shape variations.
 // -----------------------------------------------------------------------------
@@ -289,6 +367,9 @@ const CONNECTOR_STATUS_LABELS = {
   connected: "Connected",
   connecting: "Connecting",
   pending: "Pending",
+  samplePending: "Sample pending",
+  sampleReady: "Sample ready",
+  active: "Active",
   error: "Connection error",
   disabled: "Disabled",
 };

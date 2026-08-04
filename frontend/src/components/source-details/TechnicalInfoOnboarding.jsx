@@ -18,6 +18,7 @@ export default function TechnicalInfoOnboarding({
   objectiveId,
   advice,
   accepted,
+  accepting = false,
   onRun,
   onAccept,
   onChangeMode,
@@ -102,10 +103,27 @@ export default function TechnicalInfoOnboarding({
         </div>
 
         <div className="ba-actions">
-          <button className="btn btn--primary" type="button" onClick={analyse} disabled={!canAnalyse}>
-            {advice.status === "idle" ? "Analyse with AI" : "Re-analyse"}
-          </button>
+          {advice.status === "idle" || advice.status === "error" ? (
+            <button className="btn btn--primary" type="button" onClick={analyse} disabled={!canAnalyse}>
+              Analyse with AI
+            </button>
+          ) : advice.status === "ready" ? (
+            <button
+              className="btn btn--ghost"
+              type="button"
+              onClick={analyse}
+              disabled={!canAnalyse || loading}
+              title="Discards refinements and runs a fresh analysis from the technical information above"
+            >
+              Start over
+            </button>
+          ) : null}
         </div>
+        {advice.status === "ready" && (
+          <p className="ba-helper">
+            To adjust the proposal, use <strong>Describe changes</strong> below. Start over only if you want a fresh analysis.
+          </p>
+        )}
       </div>
 
       {advice.status !== "idle" && (
@@ -114,6 +132,7 @@ export default function TechnicalInfoOnboarding({
           variant="technical"
           recommendation={recommendation}
           accepted={accepted}
+          accepting={accepting}
           onAccept={onAccept}
           onRefine={refine}
           onRetry={() => run(revisions)}

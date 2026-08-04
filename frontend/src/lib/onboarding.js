@@ -40,10 +40,10 @@ const RESPONSIBILITIES = `Resolve publicly available technical facts YOURSELF, i
 
 Classify every remaining uncertainty into EXACTLY three groups:
 1. automatedValidationPlan — facts the automated connector TEST must verify (endpoint availability, actual fields, identifier/GUID stability, deduplication, parsing/encoding, rate limits, pagination, field-mapping confirmation). These are NOT user homework.
-2. decisionsRequiringUserApproval — business choices only the risk manager should approve (business scope, languages, geographic coverage, monitoring sensitivity, risk-category mapping, accept/modify).
+2. decisionsRequiringUserApproval — business choices only the risk manager should approve (business scope, languages, geographic coverage, monitoring sensitivity, risk-category mapping, accept/modify). Prefer a short list of real forks; make opinionated defaults for the rest and state them under assumptions.
 3. unresolvedTechnicalFacts — public technical facts you could not reliably discover. Use this ONLY after genuine research has failed. "The source probably has RSS" is discoverable and must be resolved, not listed here.
 
-Keep "assumptions" for GENUINE business assumptions that depend on business intent and can be shown to the risk manager (e.g. "Include Finnish-language articles because the objective concerns Finnish shipbuilding"). Never present connector-test tasks as questions for the risk manager.`;
+Keep "assumptions" for GENUINE business assumptions that depend on business intent and can be shown to the risk manager (e.g. "Include Finnish-language articles because the objective concerns Finnish shipbuilding"). Never present connector-test tasks as questions for the risk manager. Do not drip-feed new micro-decisions across turns; decide on the first pass wherever a sensible default exists.`;
 
 const READINESS = `Connector readiness states (choose the honest one — do NOT report "not ready" merely because something is unverified):
 - proposal-ready: you have enough information to recommend a configuration.
@@ -94,9 +94,19 @@ function contextBlock({ recommendation, objectiveId, objectiveName }) {
 
 function revisionBlock(revisions = []) {
   if (!revisions.length) return "";
-  return `\n\nUser-requested changes to fold into a completely regenerated proposal:\n${revisions
-    .map((t, i) => `${i + 1}. ${t}`)
-    .join("\n")}`;
+  return `\n\nThe risk manager already reviewed a prior proposal and sent the following decisions / corrections. Treat them as RESOLVED business choices — apply them in the regenerated proposal and do NOT list them again under decisionsRequiringUserApproval.
+
+Rules for this regeneration:
+- Fold every item below into technicalConfiguration / monitoringConfiguration / retentionRecommendation / assumptions as appropriate.
+- Remove resolved items from decisionsRequiringUserApproval. Only keep business choices that are still open after applying these corrections.
+- Do not re-ask for approval of values the user just confirmed or chose.
+- Do NOT invent new decisionsRequiringUserApproval on this regeneration unless the user explicitly introduced a new open choice below. Prefer decisive defaults and put remaining technical uncertainty into automatedValidationPlan or assumptions.
+- If decisionsRequiringUserApproval can be empty after applying the corrections, return an empty list and prefer connectorReadiness ready-for-test.
+- Raise confidence when open business decisions shrink; use ready-for-test when the configuration is concrete enough to auto-test (even if the live test has not run yet).
+- Keep unresolvedTechnicalFacts only for public facts you still genuinely cannot confirm.
+
+User decisions / corrections (apply all of them):
+${revisions.map((t, i) => `${i + 1}. ${t}`).join("\n")}`;
 }
 
 function core(extraRole) {

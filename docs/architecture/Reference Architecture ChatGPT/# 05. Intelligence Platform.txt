@@ -1,0 +1,372 @@
+# 05. Intelligence Platform
+
+---
+
+# Purpose
+
+The Intelligence Platform transforms reusable organisational knowledge into business intelligence.
+
+Unlike the Knowledge Platform, which extracts facts from information, the Intelligence Platform evaluates what those facts mean for the organisation.
+
+The primary outputs are:
+
+- Risk Signals
+- Recommendations
+- Business Insights
+- Future AI Agent actions
+
+The Intelligence Platform is independent of information collection and knowledge extraction.
+
+---
+
+# Position in Overall Architecture
+
+```
+Information Sources
+        │
+        ▼
+Connector Platform
+        │
+        ▼
+Knowledge Platform
+        │
+        ▼
+Intelligence Platform
+        │
+        ▼
+Presentation Platform
+```
+
+Knowledge answers:
+
+> What happened?
+
+The Intelligence Platform answers:
+
+> Why does it matter?
+
+---
+
+# Objectives
+
+The Intelligence Platform shall:
+
+- assess business impact
+- generate Risk Signals
+- classify enterprise risks
+- estimate severity
+- estimate probability
+- estimate confidence
+- generate recommendations
+- support explainable reasoning
+- support future autonomous AI agents
+
+---
+
+# Intelligence Pipeline
+
+```
+Knowledge
+      │
+      ▼
+Monitoring Objectives
+      │
+      ▼
+Risk Assessment
+      │
+      ▼
+Risk Signals
+      │
+      ▼
+Recommendations
+      │
+      ▼
+Presentation
+```
+
+---
+
+# Monitoring Objectives
+
+Monitoring Objectives represent business intent.
+
+Examples include:
+
+- Supplier Stability
+- Geopolitical Risk
+- Shipyard Logistics
+- Energy Market
+- Labour Availability
+- Environmental Compliance
+
+Monitoring Objectives determine:
+
+- which Knowledge is relevant
+- which enterprise risks should be evaluated
+- recommendation priorities
+
+Knowledge remains independent from Monitoring Objectives.
+
+---
+
+# Risk Assessment
+
+Purpose
+
+Evaluate the business impact of reusable Knowledge.
+
+Risk Assessment combines:
+
+- Knowledge
+- Monitoring Objective
+- Enterprise Risk Taxonomy
+- Business Rules
+- AI reasoning
+
+The output is one or more Risk Signals.
+
+---
+
+# Risk Signals
+
+A Risk Signal represents a business-relevant interpretation of Knowledge.
+
+A Risk Signal always references:
+
+- Monitoring Objective
+- Knowledge
+- Enterprise Risk Category
+
+Typical fields:
+
+- severity
+- probability
+- confidence
+- business impact
+- explanation
+- evidence
+- timestamp
+
+One Knowledge object may generate multiple Risk Signals.
+
+Example:
+
+```
+Knowledge
+
+↓
+
+Port strike
+
+↓
+
+Logistics Risk
+
+↓
+
+Operational Risk
+
+↓
+
+Supply Chain Risk
+```
+
+---
+
+# Recommendations
+
+Recommendations represent suggested actions.
+
+Examples:
+
+- Increase monitoring frequency
+- Contact supplier
+- Review delivery schedule
+- Escalate to project manager
+- Ignore (low significance)
+
+Recommendations should always explain:
+
+- why
+- based on which evidence
+- confidence
+
+---
+
+# Enterprise Risk Taxonomy
+
+Risk Signals should map to a common enterprise taxonomy.
+
+Example categories:
+
+- Strategic
+- Operational
+- Financial
+- Supply Chain
+- Cyber
+- Environmental
+- Regulatory
+- Political
+- Reputation
+
+The taxonomy remains independent from Knowledge.
+
+---
+
+# Business Rules
+
+Not every decision should require AI.
+
+Business Rules may include:
+
+- deterministic thresholds
+- organisational policies
+- escalation matrices
+- notification rules
+- confidence thresholds
+
+Business Rules and AI should complement each other.
+
+---
+
+# Explainability
+
+Every Risk Signal must be explainable.
+
+The reasoning chain is:
+
+```
+Recommendation
+        │
+        ▼
+Risk Signal
+        │
+        ▼
+Knowledge
+        │
+        ▼
+Raw Record
+        │
+        ▼
+Information Source
+```
+
+Users must always be able to inspect the complete evidence chain.
+
+---
+
+# Confidence
+
+Confidence should be calculated independently for each stage.
+
+Examples:
+
+Knowledge confidence
+
+↓
+
+Risk Assessment confidence
+
+↓
+
+Recommendation confidence
+
+This prevents uncertainty from being hidden.
+
+---
+
+# Future AI Agents
+
+The Intelligence Platform is designed to support autonomous agents.
+
+Possible future agents:
+
+- Supplier Agent
+- Geopolitical Agent
+- Environmental Agent
+- Weather Agent
+- Logistics Agent
+- Cyber Agent
+
+Agents consume Knowledge rather than raw documents.
+
+This enables multiple specialised agents to reason over the same organisational memory.
+
+---
+
+# Cross-Objective Intelligence
+
+One Knowledge object may affect multiple Monitoring Objectives.
+
+Example:
+
+```
+Knowledge
+
+↓
+
+New EU sanctions
+
+↓
+
+Supplier Stability
+
+↓
+
+Operational Risk
+
+↓
+
+Financial Risk
+
+↓
+
+Compliance
+
+↓
+
+Project Delivery
+```
+
+Knowledge is processed once.
+
+Business intelligence is generated many times.
+
+---
+
+# Architectural Decisions
+
+Business reasoning belongs to the Intelligence Platform.
+
+Knowledge remains objective.
+
+Risk Signals are objective-specific.
+
+Recommendations are contextual.
+
+Business Rules complement AI rather than replacing it.
+
+All outputs remain traceable to original evidence.
+
+---
+
+# Guiding Principle
+
+> **Knowledge represents facts. Intelligence represents business meaning.**
+
+The Intelligence Platform transforms organisational knowledge into explainable, evidence-based decision support while remaining independent from information collection and knowledge extraction.
+'
+
+Business Platform
+        │
+        ▼
+Acquisition Platform
+        │
+        ▼
+Knowledge Platform
+        │
+        ▼
+Intelligence Platform
+        │
+        ▼
+Presentation Platform

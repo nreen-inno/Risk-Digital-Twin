@@ -1,0 +1,754 @@
+# 18. Canonical Data Schemas
+
+---
+
+# Purpose
+
+This chapter defines the canonical business objects used throughout the AI Knowledge & Risk Intelligence Platform.
+
+These schemas represent the logical data model of the platform and are independent of programming language, database technology or API implementation.
+
+Every platform component should exchange information using these canonical objects.
+
+The schemas serve as the contract between:
+
+- Business Platform
+- Acquisition Platform
+- Knowledge Platform
+- Intelligence Platform
+- Presentation Platform
+
+They also provide a common vocabulary for developers, AI assistants and external integrations.
+
+---
+
+# Schema Design Principles
+
+Every schema follows the same principles.
+
+## Business-Oriented
+
+Schemas represent business concepts rather than implementation details.
+
+Example:
+
+✓ InformationSource
+
+rather than
+
+✗ RSSFeed
+
+---
+
+## Stable Identity
+
+Every object has a globally unique identifier.
+
+```
+id
+```
+
+Object identifiers remain unchanged throughout the object lifecycle.
+
+---
+
+## Metadata
+
+Every object contains common metadata.
+
+```
+id
+
+type
+
+version
+
+createdAt
+
+updatedAt
+
+createdBy
+
+status
+```
+
+---
+
+## References
+
+Relationships use references rather than nested objects.
+
+Example
+
+```
+knowledgeId
+
+monitoringObjectiveId
+
+connectorDefinitionId
+```
+
+---
+
+## Extensibility
+
+Schemas should support future fields without breaking existing implementations.
+
+---
+
+# Object Categories
+
+The platform contains four groups of canonical schemas.
+
+```
+Configuration
+
+↓
+
+Runtime
+
+↓
+
+Knowledge
+
+↓
+
+Intelligence
+```
+
+---
+
+# Configuration Schemas
+
+## MonitoringObjective
+
+Purpose
+
+Defines a business objective.
+
+Main properties
+
+```
+id
+
+name
+
+description
+
+riskCategories
+
+monitoringProfiles
+
+assignedSources
+
+status
+```
+
+---
+
+## MonitoringProfile
+
+Purpose
+
+Defines reusable monitoring criteria.
+
+Main properties
+
+```
+id
+
+keywords
+
+entities
+
+locations
+
+languages
+
+exclusions
+
+priority
+```
+
+---
+
+## InformationSource
+
+Purpose
+
+Represents an external or internal information provider.
+
+Main properties
+
+```
+id
+
+name
+
+provider
+
+description
+
+category
+
+languages
+
+owner
+
+status
+```
+
+---
+
+## ConnectorProposal
+
+Purpose
+
+Represents an AI-generated recommendation.
+
+Main properties
+
+```
+id
+
+sourceId
+
+recommendedMethod
+
+assumptions
+
+missingInformation
+
+confidence
+
+status
+```
+
+---
+
+## ConnectorSpecification
+
+Purpose
+
+Approved connector design.
+
+Main properties
+
+```
+id
+
+proposalId
+
+connectionMethod
+
+schedule
+
+authentication
+
+mapping
+
+validation
+```
+
+---
+
+## ConnectorDefinition
+
+Purpose
+
+Executable runtime definition.
+
+Main properties
+
+```
+id
+
+specificationId
+
+adapter
+
+runtimeConfiguration
+
+status
+
+version
+```
+
+---
+
+# Runtime Schemas
+
+## ConnectorExecution
+
+Purpose
+
+Represents one connector execution.
+
+Properties
+
+```
+id
+
+connectorId
+
+startedAt
+
+completedAt
+
+duration
+
+recordsCollected
+
+errors
+```
+
+---
+
+## RawRecord
+
+Purpose
+
+Canonical representation of collected information.
+
+Properties
+
+```
+id
+
+sourceId
+
+connectorExecutionId
+
+language
+
+publishedAt
+
+rawPayload
+
+checksum
+
+metadata
+```
+
+---
+
+## ConnectorTestResult
+
+Purpose
+
+Connector validation results.
+
+Properties
+
+```
+status
+
+connectivity
+
+parserValidation
+
+schemaValidation
+
+sampleRecords
+```
+
+---
+
+# Knowledge Schemas
+
+## Knowledge
+
+Purpose
+
+Represents reusable organisational knowledge.
+
+Properties
+
+```
+id
+
+rawRecordIds
+
+entities
+
+events
+
+relationships
+
+topics
+
+summary
+
+confidence
+
+evidence
+```
+
+---
+
+## Entity
+
+Properties
+
+```
+id
+
+type
+
+name
+
+aliases
+
+confidence
+```
+
+---
+
+## Relationship
+
+Properties
+
+```
+sourceEntity
+
+targetEntity
+
+relationshipType
+
+confidence
+```
+
+---
+
+## Event
+
+Properties
+
+```
+id
+
+eventType
+
+timestamp
+
+location
+
+participants
+
+confidence
+```
+
+---
+
+# Intelligence Schemas
+
+## RiskSignal
+
+Purpose
+
+Business interpretation of Knowledge.
+
+Properties
+
+```
+id
+
+knowledgeId
+
+monitoringObjectiveId
+
+riskCategory
+
+severity
+
+probability
+
+confidence
+
+explanation
+```
+
+---
+
+## Recommendation
+
+Purpose
+
+Suggested action.
+
+Properties
+
+```
+id
+
+riskSignalId
+
+recommendationType
+
+priority
+
+description
+
+confidence
+
+status
+```
+
+---
+
+# Operational Schemas
+
+## AuditRecord
+
+Properties
+
+```
+id
+
+timestamp
+
+actor
+
+action
+
+target
+
+correlationId
+```
+
+---
+
+## Notification
+
+Properties
+
+```
+id
+
+recipient
+
+channel
+
+status
+
+message
+```
+
+---
+
+## AIRequest
+
+Properties
+
+```
+id
+
+promptTemplate
+
+model
+
+tokens
+
+cost
+
+duration
+
+status
+```
+
+---
+
+## AIResponse
+
+Properties
+
+```
+id
+
+requestId
+
+response
+
+confidence
+
+promptVersion
+
+modelVersion
+```
+
+---
+
+# Common Metadata
+
+Every canonical object supports:
+
+```
+id
+
+type
+
+version
+
+status
+
+createdAt
+
+updatedAt
+
+createdBy
+
+updatedBy
+
+correlationId
+
+tags
+```
+
+---
+
+# Object Relationships
+
+```
+MonitoringObjective
+
+↓
+
+MonitoringProfile
+
+↓
+
+InformationSource
+
+↓
+
+ConnectorProposal
+
+↓
+
+ConnectorSpecification
+
+↓
+
+ConnectorDefinition
+
+↓
+
+ConnectorExecution
+
+↓
+
+RawRecord
+
+↓
+
+Knowledge
+
+↓
+
+RiskSignal
+
+↓
+
+Recommendation
+```
+
+---
+
+# Versioning
+
+Configuration objects are versioned.
+
+Runtime objects are immutable.
+
+Knowledge objects may evolve through new versions while preserving history.
+
+Risk Signals reference the exact Knowledge version used during assessment.
+
+---
+
+# Serialization
+
+Canonical schemas are technology independent.
+
+Typical representations include:
+
+- JSON
+- REST
+- Events
+- Message queues
+
+Internal storage formats may differ.
+
+---
+
+# Future Schemas
+
+Future platform versions may introduce:
+
+- KnowledgeGraphNode
+- KnowledgeGraphEdge
+- SemanticEmbedding
+- AIAgent
+- AIConversation
+- PromptTemplate
+- PromptExecution
+- ContextPackage
+
+These extend the canonical model without changing existing schemas.
+
+---
+
+# Architectural Decisions
+
+Canonical schemas define platform contracts.
+
+Business objects remain independent from storage technologies.
+
+All platforms communicate through canonical schemas.
+
+Schemas evolve through versioning rather than replacement.
+
+---
+
+# Guiding Principle
+
+> **A business object has one canonical representation throughout the platform.**
+
+Canonical schemas provide a common language for people, software services and Artificial Intelligence.
+I think there is one architectural chapter left before the appendices
+
+At this point, the document has become very complete, but one thing is still missing.
+
+Not JSON.
+
+Not deployment.
+
+Not frontend.
+
+Reference Use Cases.
+
+I would make Chapter 19 something that almost no architecture documents include:
+
+Reference Business Scenarios
+
+For example:
+
+UC-01 Onboard YLE RSS
+UC-02 Connect SAP
+UC-03 Weather connector
+UC-04 Supplier bankruptcy detected
+UC-05 AI recommends new connector
+UC-06 Knowledge reused by three Monitoring Objectives
+UC-07 Human approves Recommendation
+UC-08 AI Agent performs autonomous reassessment
+
+Each use case would include:
+
+participating platforms
+sequence diagram
+events
+APIs
+canonical objects
+AI Gateway interactions
+
+That chapter would effectively tie together every concept in the document and serve as an executable blueprint for both developers and AI coding assistants. I think it would become the single best onboarding resource for anyone joining the project.

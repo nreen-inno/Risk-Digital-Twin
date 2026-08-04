@@ -1,0 +1,547 @@
+# 13. Cross-Cutting Platform Services
+
+---
+
+# Purpose
+
+Cross-Cutting Platform Services provide capabilities shared by all business platforms.
+
+Unlike Business, Knowledge or Intelligence Platforms, these services do not implement business functionality.
+
+Instead, they provide common capabilities required throughout the platform.
+
+Examples include:
+
+- AI Gateway
+- Authentication
+- Audit
+- Search
+- Notifications
+- Logging
+- Configuration
+
+Every platform may use these services without becoming tightly coupled to their implementation.
+
+---
+
+# Overview
+
+```
+                    Business Platform
+                           │
+                           ▼
+                  Acquisition Platform
+                           │
+                           ▼
+                  Knowledge Platform
+                           │
+                           ▼
+                 Intelligence Platform
+                           │
+                           ▼
+                 Presentation Platform
+
+────────────────────────────────────────────
+
+Cross-Cutting Services
+
+• AI Gateway
+• Authentication
+• Configuration
+• Audit
+• Search
+• Notifications
+• Logging
+• Metrics
+• File Service
+```
+
+---
+
+# Why Cross-Cutting Services?
+
+Without shared services every platform would implement:
+
+- authentication
+- logging
+- AI access
+- configuration
+- search
+
+independently.
+
+This creates:
+
+- duplicated logic
+- inconsistent behaviour
+- difficult maintenance
+
+Cross-Cutting Services centralise these capabilities.
+
+---
+
+# AI Gateway
+
+## Purpose
+
+The AI Gateway is the single entry point for all Artificial Intelligence capabilities.
+
+No platform communicates directly with an LLM.
+
+Instead:
+
+```
+Business Platform
+
+↓
+
+AI Gateway
+
+↓
+
+AI Provider
+```
+
+---
+
+# Responsibilities
+
+The AI Gateway is responsible for:
+
+- model selection
+- prompt management
+- prompt versioning
+- provider abstraction
+- authentication
+- request logging
+- response logging
+- cost monitoring
+- caching
+- retries
+- rate limiting
+- security
+- governance
+
+---
+
+# AI Consumers
+
+Typical consumers include:
+
+Connector Recommendation
+
+Knowledge Processing
+
+Risk Assessment
+
+Recommendation Generation
+
+Semantic Search
+
+Future AI Agents
+
+All use the same Gateway.
+
+---
+
+# AI Provider Abstraction
+
+The Gateway hides implementation details.
+
+Current provider:
+
+Azure OpenAI
+
+Future providers:
+
+Azure AI Foundry
+
+OpenAI
+
+Anthropic
+
+Google
+
+Local models
+
+Hybrid deployments
+
+Business services remain independent from providers.
+
+---
+
+# Prompt Registry
+
+Prompts are platform assets.
+
+Every prompt should be versioned.
+
+Example:
+
+```
+Connector Recommendation
+
+v1
+
+↓
+
+v2
+
+↓
+
+v3
+```
+
+Prompt versions remain traceable.
+
+---
+
+# Prompt Categories
+
+Examples include:
+
+Connector Recommendation
+
+Knowledge Extraction
+
+Relationship Extraction
+
+Risk Assessment
+
+Recommendation Generation
+
+Summary
+
+Explanation
+
+Classification
+
+Translation
+
+Future Agent Prompts
+
+---
+
+# Prompt Templates
+
+Prompts are parameterised.
+
+Instead of embedding text inside services:
+
+```
+Prompt
+
++
+
+Knowledge
+
++
+
+Monitoring Objective
+
++
+
+Configuration
+
+↓
+
+AI Gateway
+```
+
+The Gateway assembles the final prompt.
+
+---
+
+# Model Routing
+
+Different tasks require different models.
+
+Examples:
+
+```
+Connector Recommendation
+
+↓
+
+Reasoning Model
+
+Knowledge Extraction
+
+↓
+
+Balanced Model
+
+Translation
+
+↓
+
+Small Model
+
+Summaries
+
+↓
+
+Fast Model
+```
+
+Routing decisions belong to the Gateway.
+
+---
+
+# AI Cache
+
+Repeated AI requests should be avoided.
+
+Examples:
+
+```
+Knowledge
+
+↓
+
+Prompt
+
+↓
+
+Cached Response
+```
+
+If nothing changed:
+
+↓
+
+Reuse result.
+
+The cache reduces:
+
+- latency
+- cost
+
+---
+
+# Cost Optimisation
+
+The Gateway continuously tracks:
+
+- tokens
+- model usage
+- execution time
+- cost
+
+This enables optimisation without changing business services.
+
+---
+
+# AI Governance
+
+Every AI response should include:
+
+- prompt version
+- model
+- timestamp
+- confidence
+- token count
+
+This supports auditing.
+
+---
+
+# AI Security
+
+The Gateway enforces:
+
+- prompt validation
+- content filtering
+- secret protection
+- provider authentication
+
+Business services never handle provider credentials.
+
+---
+
+# Search Service
+
+Purpose
+
+Provide unified search.
+
+Supports:
+
+Metadata Search
+
+↓
+
+Semantic Search
+
+↓
+
+Future Knowledge Graph Search
+
+---
+
+# Configuration Service
+
+Stores shared configuration.
+
+Examples:
+
+- AI settings
+- feature flags
+- connector defaults
+- runtime limits
+
+---
+
+# Notification Service
+
+Provides:
+
+- email
+- Teams
+- future messaging channels
+
+Business services publish events.
+
+Notification Service delivers them.
+
+---
+
+# Audit Service
+
+Records:
+
+- user actions
+- connector changes
+- AI decisions
+- recommendation approvals
+
+Audit remains immutable.
+
+---
+
+# Logging Service
+
+Collects:
+
+- application logs
+- connector logs
+- AI logs
+- operational logs
+
+Logging is standardised.
+
+---
+
+# Metrics Service
+
+Collects:
+
+- connector statistics
+- AI performance
+- API performance
+- storage usage
+- processing latency
+
+---
+
+# File Service
+
+Responsible for:
+
+- uploads
+- downloads
+- document storage
+- attachment lifecycle
+
+Business services store references only.
+
+---
+
+# Architectural Decisions
+
+Cross-Cutting Services are reusable.
+
+Business services remain independent.
+
+The AI Gateway becomes the single point of AI integration.
+
+Every AI request is governed, logged and versioned.
+
+---
+
+# Guiding Principle
+
+> **Business platforms own business capabilities. Cross-Cutting Services provide shared platform capabilities.**
+
+The AI Gateway is the central intelligence infrastructure that enables consistent, secure and cost-effective use of Artificial Intelligence across the entire platform.
+I honestly think AI Gateway deserves to become a publishable architectural concept.
+
+Most systems have:
+
+Application
+↓
+
+LLM
+
+Your platform now has:
+
+Business Capability
+
+↓
+
+AI Gateway
+
+↓
+
+Prompt Registry
+
+↓
+
+Model Router
+
+↓
+
+Cache
+
+↓
+
+Provider
+
+↓
+
+Governance
+
+↓
+
+Knowledge
+
+That is much closer to how enterprise AI platforms will be built over the next few years.
+
+One more improvement
+
+I would actually split the AI Gateway internally into six subservices:
+
+AI Gateway
+│
+├── Prompt Registry
+├── Model Router
+├── Context Builder
+├── AI Cache
+├── Provider Adapter
+├── AI Governance
+
+The Context Builder is particularly important. It would assemble the right context automatically by combining:
+
+Monitoring Objective
+Knowledge
+Enterprise Taxonomy
+User preferences
+Prompt template
+Retrieved knowledge (future RAG)
+Conversation history (where appropriate)
+
+This means business services no longer "build prompts." They simply ask the AI Gateway:
+
+"Assess this Knowledge object for Monitoring Objective X."
+
+The gateway then constructs the optimal prompt. That separation will make prompt engineering, model changes, and future RAG capabilities much easier to manage without touching business logic. I think this is one of the strongest architectural decisions we've developed today.

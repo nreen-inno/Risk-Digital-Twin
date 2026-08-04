@@ -1,0 +1,446 @@
+# 11. Presentation Platform
+
+---
+
+# Purpose
+
+The Presentation Platform provides human interaction with the AI Knowledge & Risk Intelligence Platform.
+
+Unlike traditional user interfaces, the Presentation Platform does not contain business logic.
+
+Its purpose is to present business capabilities, support decision making and enable collaboration between users and Artificial Intelligence.
+
+The Presentation Platform consumes services exposed by the backend and presents them in a form suitable for different user roles.
+
+---
+
+# Design Principles
+
+The Presentation Platform follows several fundamental principles.
+
+## Workspace-Oriented
+
+The user works inside dedicated workspaces.
+
+Each workspace represents a business activity rather than a database object.
+
+Examples include:
+
+- Source Workspace
+- Monitoring Workspace
+- Connector Workspace
+- Knowledge Workspace
+- Risk Workspace
+- Dashboard Workspace
+
+---
+
+## AI-First User Experience
+
+Artificial Intelligence is considered a permanent participant in every workspace.
+
+The user should never need to leave a workspace to interact with AI.
+
+AI should:
+
+- explain
+- recommend
+- refine
+- validate
+- generate
+- summarise
+
+The interface should minimise technical complexity.
+
+---
+
+## Progressive Disclosure
+
+Risk Managers should see business concepts first.
+
+Technical details should only appear when required.
+
+Example:
+
+```
+Connector
+
+↓
+
+Recommended RSS connector
+
+↓
+
+Advanced
+
+↓
+
+Authentication
+
+↓
+
+Parser
+
+↓
+
+Headers
+```
+
+The majority of users should never need to open the advanced view.
+
+---
+
+# Presentation Architecture
+
+```
+Navigation
+
+↓
+
+Workspace
+
+↓
+
+Business Components
+
+↓
+
+Platform APIs
+```
+
+Business Components never communicate directly with databases.
+
+---
+
+# Main Workspaces
+
+## Dashboard Workspace
+
+Purpose
+
+Provide an overview of organisational risk.
+
+Typical widgets:
+
+- Active Monitoring Objectives
+- Information Sources
+- Active Connectors
+- Recent Risk Signals
+- Recommendations
+- System Health
+
+---
+
+## Source Workspace
+
+Purpose
+
+Manage Information Sources.
+
+Capabilities:
+
+- create source
+- AI onboarding
+- connector proposal
+- connector refinement
+- connector approval
+- connector testing
+- runtime monitoring
+
+The Source Workspace is the primary entry point for new connectors.
+
+---
+
+## Monitoring Workspace
+
+Purpose
+
+Configure business monitoring.
+
+Contains:
+
+- Monitoring Objectives
+- Monitoring Profiles
+- Enterprise Risk Mapping
+
+---
+
+## Knowledge Workspace
+
+Purpose
+
+Explore organisational knowledge.
+
+Capabilities:
+
+- search knowledge
+- inspect entities
+- inspect relationships
+- browse events
+- evidence tracing
+- semantic search (future)
+
+---
+
+## Risk Workspace
+
+Purpose
+
+Analyse generated Risk Signals.
+
+Capabilities:
+
+- filter
+- prioritise
+- acknowledge
+- investigate
+- inspect evidence
+- generate reports
+
+---
+
+## Administration Workspace
+
+Purpose
+
+Manage platform configuration.
+
+Capabilities:
+
+- users
+- permissions
+- connector health
+- audit logs
+- system configuration
+
+---
+
+# User Roles
+
+The platform supports multiple user roles.
+
+Examples:
+
+Risk Manager
+
+Project Manager
+
+Researcher
+
+System Administrator
+
+Connector Developer
+
+AI Engineer
+
+Different roles may use different workspaces while sharing the same backend services.
+
+---
+
+# AI Conversations
+
+AI interactions are embedded inside workspaces.
+
+Example:
+
+```
+Source Workspace
+
+↓
+
+AI Conversation
+
+↓
+
+Connector Proposal
+
+↓
+
+Refinement
+
+↓
+
+Approval
+```
+
+The user should perceive AI as a collaborative assistant rather than a separate application.
+
+---
+
+# Workspace Navigation
+
+Navigation is organised around business activities rather than technical objects.
+
+Suggested navigation:
+
+```
+Dashboard
+
+Monitoring
+
+Information Sources
+
+Knowledge
+
+Risk Signals
+
+Reports
+
+Administration
+```
+
+Future workspaces may be added without redesigning the navigation structure.
+
+---
+
+# Component Design
+
+Presentation components are divided into three categories.
+
+## Business Components
+
+Examples:
+
+- Monitoring Objective Editor
+- Source Workspace
+- Knowledge Explorer
+- Risk Signal Viewer
+
+---
+
+## Shared Components
+
+Examples:
+
+- Search
+- Tables
+- Filters
+- Dialogs
+- Notifications
+
+---
+
+## AI Components
+
+Examples:
+
+- AI Conversation
+- AI Recommendation Panel
+- AI Explanation
+- AI Validation
+- AI Refinement
+
+AI Components communicate with business APIs rather than directly with AI models.
+
+---
+
+# State Management
+
+Presentation state is divided into:
+
+Application State
+
+↓
+
+Workspace State
+
+↓
+
+Component State
+
+Business data is retrieved from backend APIs.
+
+The frontend does not duplicate business logic.
+
+---
+
+# Presentation Responsibilities
+
+The Presentation Platform is responsible for:
+
+- visualisation
+- navigation
+- interaction
+- collaboration
+- explanation
+
+The Presentation Platform is **not** responsible for:
+
+- business rules
+- connector execution
+- knowledge processing
+- risk assessment
+
+---
+
+# Future Evolution
+
+The architecture supports additional presentation channels including:
+
+- Mobile applications
+- Microsoft Teams
+- Copilot extensions
+- Voice assistants
+- Command-line tools
+- AR/VR interfaces
+
+All channels consume the same business APIs.
+
+---
+
+# Architectural Decisions
+
+Presentation is organised around business workspaces.
+
+AI is integrated into every workspace.
+
+Business logic remains in backend services.
+
+The Presentation Platform communicates only through platform APIs.
+
+Presentation technology may evolve independently of business capabilities.
+
+---
+
+# Guiding Principle
+
+> **Users work in business workspaces. AI works alongside them. The Presentation Platform makes complex intelligence simple, explainable and actionable.**
+
+
+I think we have now discovered the biggest UX concept of the whole platform
+
+The UI is not page-oriented.
+
+It is workspace-oriented.
+
+For example:
+
+Source Workspace
+
+AI onboarding
+
+↓
+
+Connector Proposal
+
+↓
+
+Connector Test
+
+↓
+
+Runtime Health
+
+↓
+
+Collected Knowledge
+
+↓
+
+Generated Risk Signals
+
+Everything happens inside one workspace.
+
+The user never feels like they are navigating between disconnected pages.
+
+This is exactly the direction your onboarding redesign has already taken. I think it's a defining UX principle and worth stating explicitly in the architecture.

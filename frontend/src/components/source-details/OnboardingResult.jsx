@@ -45,7 +45,7 @@ function Grid({ rows }) {
  * facts are flagged as unresolved. Readiness uses proper states, so a proposal
  * can be accepted for testing before every field is live-validated.
  */
-export default function OnboardingResult({ advice, variant, recommendation, accepted, onAccept, onRefine, onRetry }) {
+export default function OnboardingResult({ advice, variant, recommendation, accepted, accepting = false, onAccept, onRefine, onRetry }) {
   const [revision, setRevision] = useState("");
 
   if (advice.status === "loading") {
@@ -213,7 +213,7 @@ export default function OnboardingResult({ advice, variant, recommendation, acce
           <strong>{accepted ? "Accepted as Connector Specification" : "Proposal ready for review"}</strong>
           <p className="sd-muted">
             {accepted
-              ? "This specification is ready for the automated connector test."
+              ? "Specification saved. Sample records appear below when the connector test succeeds."
               : "Accept it as the connector specification, or describe changes below."}
           </p>
         </div>
@@ -226,10 +226,10 @@ export default function OnboardingResult({ advice, variant, recommendation, acce
             className="btn btn--primary"
             type="button"
             onClick={onAccept}
-            disabled={!state.acceptable}
+            disabled={!state.acceptable || accepting}
             title={state.acceptable ? "" : "Enabled once the proposal is ready"}
           >
-            Accept as Connector Specification
+            {accepting ? "Verifying feeds…" : "Accept as Connector Specification"}
           </button>
         )}
       </div>
@@ -237,7 +237,7 @@ export default function OnboardingResult({ advice, variant, recommendation, acce
       <form className="op-revision" onSubmit={submitRevision}>
         <label htmlFor="onboarding-revision">Describe changes</label>
         <p className="sd-muted">
-          Optional. AI regenerates the complete proposal with your correction; no interview is required.
+          Approve or change any open decisions (languages, scope, sensitivity, etc.). AI regenerates the proposal and should stop re-asking for what you just decided.
         </p>
         <textarea
           id="onboarding-revision"
@@ -245,7 +245,7 @@ export default function OnboardingResult({ advice, variant, recommendation, acce
           rows="3"
           value={revision}
           onChange={(e) => setRevision(e.target.value)}
-          placeholder="Example: Use the Finnish RSS feed, poll hourly, and add Wärtsilä and Baltic logistics to the monitoring profile."
+          placeholder="Example: Approve Finnish and English; poll every 6 hours; keep sensitivity balanced; add Wärtsilä to the monitoring profile."
         />
         <div className="ba-actions">
           <button className="btn btn--secondary" type="submit" disabled={revision.trim().length < 2}>

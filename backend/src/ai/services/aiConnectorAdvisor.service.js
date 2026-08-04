@@ -14,6 +14,13 @@ import {
 const currentFilePath = fileURLToPath(import.meta.url);
 const currentDirectory = path.dirname(currentFilePath);
 
+const PLATFORM_DEFAULTS = {
+  defaultPollInterval: "PT6H",
+  defaultLanguages: ["fi", "en"],
+  defaultSensitivity: "balanced",
+  rawRecordRetentionDays: 90
+};
+
 function loadConnectorAdvisorPrompt() {
   const promptPath = path.resolve(
     currentDirectory,
@@ -32,14 +39,39 @@ function loadConnectorAdvisorPrompt() {
 const CONNECTOR_ADVISOR_PROMPT =
   loadConnectorAdvisorPrompt();
 
-function buildConnectorAdvisorInput(source) {
+function buildMonitoringObjectiveContext(objective) {
+  if (!objective) {
+    return null;
+  }
+
+  return {
+    id: objective.id,
+    name: objective.name,
+    description: objective.description || "",
+    businessQuestion: objective.businessQuestion || "",
+    linkedRiskCategories:
+      objective.relatedRiskDefinitions || [],
+    relatedRiskFactors:
+      objective.relatedRiskFactors || []
+  };
+}
+
+function buildConnectorAdvisorInput(
+  source,
+  { monitoringObjective = null } = {}
+) {
   if (!source) {
     throw new Error(
       "Information source is required for connector advice."
     );
   }
 
+  const objectiveContext =
+    buildMonitoringObjectiveContext(monitoringObjective);
+
   return {
+    monitoringObjective: objectiveContext,
+
     informationSource: {
       id: source.id,
       name: source.name,
@@ -113,15 +145,116 @@ function buildConnectorAdvisorInput(source) {
       connectorStatus:
         source.connectorStatus ||
         "notConfigured"
-    }
+    },
+
+    existingRiskTaxonomy: objectiveContext
+      ? [
+          ...(objectiveContext.linkedRiskCategories || []),
+          ...(objectiveContext.relatedRiskFactors || [])
+        ]
+      : [
+          ...(source.relatedRiskDefinitionIds || []),
+          ...(source.supportedRiskFactorIds || [])
+        ],
+
+    platformDefaults: PLATFORM_DEFAULTS
+  };
+}
+
+function fieldMappingsToObject(fieldMappings) {
+  if (!Array.isArray(fieldMappings)) {
+    return {};
+  }
+
+  const mapping = {};
+
+  for (const item of fieldMappings) {
+    if (!item || typeof item !== "object") continue;
+    const sourceField = String(item.sourceField || "").trim();
+    const canonicalField = String(item.canonicalField || "").trim();
+    if (!sourceField || !canonicalField) continue;
+    mapping[sourceField] = canonicalField;
+  }
+
+  return mapping;
+}
+
+function readinessToLegacy(connectorReadiness) {
+  switch (connectorReadiness) {
+    case "ready-for-activation":
+    case "ready-for-test":
+      return "ready";
+    case "proposal-ready":
+      return "partiallyReady";
+    case "test-failed":
+      return "actionRequired";
+    default:
+      return "unknown";
+  }
+}
+
+/**
+ * Normalize AI output for the frontend: convert fieldMappings →
+ * proposedFieldMapping object, and keep a few legacy aliases so older
+ * panels still degrade cleanly.
+ */
+export function normalizeConnectorAdviceOutput(advice) {
+  if (!advice || typeof advice !== "object") {
+    return advice;
+  }
+
+  const technicalConfiguration = {
+    ...(advice.technicalConfiguration || {}),
+    proposedFieldMapping: fieldMappingsToObject(
+      advice.technicalConfiguration?.fieldMappings
+    )
+  };
+
+  // Prefer object form for clients; keep fieldMappings for debugging.
+  delete technicalConfiguration.fieldMappings;
+
+  const connectorReadiness =
+    advice.connectorReadiness || "proposal-ready";
+
+  const canGenerate =
+    connectorReadiness === "ready-for-test" ||
+    connectorReadiness === "ready-for-activation";
+
+  return {
+    ...advice,
+    technicalConfiguration,
+
+    // Legacy aliases (Sprint 3 panels / older normalizer paths)
+    readiness: readinessToLegacy(connectorReadiness),
+    recommendedApproach: {
+      connectionMethod:
+        advice.recommendation?.connectionMethod || "",
+      refreshFrequency:
+        technicalConfiguration.pollInterval ||
+        PLATFORM_DEFAULTS.defaultPollInterval,
+      expectedData: Object.values(
+        technicalConfiguration.proposedFieldMapping || {}
+      ),
+      rationale: advice.recommendation?.rationale || "",
+      authenticationType:
+        technicalConfiguration.authenticationType || "",
+      languages:
+        advice.monitoringConfiguration?.languages || []
+    },
+    missingInformation:
+      advice.unresolvedTechnicalFacts || [],
+    requiredBeforeConnection:
+      advice.decisionsRequiringUserApproval || [],
+    estimatedComplexity: canGenerate ? "medium" : "unknown",
+    canGenerateConnectorDefinition: canGenerate
   };
 }
 
 export async function generateConnectorAdvice(
-  source
+  source,
+  options = {}
 ) {
-  const input =
-    buildConnectorAdvisorInput(source);
+  const input = buildConnectorAdvisorInput(source, options);
 
   const response =
     await aiClient.responses.create({
@@ -139,7 +272,7 @@ export async function generateConnectorAdvice(
       text: {
         format: {
           type: "json_schema",
-          name: "connector_advisor",
+          name: "connector_proposal_v2",
           strict: true,
           schema: connectorAdvisorSchema
         }
@@ -152,13 +285,17 @@ export async function generateConnectorAdvice(
     );
   }
 
+  let parsed;
+
   try {
-    return JSON.parse(
-      response.output_text
-    );
+    parsed = JSON.parse(response.output_text);
   } catch (error) {
     throw new Error(
       `AI Connector Advisor returned invalid JSON: ${error.message}`
     );
   }
+
+  return normalizeConnectorAdviceOutput(parsed);
 }
+
+export { PLATFORM_DEFAULTS, buildConnectorAdvisorInput };

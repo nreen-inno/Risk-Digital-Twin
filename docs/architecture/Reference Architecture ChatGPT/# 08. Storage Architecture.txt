@@ -1,0 +1,623 @@
+# 08. Storage Architecture
+
+---
+
+# Purpose
+
+The Storage Architecture defines how information is persisted throughout the AI Knowledge & Risk Intelligence Platform.
+
+Rather than focusing on specific database technologies, this chapter defines the logical ownership, lifecycle and persistence strategy for every major domain object.
+
+The architecture separates configuration, operational data, runtime information, knowledge and business intelligence to ensure scalability, traceability and long-term maintainability.
+
+---
+
+# Storage Principles
+
+The platform follows several fundamental storage principles.
+
+## Canonical Persistence
+
+Every important business object should exist only once within the platform.
+
+Multiple copies of the same information should be avoided.
+
+---
+
+## Immutable Runtime
+
+Runtime data is never modified after creation.
+
+Examples:
+
+- Raw Records
+- Connector Executions
+- Knowledge
+- Risk Signals
+
+Corrections create new objects rather than modifying historical information.
+
+---
+
+## Configuration Versioning
+
+Configuration objects evolve over time.
+
+Examples:
+
+- Connector Specification
+- Connector Definition
+- Monitoring Profile
+
+Historical versions remain available for auditing.
+
+---
+
+## Evidence Preservation
+
+Every business conclusion must reference its supporting evidence.
+
+Evidence should never be deleted while dependent objects exist.
+
+---
+
+## Separation of Storage Responsibilities
+
+The platform separates:
+
+- Configuration
+- Runtime
+- Knowledge
+- Intelligence
+- Operational Monitoring
+- Binary Content
+
+Each category has different lifecycle requirements.
+
+---
+
+# Storage Architecture
+
+```
+                    Configuration
+                           │
+                           ▼
+                 Configuration Repository
+                           │
+                           ▼
+                     Runtime Repository
+                           │
+                           ▼
+                    Knowledge Repository
+                           │
+                           ▼
+                  Intelligence Repository
+                           │
+                           ▼
+                  Presentation Repository
+```
+
+---
+
+# Storage Categories
+
+The platform stores five categories of information.
+
+---
+
+## Configuration Repository
+
+Purpose
+
+Stores platform configuration.
+
+Contains:
+
+- Monitoring Objectives
+- Monitoring Profiles
+- Information Sources
+- Connector Proposals
+- Connector Specifications
+- Connector Definitions
+
+Characteristics
+
+- Versioned
+- Small volume
+- Frequently read
+- Infrequently updated
+
+---
+
+## Runtime Repository
+
+Purpose
+
+Stores operational execution data.
+
+Contains:
+
+- Connector Executions
+- Connector Test Results
+- Execution Logs
+- Runtime Errors
+- Scheduler State
+
+Characteristics
+
+- High write frequency
+- Operational history
+- Time-series oriented
+
+---
+
+## Raw Information Repository
+
+Purpose
+
+Stores canonical Raw Records.
+
+Every connector creates Raw Records.
+
+Raw Records remain unchanged after creation.
+
+Typical contents:
+
+- metadata
+- publication time
+- language
+- source
+- payload reference
+- duplicate identifiers
+
+---
+
+## Knowledge Repository
+
+Purpose
+
+Stores reusable organisational knowledge.
+
+Knowledge is independent of Monitoring Objectives.
+
+Knowledge survives connector upgrades, AI model changes and dashboard redesigns.
+
+Typical contents:
+
+- entities
+- organisations
+- people
+- locations
+- relationships
+- events
+- topics
+- confidence
+- evidence
+
+The Knowledge Repository becomes the organisational memory of the platform.
+
+---
+
+## Intelligence Repository
+
+Purpose
+
+Stores business intelligence.
+
+Contains:
+
+- Risk Signals
+- Recommendations
+- Future Predictions
+- AI Agent outputs
+
+Unlike Knowledge, these objects are context dependent.
+
+---
+
+# Binary Storage
+
+Not all information belongs in a document database.
+
+Binary storage contains:
+
+- original XML
+- JSON payloads
+- PDF documents
+- attachments
+- downloaded reports
+- images
+- future multimedia
+
+The platform stores references rather than embedding large binary objects inside business documents.
+
+---
+
+# Logical Data Ownership
+
+```
+Monitoring Objective
+
+owns
+
+Monitoring Profiles
+
+
+
+Information Source
+
+owns
+
+Connector Specification
+
+
+
+Connector Definition
+
+creates
+
+Connector Execution
+
+
+
+Connector Execution
+
+creates
+
+Raw Record
+
+
+
+Raw Record
+
+creates
+
+Knowledge
+
+
+
+Knowledge
+
+creates
+
+Risk Signal
+
+
+
+Risk Signal
+
+creates
+
+Recommendation
+```
+
+Ownership defines lifecycle.
+
+References define traceability.
+
+---
+
+# Repository Responsibilities
+
+## Configuration Repository
+
+Business configuration.
+
+---
+
+## Runtime Repository
+
+Operational history.
+
+---
+
+## Knowledge Repository
+
+Organisational memory.
+
+---
+
+## Intelligence Repository
+
+Business conclusions.
+
+---
+
+## Binary Repository
+
+Large immutable payloads.
+
+---
+
+# Storage Technology Mapping
+
+The current implementation uses Azure services.
+
+Logical Repository | Suggested Technology
+
+Configuration | Cosmos DB
+
+Runtime | Cosmos DB
+
+Knowledge | Cosmos DB
+
+Intelligence | Cosmos DB
+
+Binary | Azure Blob Storage
+
+Secrets | Azure Key Vault
+
+Telemetry | Application Insights
+
+This mapping is an implementation choice rather than an architectural requirement.
+
+---
+
+# Cosmos DB Containers
+
+Suggested logical containers.
+
+## configuration
+
+Contains:
+
+- InformationSource
+- MonitoringObjective
+- MonitoringProfile
+- ConnectorProposal
+- ConnectorSpecification
+- ConnectorDefinition
+
+---
+
+## runtime
+
+Contains:
+
+- ConnectorExecution
+- ConnectorTestResult
+- SchedulerState
+- RuntimeErrors
+
+---
+
+## rawrecords
+
+Contains:
+
+- RawRecord
+
+---
+
+## knowledge
+
+Contains:
+
+- Knowledge
+
+Future versions may additionally support graph storage.
+
+---
+
+## intelligence
+
+Contains:
+
+- RiskSignal
+- Recommendation
+
+---
+
+# Partition Strategy
+
+Configuration
+
+Low volume.
+
+Partition by object type.
+
+---
+
+Runtime
+
+Partition by connector.
+
+---
+
+Raw Records
+
+Partition by source.
+
+---
+
+Knowledge
+
+Partition by source.
+
+Future:
+
+Partition by Knowledge Domain.
+
+---
+
+Risk Signals
+
+Partition by Monitoring Objective.
+
+---
+
+# Retention
+
+Different object types have different retention policies.
+
+Configuration
+
+Permanent.
+
+---
+
+Raw Records
+
+Long-term retention.
+
+---
+
+Knowledge
+
+Permanent organisational memory.
+
+---
+
+Risk Signals
+
+Business-defined retention.
+
+---
+
+Execution Logs
+
+Configurable.
+
+---
+
+Temporary Files
+
+Automatic cleanup.
+
+---
+
+# Versioning
+
+Configuration objects are versioned.
+
+Examples
+
+Connector Specification
+
+Version 1
+
+↓
+
+Version 2
+
+↓
+
+Version 3
+
+Runtime objects always reference the version used during execution.
+
+Historical executions remain reproducible.
+
+---
+
+# Traceability
+
+Every Recommendation must remain traceable.
+
+```
+Recommendation
+
+↓
+
+Risk Signal
+
+↓
+
+Knowledge
+
+↓
+
+Raw Record
+
+↓
+
+Connector Execution
+
+↓
+
+Connector Definition
+
+↓
+
+Information Source
+```
+
+Traceability is one of the most important architectural principles of the platform.
+
+---
+
+# Backup Strategy
+
+Configuration
+
+Daily backup.
+
+---
+
+Knowledge
+
+Continuous backup.
+
+---
+
+Runtime
+
+Point-in-time recovery.
+
+---
+
+Binary Storage
+
+Geo-redundant replication.
+
+---
+
+# Future Evolution
+
+The storage architecture supports future extensions including:
+
+- Knowledge Graph
+- Semantic Index
+- Vector Database
+- Long-term AI Memory
+- Cross-platform Knowledge Sharing
+
+These technologies extend the Knowledge Repository without changing the domain model.
+
+---
+
+# Architectural Decisions
+
+Storage is organised around business responsibilities rather than database technologies.
+
+Knowledge is treated as a permanent organisational asset.
+
+Business intelligence is stored separately from knowledge.
+
+Configuration is separated from runtime.
+
+Large binary objects remain outside document storage.
+
+---
+
+# Guiding Principle
+
+> **Store information once. Preserve evidence. Build organisational memory. Keep business intelligence traceable.**
+
+The Storage Architecture provides the persistent foundation for every other platform capability while remaining independent of implementation technologies.
+
+I would make one more major architectural improvement
+
+After writing this chapter, I think the platform is still missing one repository that will become essential:
+
+Knowledge Repository
+        │
+        ▼
+Semantic Index
+        │
+        ▼
+Vector Store
+
+I would not expose vectors as a business object. They are an implementation detail.
+
+But I would introduce a Semantic Index in the architecture. It could initially be empty, but later be implemented using Azure AI Search, PostgreSQL + pgvector, or another vector-capable store. That keeps the architecture future-proof while preserving the clean separation between business concepts (Knowledge) and implementation technologies (embeddings). I think it's worth introducing now so that future AI features have a natural place in the architecture.

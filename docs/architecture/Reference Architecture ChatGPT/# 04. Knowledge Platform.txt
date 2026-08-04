@@ -1,0 +1,480 @@
+# 04. Knowledge Platform
+
+---
+
+# Purpose
+
+The Knowledge Platform is responsible for transforming heterogeneous information collected from external and internal sources into reusable organisational knowledge.
+
+Unlike traditional monitoring systems, the Risk Digital Twin does not generate business conclusions directly from collected documents.
+
+Instead, the platform first constructs a reusable knowledge representation that becomes the foundation for business intelligence, risk assessment and future AI reasoning.
+
+The Knowledge Platform therefore represents the organisational memory of the Risk Digital Twin.
+
+---
+
+# Why a Knowledge Platform?
+
+Traditional monitoring systems repeatedly analyse the same document every time a different business question is asked.
+
+For example:
+
+```
+Article
+
+↓
+
+"What does this mean for logistics?"
+
+↓
+
+AI
+```
+
+Later
+
+```
+Same Article
+
+↓
+
+"What does this mean for suppliers?"
+
+↓
+
+AI
+```
+
+Later
+
+```
+Same Article
+
+↓
+
+"What does this mean for geopolitical risk?"
+
+↓
+
+AI
+```
+
+The same article may therefore be processed many times.
+
+The Risk Digital Twin follows a different approach.
+
+```
+Article
+
+↓
+
+Knowledge
+
+↓
+
+Logistics
+
+Supplier
+
+Political
+
+Financial
+
+Environmental
+```
+
+Knowledge is extracted once and reused many times.
+
+---
+
+# Objectives
+
+The Knowledge Platform shall:
+
+- extract reusable knowledge
+- normalize information
+- remove duplication
+- identify entities
+- detect relationships
+- detect events
+- classify topics
+- preserve evidence
+- maintain confidence
+- support semantic search
+- support future Knowledge Graph
+
+---
+
+# Knowledge Processing
+
+Knowledge is created by the Knowledge Processing Service.
+
+Knowledge Processing may combine multiple technologies.
+
+Examples include:
+
+- Artificial Intelligence
+- Named Entity Recognition
+- Rule-based extraction
+- Natural Language Processing
+- Translation
+- Metadata extraction
+- Language detection
+- Relationship extraction
+- Future AI agents
+
+The implementation technology is not part of the domain model.
+
+---
+
+# Knowledge Object
+
+The Knowledge object is the primary output of the processing pipeline.
+
+Unlike AI-specific outputs, Knowledge represents reusable organisational information.
+
+Knowledge may contain:
+
+## Identity
+
+- id
+- source
+- timestamp
+- confidence
+
+---
+
+## Entities
+
+Examples
+
+- Meyer Turku
+- YLE
+- Port of Turku
+- Baltic Sea
+
+---
+
+## People
+
+Examples
+
+- CEOs
+- Ministers
+- Researchers
+
+---
+
+## Organisations
+
+Examples
+
+- Companies
+- Government agencies
+- Suppliers
+
+---
+
+## Locations
+
+Examples
+
+- Countries
+- Ports
+- Cities
+- Regions
+
+---
+
+## Events
+
+Examples
+
+- Strike
+- Bankruptcy
+- New regulation
+- Weather warning
+- Accident
+
+---
+
+## Topics
+
+Examples
+
+- Shipbuilding
+- Politics
+- Defence
+- Energy
+- Environment
+- Supply Chain
+
+---
+
+## Relationships
+
+Examples
+
+```
+Strike
+
+↓
+
+affects
+
+↓
+
+Port of Turku
+```
+
+```
+Port
+
+↓
+
+supports
+
+↓
+
+Shipbuilding
+```
+
+---
+
+## Time
+
+Knowledge contains:
+
+- publication time
+- event time
+- processing time
+
+---
+
+## Evidence
+
+Knowledge always references its originating Raw Record.
+
+Knowledge never exists without evidence.
+
+---
+
+# Knowledge Repository
+
+Knowledge objects are stored independently from Raw Records.
+
+The repository becomes the organisational memory of the platform.
+
+Future capabilities include:
+
+- semantic search
+- similarity search
+- historical reasoning
+- cross-source correlation
+- trend detection
+- knowledge graph
+
+---
+
+# Knowledge Processing Pipeline
+
+```
+Raw Record
+
+↓
+
+Normalization
+
+↓
+
+Language Detection
+
+↓
+
+Translation
+
+↓
+
+Entity Recognition
+
+↓
+
+Relationship Extraction
+
+↓
+
+Topic Classification
+
+↓
+
+Event Detection
+
+↓
+
+Knowledge Object
+```
+
+Each processing step may be implemented using different technologies.
+
+---
+
+# Knowledge Quality
+
+Every Knowledge object contains quality metadata.
+
+Examples:
+
+- confidence
+- processing model
+- extraction timestamp
+- language
+- completeness
+- validation status
+
+Knowledge quality supports explainability and auditing.
+
+---
+
+# Relationship with Monitoring Objectives
+
+Knowledge is independent from Monitoring Objectives.
+
+One Knowledge object may support many Monitoring Objectives.
+
+```
+Knowledge
+
+↓
+
+Objective A
+
+↓
+
+Risk Signal A
+
+
+Knowledge
+
+↓
+
+Objective B
+
+↓
+
+Risk Signal B
+```
+
+This allows the platform to avoid repeated AI processing.
+
+---
+
+# Relationship with Risk Assessment
+
+Knowledge itself contains no business interpretation.
+
+Business interpretation is performed later.
+
+```
+Knowledge
+
+↓
+
+Risk Assessment
+
+↓
+
+Risk Signal
+```
+
+This separation allows business rules to evolve independently of information extraction.
+
+---
+
+# Future Knowledge Graph
+
+The Knowledge Platform is intentionally designed to evolve into a Knowledge Graph.
+
+Initially, knowledge may be stored as independent objects.
+
+Later these objects may be connected through graph relationships.
+
+Examples:
+
+```
+Supplier
+
+↓
+
+located in
+
+↓
+
+Finland
+```
+
+```
+Company
+
+↓
+
+owns
+
+↓
+
+Shipyard
+```
+
+```
+Strike
+
+↓
+
+affects
+
+↓
+
+Supplier
+```
+
+This transition should not require changes to connector implementations.
+
+---
+
+# Architectural Decisions
+
+Knowledge is treated as a first-class domain object.
+
+The platform stores knowledge rather than AI outputs.
+
+Knowledge is reusable.
+
+Knowledge is independent of Monitoring Objectives.
+
+Knowledge Processing is a service.
+
+Knowledge is persistent.
+
+Business interpretation belongs to the Risk Assessment Platform.
+
+---
+
+# Guiding Principle
+
+> **Extract knowledge once. Reuse knowledge everywhere.**
+
+The Knowledge Platform represents the long-term organisational memory of the Risk Digital Twin and forms the foundation for explainable AI, semantic search, future Knowledge Graph capabilities and reusable business intelligence.
+
+Business Platform
+        │
+        ▼
+Acquisition Platform
+        │
+        ▼
+Knowledge Platform
+        │
+        ▼
+Intelligence Platform
+        │
+        ▼
+Presentation Platform

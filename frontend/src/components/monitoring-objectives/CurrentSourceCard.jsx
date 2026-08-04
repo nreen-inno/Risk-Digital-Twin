@@ -4,10 +4,36 @@ import { ArrowIcon } from "../../lib/icons.jsx";
 function firstValue(source, keys, fallback = "Not configured") {
   const raw = source?.raw || {};
   for (const key of keys) {
-    const value = raw[key];
+    const value = raw[key] ?? source?.[key];
+    if (value !== undefined && value !== null && value !== "") return value;
+  }
+  // Nested connector definition / config shapes
+  const nested = [
+    raw?.config?.pollInterval,
+    raw?.connectorDefinition?.config?.pollInterval,
+    raw?.technicalConfiguration?.pollInterval,
+  ];
+  for (const value of nested) {
     if (value !== undefined && value !== null && value !== "") return value;
   }
   return fallback;
+}
+
+function formatFrequency(value) {
+  const raw = String(value || "").trim();
+  if (!raw || raw === "Not configured") return "Not configured";
+  const match = raw.match(
+    /^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+(?:\.\d+)?)S)?)?$/i
+  );
+  if (!match) return raw;
+  const days = Number(match[1] || 0);
+  const hours = Number(match[2] || 0);
+  const minutes = Number(match[3] || 0);
+  if (!days && hours === 1 && !minutes) return "Hourly";
+  if (!days && hours && !minutes) return `Every ${hours} hours`;
+  if (days === 1 && !hours && !minutes) return "Daily";
+  if (!days && !hours && minutes) return `Every ${minutes} minutes`;
+  return raw;
 }
 
 function asText(value, fallback = "Not configured") {
@@ -20,11 +46,20 @@ function asText(value, fallback = "Not configured") {
 
 export default function CurrentSourceCard({ source, onModify, onDisable, busy = false }) {
   const [expanded, setExpanded] = useState(false);
+  const frequency = formatFrequency(
+    firstValue(source, [
+      "collectionFrequency",
+      "refreshFrequency",
+      "pollInterval",
+      "recommendedInterval",
+      "schedule",
+    ])
+  );
 
   const operational = [
     ["Connector status", source.connectorStatusLabel || "Not configured"],
     ["Connection method", asText(firstValue(source, ["connectionMethod", "transport", "connectorType", "sourceKind"]), source.sourceKindLabel)],
-    ["Collection frequency", asText(firstValue(source, ["collectionFrequency", "refreshFrequency", "recommendedInterval", "schedule"]))],
+    ["Collection frequency", frequency],
     ["Filters / topics", asText(firstValue(source, ["filters", "monitoringFilters", "topics", "keywords", "tags"]))],
     ["Monitoring instructions", asText(firstValue(source, ["monitoringInstructions", "aiInstructions", "informationNeed"]), source.informationNeed || "Not configured")],
     ["Last collection", asText(firstValue(source, ["lastCollectedAt", "lastRunAt", "lastSuccessfulRunAt"]))],
@@ -48,7 +83,7 @@ export default function CurrentSourceCard({ source, onModify, onDisable, busy = 
         </div>
         <div className="msrc__meta-row">
           <dt>Frequency</dt>
-          <dd>{asText(firstValue(source, ["collectionFrequency", "refreshFrequency", "recommendedInterval", "schedule"]))}</dd>
+          <dd>{frequency}</dd>
         </div>
         <div className="msrc__meta-row">
           <dt>Monitoring focus</dt>

@@ -1,0 +1,447 @@
+# 16. Event-Driven Architecture & Platform Communication
+
+---
+
+# Purpose
+
+The AI Knowledge & Risk Intelligence Platform consists of multiple independent platforms that collaborate to transform information into business intelligence.
+
+Rather than communicating through tightly coupled synchronous calls, platforms exchange domain events representing meaningful business activities.
+
+This chapter defines the logical event architecture of the platform.
+
+The architecture remains independent of the underlying messaging technology.
+
+---
+
+# Why Event-Driven?
+
+The platform continuously processes information.
+
+Examples include:
+
+- new connector created
+- connector executed
+- new Raw Record received
+- Knowledge generated
+- Risk Signal created
+- Recommendation approved
+
+These activities naturally form a sequence of business events.
+
+Using events provides:
+
+- loose coupling
+- scalability
+- resilience
+- auditability
+- asynchronous processing
+
+---
+
+# Event Flow
+
+```
+Business Platform
+        │
+        ▼
+Acquisition Platform
+        │
+        ▼
+Knowledge Platform
+        │
+        ▼
+Intelligence Platform
+        │
+        ▼
+Presentation Platform
+```
+
+Each platform publishes events describing completed work.
+
+---
+
+# Event Categories
+
+The platform defines five categories of events.
+
+## Business Events
+
+Examples:
+
+MonitoringObjectiveCreated
+
+MonitoringObjectiveUpdated
+
+InformationSourceCreated
+
+ConnectorApproved
+
+---
+
+## Acquisition Events
+
+Examples:
+
+ConnectorActivated
+
+ConnectorExecutionStarted
+
+ConnectorExecutionCompleted
+
+RawRecordCreated
+
+RawRecordDuplicateDetected
+
+---
+
+## Knowledge Events
+
+Examples:
+
+KnowledgeCreated
+
+KnowledgeUpdated
+
+KnowledgeMerged
+
+EntityResolved
+
+KnowledgeValidated
+
+---
+
+## Intelligence Events
+
+Examples:
+
+RiskSignalGenerated
+
+RiskSignalUpdated
+
+RecommendationCreated
+
+RecommendationAccepted
+
+RecommendationDismissed
+
+---
+
+## Operational Events
+
+Examples:
+
+ConnectorFailed
+
+AIProviderUnavailable
+
+StorageWarning
+
+AuthenticationFailure
+
+PlatformHealthChanged
+
+---
+
+# Event Lifecycle
+
+Typical processing sequence.
+
+```
+Information Source Created
+
+↓
+
+Connector Proposal Generated
+
+↓
+
+Connector Approved
+
+↓
+
+Connector Activated
+
+↓
+
+Connector Executed
+
+↓
+
+Raw Record Created
+
+↓
+
+Knowledge Created
+
+↓
+
+Risk Signal Generated
+
+↓
+
+Recommendation Generated
+
+↓
+
+Dashboard Updated
+```
+
+---
+
+# Event Structure
+
+Every event follows the same structure.
+
+```json
+{
+  "eventId": "...",
+  "eventType": "...",
+  "occurredAt": "...",
+  "sourcePlatform": "...",
+  "objectId": "...",
+  "correlationId": "...",
+  "payload": { }
+}
+```
+
+Business services should not depend on messaging technology.
+
+---
+
+# Correlation IDs
+
+Every processing chain shares the same Correlation ID.
+
+Example:
+
+```
+Connector Execution
+
+↓
+
+Raw Record
+
+↓
+
+Knowledge
+
+↓
+
+Risk Signal
+
+↓
+
+Recommendation
+```
+
+This enables complete operational traceability.
+
+---
+
+# Synchronous vs Asynchronous Communication
+
+The platform supports two communication styles.
+
+## Synchronous
+
+Used for:
+
+- user requests
+- validation
+- configuration
+- queries
+
+Technology:
+
+REST API
+
+---
+
+## Asynchronous
+
+Used for:
+
+- processing
+- runtime execution
+- AI processing
+- notifications
+- background work
+
+Technology:
+
+Messaging platform (implementation independent)
+
+---
+
+# Event Ownership
+
+Each platform owns its own events.
+
+Business Platform owns:
+
+- MonitoringObjectiveCreated
+- MonitoringProfileUpdated
+
+Acquisition Platform owns:
+
+- RawRecordCreated
+- ConnectorExecutionCompleted
+
+Knowledge Platform owns:
+
+- KnowledgeCreated
+- KnowledgeUpdated
+
+Intelligence Platform owns:
+
+- RiskSignalGenerated
+- RecommendationCreated
+
+Presentation Platform consumes events but normally does not publish business events.
+
+---
+
+# Event Consumers
+
+One event may have multiple consumers.
+
+Example:
+
+```
+KnowledgeCreated
+
+├── Risk Assessment
+
+├── Search Index
+
+├── Analytics
+
+├── Future AI Agents
+
+└── Audit
+```
+
+New consumers should not require changes to the publisher.
+
+---
+
+# Platform Independence
+
+Events reduce coupling.
+
+The Acquisition Platform never calls the Intelligence Platform directly.
+
+Instead:
+
+```
+KnowledgeCreated
+
+↓
+
+published
+
+↓
+
+Risk Assessment
+
+↓
+
+consumes event
+```
+
+This enables independent evolution.
+
+---
+
+# Future Messaging Technologies
+
+Possible implementations include:
+
+- Azure Service Bus
+- Azure Event Grid
+- Kafka
+- RabbitMQ
+- CloudEvents
+- NATS
+
+The architecture intentionally remains independent of vendor technology.
+
+---
+
+# Event Replay
+
+Events should remain immutable.
+
+Historical events may be replayed to:
+
+- rebuild indexes
+- regenerate Knowledge
+- recalculate Risk Signals
+- test new AI models
+
+This capability supports continuous platform evolution.
+
+---
+
+# Architectural Decisions
+
+Business communication is event-driven.
+
+REST APIs remain user-facing.
+
+Events represent business facts.
+
+Platforms communicate through domain events rather than implementation details.
+
+Messaging technology is replaceable.
+
+---
+
+# Guiding Principle
+
+> **Platforms communicate by publishing facts, not by invoking internal implementation details.**
+
+Event-driven communication allows the platform to evolve into a scalable, loosely coupled and highly extensible AI ecosystem.I think we've just found the final architectural concept
+
+Until now we've described:
+
+Platforms
+Services
+Storage
+APIs
+
+But now I think the platform can be viewed as three orthogonal dimensions:
+
+1. Capabilities
+Business
+Acquisition
+Knowledge
+Intelligence
+Presentation
+2. Data
+Configuration
+Information
+Knowledge
+Intelligence
+Trust
+3. Communication
+REST
+
+↓
+
+Events
+
+↓
+
+AI Gateway
+
+That is actually a complete enterprise architecture framework.
+
+It means every future feature can be described by answering just three questions:
+
+Which platform owns it? (Capability)
+Which business object does it create or modify? (Data)
+How does it communicate? (REST, Events, AI Gateway)
+
+I think this three-dimensional view is one of the strongest conceptual outcomes of everything we've designed. It gives developers and architects a very clear mental model for extending the platform without breaking its structure.

@@ -13,6 +13,7 @@ export default function AiFirstOnboarding({
   objectiveId,
   advice,
   accepted,
+  accepting = false,
   onRun,
   onAccept,
   onChangeMode,
@@ -60,12 +61,30 @@ export default function AiFirstOnboarding({
           value={extra}
           onChange={(e) => setExtra(e.target.value)}
           placeholder="e.g. Monitor only financial news · Use Finnish and English · Check every hour · Focus on suppliers · Prefer official APIs over RSS"
+          disabled={loading || advice.status === "ready"}
         />
         <div className="ba-actions">
-          <button className="btn btn--primary" type="button" onClick={analyse} disabled={loading}>
-            {advice.status === "idle" ? "Analyse with AI" : "Re-analyse"}
-          </button>
+          {advice.status === "idle" || advice.status === "error" ? (
+            <button className="btn btn--primary" type="button" onClick={analyse} disabled={loading}>
+              Analyse with AI
+            </button>
+          ) : advice.status === "ready" ? (
+            <button
+              className="btn btn--ghost"
+              type="button"
+              onClick={analyse}
+              disabled={loading}
+              title="Discards refinements and runs a fresh analysis from the optional instructions above"
+            >
+              Start over
+            </button>
+          ) : null}
         </div>
+        {advice.status === "ready" && (
+          <p className="ba-helper">
+            To adjust the proposal, use <strong>Describe changes</strong> below. Start over only if you want a fresh analysis.
+          </p>
+        )}
       </div>
 
       {advice.status !== "idle" && (
@@ -74,6 +93,7 @@ export default function AiFirstOnboarding({
           variant="ai"
           recommendation={recommendation}
           accepted={accepted}
+          accepting={accepting}
           onAccept={onAccept}
           onRefine={refine}
           onRetry={() => run(revisions)}

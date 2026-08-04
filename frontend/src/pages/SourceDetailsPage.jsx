@@ -4,6 +4,10 @@ import {
   getAccessGuidance,
   updateBusinessAccess,
   getConnectorAdvice,
+  acceptConnectorSpecification,
+  testConnector,
+  getSourceRawRecords,
+  approveSourceSample,
 } from "../services/api.js";
 import { buildBusinessAccessPayload } from "../lib/access.js";
 import TopBar from "../components/layout/TopBar.jsx";
@@ -13,6 +17,7 @@ import SourceOverview from "../components/source-details/SourceOverview.jsx";
 import OnboardingModeChoice from "../components/source-details/OnboardingModeChoice.jsx";
 import AiFirstOnboarding from "../components/source-details/AiFirstOnboarding.jsx";
 import TechnicalInfoOnboarding from "../components/source-details/TechnicalInfoOnboarding.jsx";
+import RawRecordsPreview from "../components/source-details/RawRecordsPreview.jsx";
 import "../styles/source-details.css";
 
 function readContext(id, state) {
@@ -28,10 +33,8 @@ function readContext(id, state) {
 
 /**
  * Source Onboarding — AI-first connector onboarding.
- * The user first chooses an onboarding mode, then either lets AI analyse the
- * source or provides technical information. Both modes reuse the SAME existing
- * AI path (stash the instruction in business-access notes → POST
- * /connector-advice); no new backend API and no mock AI.
+ * Accept Spec persists Specification + Definition and, for RSS, runs a live
+ * fetch into canonical RawRecords shown in the preview panel.
  */
 export default function SourceDetailsPage() {
   const { id } = useParams();
@@ -48,8 +51,18 @@ export default function SourceDetailsPage() {
   const [mode, setMode] = useState(null); // null | "ai" | "technical"
   const [advice, setAdvice] = useState({ status: "idle", data: null, error: null });
   const [accepted, setAccepted] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const [sampleApproved, setSampleApproved] = useState(false);
+  const [approvingSample, setApprovingSample] = useState(false);
+  const [recordsState, setRecordsState] = useState({
+    status: "idle",
+    records: [],
+    testResult: null,
+    definition: null,
+    verification: null,
+    error: null,
+  });
 
-  // Load access guidance once, only to resolve a display name for the overview.
   const loadGuidance = useCallback(async () => {
     setGuidance((current) => ({ ...current, status: "loading", error: null }));
     try {
@@ -64,11 +77,18 @@ export default function SourceDetailsPage() {
     loadGuidance();
   }, [loadGuidance]);
 
-  // Run (or re-run) the AI analysis with a plain instruction string, reusing the
-  // existing connector-advice path. Called explicitly by each onboarding mode.
   const runAnalysis = useCallback(
     async (instruction) => {
       setAccepted(false);
+      setSampleApproved(false);
+      setRecordsState({
+        status: "idle",
+        records: [],
+        testResult: null,
+        definition: null,
+        verification: null,
+        error: null,
+      });
       setAdvice({ status: "loading", data: null, error: null });
       try {
         await updateBusinessAccess(id, buildBusinessAccessPayload("unknown", instruction));
@@ -88,15 +108,153 @@ export default function SourceDetailsPage() {
     [id]
   );
 
-  const acceptSpecification = useCallback(() => {
-    setAccepted(true);
-    setToast("Accepted as Connector Specification — ready for connector generation.");
+  const loadRawRecords = useCallback(async () => {
+    setRecordsState((prev) => ({ ...prev, status: "loading", error: null }));
+    try {
+      const data = await getSourceRawRecords(id, { limit: 25 });
+      setRecordsState((prev) => ({
+        ...prev,
+        status: "ready",
+        records: data.items || [],
+        error: null,
+      }));
+    } catch (error) {
+      setRecordsState((prev) => ({
+        ...prev,
+        status: "error",
+        error: error?.message || "Could not load raw records.",
+      }));
+    }
+  }, [id]);
+
+  const acceptSpecification = useCallback(async () => {
+    if (!advice.data || accepting) return;
+    setAccepting(true);
+    setRecordsState((prev) => ({ ...prev, status: "loading", error: null }));
+    try {
+      const result = await acceptConnectorSpecification(id, advice.data, {
+        runTest: true,
+        limit: 15,
+      });
+      setAccepted(true);
+      setSampleApproved(false);
+
+      const test = result.test || null;
+      const testFailed = test?.error || (test?.testResult && test.testResult.ok === false);
+
+      setRecordsState({
+        status: "ready",
+        records: test?.records || [],
+        testResult: test?.testResult || (test?.error ? { ok: false, message: test.error } : null),
+        definition: result.definition || test?.definition || null,
+        verification: result.verification || null,
+        error: null,
+      });
+
+      if (!test?.records?.length && result.executable) {
+        await loadRawRecords();
+      }
+
+      if (testFailed) {
+        setToast("Endpoint verified for build, but sample fetch needs attention. Try Fetch again.");
+      } else if (result.executable) {
+        setToast(
+          result.verification?.endpoint
+            ? `Verified ${result.verification.endpoint}. Review the sample — approve only if relevant.`
+            : "Sample collected — review below, then approve to move to In use."
+        );
+      } else {
+        setToast(
+          `Specification accepted. Live fetch for adapter "${result.adapterType}" is not implemented in this demo yet.`
+        );
+      }
+    } catch (error) {
+      setRecordsState((prev) => ({
+        ...prev,
+        status: "error",
+        verification: error?.verification || prev.verification || null,
+        error: error?.message || "Accept failed.",
+      }));
+      setToast(
+        error?.status === 400
+          ? error.message || "Could not verify a working feed URL before building the connector."
+          : error?.isNetwork
+            ? "Couldn’t reach the backend. Please try again."
+            : "Could not accept the connector specification."
+      );
+    } finally {
+      setAccepting(false);
+    }
+  }, [advice.data, accepting, id, loadRawRecords]);
+
+  const runConnectorTest = useCallback(async () => {
+    setRecordsState((prev) => ({ ...prev, status: "loading", error: null }));
+    try {
+      const result = await testConnector(id, { limit: 15 });
+      setRecordsState({
+        status: "ready",
+        records: result.records || [],
+        testResult: result.testResult || null,
+        definition: result.definition || null,
+        verification: null,
+        error: null,
+      });
+      setSampleApproved(false);
+      setToast(
+        result.testResult?.ok
+          ? "Sample collected — review below. Approve only if relevant for monitoring."
+          : result.testResult?.message || "Connector test finished with issues."
+      );
+    } catch (error) {
+      setRecordsState((prev) => ({
+        ...prev,
+        status: "error",
+        error: error?.message || "Connector test failed.",
+      }));
+      setToast(error?.message || "Connector test failed.");
+    }
+  }, [id]);
+
+  const approveSample = useCallback(async () => {
+    if (approvingSample) return;
+    setApprovingSample(true);
+    try {
+      await approveSourceSample(id);
+      setSampleApproved(true);
+      setToast("Sample approved — source is now In use.");
+    } catch (error) {
+      setToast(error?.message || "Could not approve the sample.");
+    } finally {
+      setApprovingSample(false);
+    }
+  }, [approvingSample, id]);
+
+  const rejectSample = useCallback(() => {
+    setSampleApproved(false);
+    setToast(
+      "Sample kept out of In use. Describe changes above (scope/feed), update the proposal, then Accept again."
+    );
+    // Keep records visible for comparison; user updates via Describe changes.
+    const el = document.getElementById("onboarding-revision");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.focus();
+    }
   }, []);
 
   const changeMode = () => {
     setMode(null);
     setAdvice({ status: "idle", data: null, error: null });
     setAccepted(false);
+    setSampleApproved(false);
+    setRecordsState({
+      status: "idle",
+      records: [],
+      testResult: null,
+      definition: null,
+      verification: null,
+      error: null,
+    });
   };
 
   const goBack = () => {
@@ -137,6 +295,7 @@ export default function SourceDetailsPage() {
               objectiveId={objectiveId}
               advice={advice}
               accepted={accepted}
+              accepting={accepting}
               onRun={runAnalysis}
               onAccept={acceptSpecification}
               onChangeMode={changeMode}
@@ -149,9 +308,27 @@ export default function SourceDetailsPage() {
               objectiveId={objectiveId}
               advice={advice}
               accepted={accepted}
+              accepting={accepting}
               onRun={runAnalysis}
               onAccept={acceptSpecification}
               onChangeMode={changeMode}
+            />
+          )}
+
+          {(accepted || recordsState.status !== "idle") && (
+            <RawRecordsPreview
+              status={recordsState.status}
+              records={recordsState.records}
+              testResult={recordsState.testResult}
+              definition={recordsState.definition}
+              verification={recordsState.verification}
+              error={recordsState.error}
+              sampleApproved={sampleApproved}
+              approving={approvingSample}
+              onRefresh={loadRawRecords}
+              onTest={accepted && !sampleApproved ? runConnectorTest : null}
+              onApproveSample={approveSample}
+              onRejectSample={rejectSample}
             />
           )}
         </div>

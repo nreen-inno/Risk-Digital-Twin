@@ -5,8 +5,10 @@ import {
     generateConnectorAnalysis
 } from "../services/aiConnectorBuilder.service.js";
 import {
-    generateConnectorAdvice
+    generateConnectorAdvice,
+    PLATFORM_DEFAULTS
 } from "../ai/services/aiConnectorAdvisor.service.js";
+import { findMonitoringCapabilityById } from "../data/monitoringCapabilities.js";
 
 function cleanCosmosFields(item) {
     if (!item) {
@@ -65,7 +67,7 @@ function buildDefaultBusinessAccess() {
     };
 }
 
-async function findInformationSourceById(id) {
+export async function findInformationSourceById(id) {
     const querySpec = {
         query: `
       SELECT *
@@ -824,12 +826,24 @@ export async function getInformationSourceConnectorAdvice(
                 }
             );
 
+        const monitoringObjectiveId =
+            Array.isArray(source.monitoringObjectiveIds) &&
+            source.monitoringObjectiveIds.length > 0
+                ? source.monitoringObjectiveIds[0]
+                : null;
+
+        const monitoringObjective = monitoringObjectiveId
+            ? findMonitoringCapabilityById(monitoringObjectiveId) || null
+            : null;
+
         let connectorAdvice;
         let generatedBy = "azureOpenAI";
 
         try {
             connectorAdvice =
-                await generateConnectorAdvice(source);
+                await generateConnectorAdvice(source, {
+                    monitoringObjective
+                });
         } catch (aiError) {
             console.error(
                 "AI connector advice failed. Using fallback:",
@@ -839,7 +853,8 @@ export async function getInformationSourceConnectorAdvice(
             connectorAdvice =
                 buildFallbackConnectorAdvice(
                     source,
-                    accessGuidance
+                    accessGuidance,
+                    monitoringObjective
                 );
 
             generatedBy = "ruleBasedFallback";
@@ -848,6 +863,10 @@ export async function getInformationSourceConnectorAdvice(
         res.status(200).json({
             informationSourceId: source.id,
             sourceName: source.name,
+            monitoringObjectiveId:
+                monitoringObjective?.id ||
+                monitoringObjectiveId ||
+                null,
             generatedBy,
             generatedAt:
                 new Date().toISOString(),
@@ -1215,98 +1234,100 @@ function buildAccessGuidance(
     };
 }
 
+function mapSourceKindToConnectionMethod(sourceKind) {
+    const map = {
+        restApi: "api",
+        rss: "rss",
+        csv: "file",
+        excel: "file",
+        database: "database",
+        manual: "file",
+        commercialService: "api",
+        publicService: "api",
+        email: "email",
+        toBeConfirmed: "api"
+    };
+
+    return map[sourceKind] || "api";
+}
+
 function buildFallbackConnectorAdvice(
     source,
-    accessGuidance
+    accessGuidance,
+    monitoringObjective = null
 ) {
     const sourceKind =
         source.sourceKind || "toBeConfirmed";
-
-    const approachByKind = {
-        restApi: {
-            connectionMethod:
-                "Provider-supported API connection",
-            refreshFrequency: "Daily"
-        },
-        rss: {
-            connectionMethod:
-                "Public feed monitoring",
-            refreshFrequency: "Hourly"
-        },
-        csv: {
-            connectionMethod:
-                "Scheduled file import",
-            refreshFrequency: "As provided"
-        },
-        excel: {
-            connectionMethod:
-                "Scheduled file import",
-            refreshFrequency: "As provided"
-        },
-        database: {
-            connectionMethod:
-                "Read-only database connection",
-            refreshFrequency: "Daily"
-        },
-        manual: {
-            connectionMethod:
-                "Manual or assisted data upload",
-            refreshFrequency: "As needed"
-        },
-        commercialService: {
-            connectionMethod:
-                "Provider-supported data connection",
-            refreshFrequency: "Daily"
-        },
-        publicService: {
-            connectionMethod:
-                "Public data connection",
-            refreshFrequency: "Daily"
-        },
-        toBeConfirmed: {
-            connectionMethod:
-                "Connection method to be confirmed",
-            refreshFrequency:
-                "To be confirmed"
-        }
-    };
-
-    const approach =
-        approachByKind[sourceKind] ||
-        approachByKind.toBeConfirmed;
+    const connectionMethod =
+        mapSourceKindToConnectionMethod(sourceKind);
+    const connectorReadiness = "proposal-ready";
 
     return {
-        readiness:
-            accessGuidance.canProceedToConnector
-                ? "partiallyReady"
-                : "actionRequired",
-
         summary:
-            accessGuidance.summary,
+            accessGuidance.summary ||
+            `Provisional connector proposal for ${source.name}. AI was unavailable; review and refine before accepting.`,
 
-        recommendedApproach: {
-            connectionMethod:
-                approach.connectionMethod,
-
-            refreshFrequency:
-                approach.refreshFrequency,
-
-            expectedData: [
-                source.informationNeed ||
-                "Monitoring evidence"
-            ],
-
-            rationale:
-                "Fallback recommendation based on the known source type and business access status."
+        source: {
+            name: source.name || "",
+            provider: source.provider || "",
+            sourceType: sourceKind
         },
 
-        requiredBeforeConnection:
-            accessGuidance.nextActions || [],
+        recommendation: {
+            connectionMethod,
+            rationale:
+                "Fallback recommendation based on the known source type and business access status. Regenerate when AI is available.",
+            alternativeMethods: []
+        },
 
-        missingInformation: [
-            "Provider technical documentation",
-            "Representative sample data or response",
-            "Authorised connection details"
+        technicalConfiguration: {
+            endpoint: source.documentationUrl || "",
+            documentationUrl: source.documentationUrl || "",
+            authenticationType: "none",
+            pollInterval: PLATFORM_DEFAULTS.defaultPollInterval,
+            responseFormat: "",
+            proposedFieldMapping: {}
+        },
+
+        monitoringConfiguration: {
+            languages: [...PLATFORM_DEFAULTS.defaultLanguages],
+            geographicScope: [],
+            sensitivity: PLATFORM_DEFAULTS.defaultSensitivity,
+            riskCategoryMappings:
+                monitoringObjective?.relatedRiskDefinitions ||
+                source.relatedRiskDefinitionIds ||
+                [],
+            monitoringProfile: {
+                includeTerms: [],
+                excludeTerms: [],
+                entities: [],
+                locations: []
+            }
+        },
+
+        retentionRecommendation: {
+            storeFeedMetadata: true,
+            storeRawFeedItem: true,
+            scrapeFullArticle: false,
+            reason:
+                "Store metadata and raw records for evidence traceability; skip full-article scrape until needed."
+        },
+
+        automatedValidationPlan: [
+            "Verify endpoint availability and response format",
+            "Confirm field mapping and identifier stability",
+            "Validate deduplication and pagination behaviour"
+        ],
+
+        decisionsRequiringUserApproval: [
+            ...(accessGuidance.nextActions || []),
+            "Confirm languages, geographic scope and monitoring sensitivity",
+            "Accept or modify the recommended connection method"
+        ],
+
+        unresolvedTechnicalFacts: [
+            "Official endpoint and authentication details were not confirmed (AI unavailable)",
+            "Representative sample response was not inspected"
         ],
 
         assumptions: [
@@ -1314,11 +1335,29 @@ function buildFallbackConnectorAdvice(
             "The recommended approach is provisional."
         ],
 
+        confidence: 0.3,
+        connectorReadiness,
+
+        // Legacy aliases
+        readiness: "partiallyReady",
+        recommendedApproach: {
+            connectionMethod,
+            refreshFrequency: PLATFORM_DEFAULTS.defaultPollInterval,
+            expectedData: [
+                source.informationNeed || "Monitoring evidence"
+            ],
+            rationale:
+                "Fallback recommendation based on the known source type and business access status."
+        },
+        requiredBeforeConnection:
+            accessGuidance.nextActions || [],
+        missingInformation: [
+            "Provider technical documentation",
+            "Representative sample data or response",
+            "Authorised connection details"
+        ],
         estimatedComplexity: "unknown",
-
-        canGenerateConnectorDefinition: false,
-
-        confidence: 0.3
+        canGenerateConnectorDefinition: false
     };
 }
 function buildFallbackConnectorAnalysis(

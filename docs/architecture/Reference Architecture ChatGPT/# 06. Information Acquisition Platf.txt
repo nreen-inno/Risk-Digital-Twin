@@ -1,0 +1,394 @@
+# 06. Information Acquisition Platform
+
+---
+
+# Purpose
+
+The Information Acquisition Platform is responsible for collecting information from heterogeneous external and internal sources and transforming it into canonical Raw Records.
+
+It provides the runtime infrastructure required to execute connectors, monitor their operation, validate connectivity, and deliver collected information to the Knowledge Platform.
+
+The Information Acquisition Platform contains no business logic and performs no risk analysis.
+
+---
+
+# Responsibilities
+
+The platform shall:
+
+- execute connectors
+- schedule executions
+- collect information
+- authenticate with external systems
+- parse source responses
+- map responses into Raw Records
+- detect duplicates
+- log execution history
+- monitor connector health
+- report operational errors
+
+---
+
+# Position in Overall Architecture
+
+```
+Business Platform
+        │
+        ▼
+Connector Platform
+        │
+        ▼
+Information Acquisition Platform
+        │
+        ▼
+Knowledge Platform
+```
+
+Connector Platform defines **what** should be connected.
+
+Information Acquisition Platform defines **how** information is collected.
+
+---
+
+# Runtime Architecture
+
+```
+Scheduler
+      │
+      ▼
+Connector Runtime
+      │
+      ▼
+Adapter Registry
+      │
+      ▼
+Connector Adapter
+      │
+      ▼
+External Source
+      │
+      ▼
+Parser
+      │
+      ▼
+Raw Record
+      │
+      ▼
+Knowledge Platform
+```
+
+---
+
+# Runtime Components
+
+The Information Acquisition Platform consists of the following components.
+
+## Scheduler
+
+Responsible for:
+
+- polling schedules
+- execution timing
+- retry scheduling
+- prioritisation
+
+Initially implemented using Node.js scheduling.
+
+Future implementations may use:
+
+- Azure Functions
+- Azure Container Apps Jobs
+- Kubernetes CronJobs
+
+---
+
+## Connector Runtime
+
+The runtime coordinates connector execution.
+
+Responsibilities:
+
+- load Connector Definition
+- select Adapter
+- execute collection
+- monitor execution
+- create execution logs
+- trigger Raw Record creation
+
+---
+
+## Adapter Registry
+
+The Adapter Registry maps Connector Definitions to reusable adapter implementations.
+
+Example:
+
+```
+RSS
+
+↓
+
+RSS Adapter
+
+REST
+
+↓
+
+REST Adapter
+
+File
+
+↓
+
+File Adapter
+```
+
+This enables new connector types without changing runtime logic.
+
+---
+
+## Connector Adapter
+
+Connector Adapters implement technology-specific communication.
+
+Responsibilities:
+
+- authentication
+- communication
+- parsing
+- mapping
+
+Adapters never contain business rules.
+
+---
+
+# Adapter Interface
+
+Every adapter implements the same interface.
+
+```typescript
+interface ConnectorAdapter {
+
+    validateConfiguration()
+
+    testConnection()
+
+    fetch()
+
+    parse()
+
+    mapToRawRecords()
+
+}
+```
+
+Future adapter methods may include:
+
+- discoverSchema()
+- discoverCapabilities()
+- estimateRateLimits()
+
+---
+
+# Raw Record Generation
+
+Every connector produces the same output.
+
+```
+External Source
+
+↓
+
+Connector Adapter
+
+↓
+
+Raw Record
+```
+
+Regardless of technology.
+
+The Raw Record is the canonical representation of collected information.
+
+---
+
+# Duplicate Detection
+
+Before storing a Raw Record the platform performs duplicate detection.
+
+Possible strategies include:
+
+- external identifier
+- canonical URL
+- content hash
+- title + publication time
+- configurable source-specific rules
+
+Duplicate handling should be connector-independent.
+
+---
+
+# Execution Monitoring
+
+Each connector execution generates operational metadata.
+
+Examples:
+
+- execution time
+- duration
+- records collected
+- duplicates skipped
+- parsing failures
+- retries
+- connector version
+
+These metrics support operational monitoring.
+
+---
+
+# Connector Health
+
+Each connector exposes health information.
+
+Typical metrics include:
+
+- Active
+- Disabled
+- Last execution
+- Next execution
+- Average execution time
+- Consecutive failures
+- Success rate
+- Last error
+
+Health monitoring is independent of business dashboards.
+
+---
+
+# Error Handling
+
+The runtime classifies failures into categories.
+
+Examples:
+
+Connection errors
+
+Authentication failures
+
+Parsing failures
+
+Schema changes
+
+Rate limiting
+
+Unexpected responses
+
+Retry policies depend on connector configuration.
+
+---
+
+# Connector Testing
+
+Before activation every connector should be tested automatically.
+
+Validation includes:
+
+- endpoint connectivity
+- authentication
+- parser
+- schema discovery
+- field mapping
+- duplicate detection
+- sample Raw Record generation
+
+Connector testing is performed independently from runtime execution.
+
+---
+
+# Runtime Logging
+
+Every execution produces an immutable execution record.
+
+Typical contents:
+
+- connector
+- version
+- start time
+- end time
+- records collected
+- records rejected
+- warnings
+- errors
+
+Execution history supports diagnostics and auditing.
+
+---
+
+# Scalability
+
+The architecture supports future scaling through:
+
+- distributed schedulers
+- parallel connector execution
+- event-driven processing
+- cloud-native deployment
+
+Connector implementations remain unchanged regardless of deployment model.
+
+---
+
+# Architectural Decisions
+
+The Information Acquisition Platform intentionally separates:
+
+Connector Definition
+
+↓
+
+Execution
+
+↓
+
+Collection
+
+↓
+
+Parsing
+
+↓
+
+Raw Record
+
+instead of embedding all logic into connectors.
+
+Advantages include:
+
+- reusable adapters
+- simplified testing
+- easier maintenance
+- technology independence
+- cloud portability
+
+---
+
+# Guiding Principle
+
+> **Collect once. Standardise once. Deliver canonical information to the Knowledge Platform.**
+
+The Information Acquisition Platform exists solely to acquire reliable information and should remain independent from business reasoning.
+
+
+Acquisition Platform
+│
+├── Design-time
+│     Information Sources
+│     Connector Proposal
+│     Connector Specification
+│     Connector Definition
+│
+└── Run-time
+      Scheduler
+      Runtime
+      Adapters
+      Raw Records
+      Monitoring

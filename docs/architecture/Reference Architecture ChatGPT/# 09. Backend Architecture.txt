@@ -1,0 +1,561 @@
+# 09. Backend Architecture
+
+---
+
+# Purpose
+
+The Backend Architecture defines the internal structure of the AI Knowledge & Risk Intelligence Platform.
+
+It describes how the platform is decomposed into independent services, how responsibilities are distributed, and how services collaborate to implement the business capabilities defined in previous chapters.
+
+The backend follows a modular service-oriented architecture where each service owns a clearly defined business capability.
+
+---
+
+# Backend Design Goals
+
+The backend architecture has been designed to achieve the following objectives:
+
+- modularity
+- clear separation of responsibilities
+- independent testing
+- scalability
+- maintainability
+- extensibility
+- cloud-native deployment
+- AI integration
+- technology independence
+
+---
+
+# Overall Backend Architecture
+
+```
+                    REST API
+                        │
+                        ▼
+                  Controllers
+                        │
+                        ▼
+                   Services
+                        │
+                        ▼
+                 Repositories
+                        │
+                        ▼
+                  Data Storage
+```
+
+Business logic resides exclusively inside Services.
+
+Controllers should never contain business logic.
+
+Repositories should never contain business logic.
+
+---
+
+# Backend Platforms
+
+The backend consists of five cooperating platforms.
+
+```
+Business Platform
+
+↓
+
+Acquisition Platform
+
+↓
+
+Knowledge Platform
+
+↓
+
+Intelligence Platform
+
+↓
+
+Presentation Platform
+```
+
+Each platform contains one or more services.
+
+---
+
+# Business Platform Services
+
+## Monitoring Objective Service
+
+Responsibilities:
+
+- create objectives
+- update objectives
+- assign Monitoring Profiles
+- assign Information Sources
+- lifecycle management
+
+---
+
+## Monitoring Profile Service
+
+Responsibilities:
+
+- manage reusable monitoring profiles
+- keyword configuration
+- entity configuration
+- language settings
+- relevance rules
+
+---
+
+## Information Source Service
+
+Responsibilities:
+
+- manage information sources
+- source metadata
+- source lifecycle
+- source capabilities
+
+---
+
+# Acquisition Platform Services
+
+## Connector Recommendation Service
+
+Responsibilities:
+
+- AI connector onboarding
+- connector proposal generation
+- proposal refinement
+- proposal validation
+
+---
+
+## Connector Specification Service
+
+Responsibilities:
+
+- approved connector configuration
+- version management
+- connector generation
+
+---
+
+## Connector Runtime Service
+
+Responsibilities:
+
+- execute connectors
+- scheduling
+- runtime monitoring
+- retry handling
+
+---
+
+## Connector Test Service
+
+Responsibilities:
+
+- connectivity validation
+- parser validation
+- schema discovery
+- sample execution
+
+---
+
+## Adapter Registry
+
+Responsibilities:
+
+- adapter registration
+- adapter discovery
+- adapter instantiation
+
+---
+
+# Knowledge Platform Services
+
+## Knowledge Processing Service
+
+Responsibilities:
+
+- process Raw Records
+- extract entities
+- detect events
+- detect relationships
+- metadata normalization
+- language detection
+- translation
+- confidence estimation
+
+---
+
+## Knowledge Repository Service
+
+Responsibilities:
+
+- create Knowledge
+- update Knowledge
+- semantic lookup
+- duplicate resolution
+- evidence linking
+
+---
+
+# Intelligence Platform Services
+
+## Risk Assessment Service
+
+Responsibilities:
+
+- generate Risk Signals
+- evaluate Monitoring Objectives
+- business reasoning
+- enterprise taxonomy mapping
+
+---
+
+## Recommendation Service
+
+Responsibilities:
+
+- generate recommendations
+- prioritization
+- explanation
+- confidence calculation
+
+---
+
+# Presentation Platform Services
+
+## Dashboard Query Service
+
+Responsibilities:
+
+- dashboard aggregation
+- KPI generation
+- filtering
+- searching
+- evidence retrieval
+
+---
+
+## Reporting Service
+
+Responsibilities:
+
+- exports
+- reports
+- summaries
+- historical analysis
+
+---
+
+# Cross-cutting Services
+
+Some services are shared across all platforms.
+
+## Authentication Service
+
+Responsibilities:
+
+- identity
+- authorization
+- tokens
+
+---
+
+## Audit Service
+
+Responsibilities:
+
+- audit trail
+- history
+- compliance
+
+---
+
+## Logging Service
+
+Responsibilities:
+
+- diagnostics
+- operational logging
+
+---
+
+## Notification Service
+
+Responsibilities:
+
+- alerts
+- email
+- Teams
+- future integrations
+
+---
+
+# Repository Layer
+
+Repositories encapsulate persistence.
+
+Examples:
+
+InformationSourceRepository
+
+ConnectorRepository
+
+KnowledgeRepository
+
+RiskSignalRepository
+
+RecommendationRepository
+
+Repositories perform:
+
+- CRUD
+- queries
+- indexing
+
+Repositories do not contain business rules.
+
+---
+
+# Controllers
+
+Controllers expose REST endpoints.
+
+Controllers should:
+
+- validate requests
+- invoke services
+- return responses
+
+Controllers should never:
+
+- access databases directly
+- perform business reasoning
+- call AI models directly
+
+---
+
+# Worker Services
+
+Some processes execute asynchronously.
+
+Examples:
+
+Knowledge Processing Worker
+
+Connector Runtime Worker
+
+Risk Assessment Worker
+
+Recommendation Worker
+
+Workers communicate using domain objects.
+
+---
+
+# Service Communication
+
+Preferred communication:
+
+```
+Controller
+
+↓
+
+Service
+
+↓
+
+Repository
+```
+
+Asynchronous communication:
+
+```
+Service
+
+↓
+
+Event
+
+↓
+
+Worker
+
+↓
+
+Repository
+```
+
+Future versions may introduce Azure Service Bus.
+
+---
+
+# Folder Structure
+
+```
+backend/
+
+controllers/
+
+services/
+
+repositories/
+
+workers/
+
+connectors/
+
+routes/
+
+middleware/
+
+schemas/
+
+config/
+
+utils/
+
+tests/
+
+```
+
+---
+
+# Dependency Rules
+
+Controllers depend on Services.
+
+Services depend on Repositories.
+
+Repositories depend on Storage.
+
+Reverse dependencies are not permitted.
+
+Knowledge Platform never depends on Presentation.
+
+Presentation never depends on Acquisition.
+
+Business logic always flows downward.
+
+---
+
+# Error Handling
+
+Errors are classified into:
+
+Business Errors
+
+Validation Errors
+
+Connector Errors
+
+Infrastructure Errors
+
+AI Errors
+
+Every error should include:
+
+- timestamp
+- correlation id
+- service
+- severity
+- details
+
+---
+
+# Scalability
+
+Services should be independently scalable.
+
+Examples:
+
+Connector Runtime
+
+Knowledge Processing
+
+Risk Assessment
+
+Recommendation Generation
+
+These services may eventually execute on different compute resources.
+
+---
+
+# Future Evolution
+
+The backend architecture supports future capabilities including:
+
+- distributed workers
+- event-driven processing
+- AI agents
+- semantic search
+- knowledge graph
+- streaming data
+- autonomous recommendations
+
+These extensions should not require redesign of the existing service boundaries.
+
+---
+
+# Architectural Decisions
+
+Business capabilities are implemented as services.
+
+Business logic is isolated from infrastructure.
+
+Persistence is isolated from services.
+
+Controllers remain lightweight.
+
+Services communicate through canonical domain objects.
+
+---
+
+# Guiding Principle
+
+> **Every backend service owns one business capability, communicates through canonical domain objects, and remains independent from presentation and storage technologies.**
+One observation after writing these chapters.
+
+Originally we had five platforms.
+
+Now I think the architecture naturally separates into three levels:
+
+──────────────────────────────────────────────
+Business Architecture
+──────────────────────────────────────────────
+
+Business Platform
+
+Presentation Platform
+
+──────────────────────────────────────────────
+Intelligence Architecture
+──────────────────────────────────────────────
+
+Knowledge Platform
+
+Intelligence Platform
+
+──────────────────────────────────────────────
+Infrastructure Architecture
+──────────────────────────────────────────────
+
+Acquisition Platform
+
+Storage Platform
+
+Backend Platform
+
+Deployment Platform
+
+This is actually a classic enterprise architecture decomposition:
+
+Business Architecture — what the users see.
+Intelligence Architecture — what makes your product unique.
+Infrastructure Architecture — how it is implemented.

@@ -1,0 +1,521 @@
+# Appendix A – Glossary
+
+---
+
+# Purpose
+
+This glossary defines the common terminology used throughout the AI Knowledge & Risk Intelligence Platform architecture.
+
+The glossary establishes a shared vocabulary for business users, architects, developers, researchers and AI coding assistants.
+
+Where possible, definitions describe the business meaning of a term rather than its technical implementation.
+
+---
+
+# A
+
+## Adapter
+
+A software component responsible for communicating with a specific external technology or protocol (for example RSS, REST API, MQTT or Azure IoT Hub).
+
+Adapters are used by Connectors to retrieve information.
+
+---
+
+## AI Gateway
+
+The central platform service responsible for all Artificial Intelligence interactions.
+
+The AI Gateway manages:
+
+- prompt execution
+- context construction
+- model selection
+- provider abstraction
+- governance
+- caching
+- auditing
+- cost optimisation
+
+Business services never communicate directly with AI models.
+
+---
+
+## AI Provider
+
+A service that executes AI models.
+
+Examples include:
+
+- Azure OpenAI
+- Azure AI Foundry
+- OpenAI
+- Anthropic
+- Google Gemini
+- Local language models
+
+---
+
+## AI Request
+
+A canonical object representing one request submitted to the AI Gateway.
+
+---
+
+## AI Response
+
+The canonical result returned by the AI Gateway after AI processing.
+
+---
+
+# B
+
+## Business Platform
+
+The platform responsible for managing business configuration.
+
+Examples include:
+
+- Monitoring Objectives
+- Monitoring Profiles
+- Information Sources
+
+---
+
+## Business Workspace
+
+A user workspace focused on completing a business task.
+
+Examples include:
+
+- Source Workspace
+- Monitoring Workspace
+- Risk Workspace
+
+---
+
+# C
+
+## Canonical Object
+
+The single authoritative representation of a business concept throughout the platform.
+
+Every business object has one canonical definition regardless of storage technology or API implementation.
+
+---
+
+## Connector
+
+A software component responsible for acquiring information from an external or internal information source.
+
+Connectors transform source-specific data into canonical Raw Records.
+
+Connectors do not perform Knowledge Processing or Risk Assessment.
+
+---
+
+## Connector Definition
+
+The executable runtime configuration of a Connector.
+
+---
+
+## Connector Proposal
+
+An AI-generated recommendation describing how a new connector should be implemented.
+
+---
+
+## Connector Specification
+
+The approved business and technical design of a connector.
+
+It is produced from a Connector Proposal after user review.
+
+---
+
+## Context Builder
+
+A core component of the AI Gateway responsible for assembling the complete business context required for AI reasoning.
+
+Typical context includes:
+
+- Knowledge
+- Monitoring Objective
+- Enterprise Taxonomy
+- User Preferences
+- Platform Configuration
+- Historical Information
+
+The Context Builder is independent of the selected AI model.
+
+---
+
+## Correlation ID
+
+A unique identifier shared by all processing steps belonging to the same business operation.
+
+It enables complete traceability across:
+
+- APIs
+- Connectors
+- Knowledge
+- Risk Signals
+- Recommendations
+- Logs
+
+---
+
+# D
+
+## Dashboard
+
+A presentation workspace providing summaries, trends and key performance indicators.
+
+Dashboards consume business intelligence rather than raw information.
+
+---
+
+## Domain Object
+
+A business object representing a concept within the platform.
+
+Examples include:
+
+- Information Source
+- Knowledge
+- Risk Signal
+- Recommendation
+
+---
+
+# E
+
+## Entity
+
+A recognised object extracted from information during Knowledge Processing.
+
+Examples include:
+
+- organisations
+- people
+- countries
+- shipyards
+- suppliers
+- regulations
+
+---
+
+## Event
+
+A business occurrence identified during Knowledge Processing.
+
+Examples include:
+
+- strike
+- accident
+- regulation published
+- supplier bankruptcy
+- political decision
+
+---
+
+## Event-Driven Architecture
+
+An architectural style where platform components communicate through published business events instead of direct service calls.
+
+---
+
+## Evidence
+
+The information supporting a Knowledge object, Risk Signal or Recommendation.
+
+Evidence provides explainability and traceability.
+
+---
+
+## Extension Framework
+
+The architectural framework enabling new platform capabilities through reusable plugins rather than modifications to the Platform Core.
+
+---
+
+# G
+
+## Governance
+
+Policies, controls and processes that ensure platform capabilities remain secure, explainable, auditable and trustworthy.
+
+Governance includes AI Governance, Knowledge Governance and Operational Governance.
+
+---
+
+# I
+
+## Information Source
+
+Any internal or external system from which information is collected.
+
+Examples include:
+
+- news websites
+- ERP systems
+- IoT platforms
+- email
+- weather services
+- government portals
+
+---
+
+## Intelligence Platform
+
+The platform responsible for transforming Knowledge into business intelligence.
+
+Outputs include:
+
+- Risk Signals
+- Recommendations
+
+---
+
+# K
+
+## Knowledge
+
+A canonical business object representing reusable organisational understanding extracted from one or more Raw Records.
+
+Knowledge is independent of individual connectors, AI models and dashboards.
+
+Knowledge is considered a long-term organisational asset.
+
+---
+
+## Knowledge Platform
+
+The platform responsible for creating, storing and managing Knowledge.
+
+---
+
+## Knowledge Repository
+
+The logical storage responsible for persisting Knowledge objects.
+
+Future implementations may include:
+
+- document databases
+- knowledge graphs
+- semantic indexes
+
+---
+
+# M
+
+## Model Router
+
+A component of the AI Gateway responsible for selecting the most appropriate AI model for each request.
+
+---
+
+## Monitoring Objective
+
+A business objective describing what the organisation wants to monitor.
+
+Examples include:
+
+- supplier stability
+- geopolitical developments
+- regulatory changes
+- environmental risks
+
+---
+
+## Monitoring Profile
+
+A reusable configuration describing how monitoring should be performed.
+
+Typical configuration includes:
+
+- keywords
+- entities
+- locations
+- languages
+- exclusions
+
+---
+
+# P
+
+## Platform Core
+
+The stable foundation of the platform.
+
+Business capabilities are extended through the Extension Framework rather than modifications to the Platform Core.
+
+---
+
+## Presentation Platform
+
+The platform responsible for user interaction.
+
+It presents business capabilities through workspaces rather than traditional application pages.
+
+---
+
+## Prompt
+
+A structured instruction submitted to an AI model.
+
+Within this platform prompts are managed through the Prompt Registry and executed exclusively through the AI Gateway.
+
+---
+
+## Prompt Registry
+
+The central repository of version-controlled prompt templates used throughout the platform.
+
+---
+
+# R
+
+## Raw Record
+
+The canonical representation of information collected from an Information Source.
+
+Raw Records preserve source information without business interpretation.
+
+They form the foundation for Knowledge Processing.
+
+---
+
+## Recommendation
+
+A suggested business action generated from one or more Risk Signals.
+
+Recommendations remain advisory unless an organisation explicitly enables automated execution.
+
+---
+
+## Relationship
+
+A connection identified between two or more Entities during Knowledge Processing.
+
+---
+
+## Repository
+
+A logical component responsible for persisting and retrieving canonical business objects.
+
+Repositories encapsulate storage implementation details.
+
+---
+
+## Risk Assessment
+
+The process of evaluating Knowledge against Monitoring Objectives to determine potential business impact.
+
+---
+
+## Risk Signal
+
+A canonical business object representing an identified business risk.
+
+Risk Signals are generated from Knowledge and Monitoring Objectives.
+
+---
+
+# S
+
+## Semantic Index
+
+A future platform capability supporting semantic retrieval of Knowledge using embeddings or similar technologies.
+
+The Semantic Index is an implementation component rather than a business object.
+
+---
+
+## Service
+
+A backend component responsible for implementing one business capability.
+
+Business logic resides within Services.
+
+---
+
+## Source Workspace
+
+The primary workspace for onboarding and managing Information Sources throughout their lifecycle.
+
+---
+
+# T
+
+## Traceability
+
+The ability to follow every business conclusion back to its originating evidence.
+
+Typical traceability chain:
+
+Recommendation
+
+↓
+
+Risk Signal
+
+↓
+
+Knowledge
+
+↓
+
+Raw Record
+
+↓
+
+Connector Execution
+
+↓
+
+Information Source
+
+---
+
+# U
+
+## User Workspace
+
+A dedicated environment supporting one business activity.
+
+Workspaces combine user interaction, AI assistance and backend services into a single coherent experience.
+
+---
+
+# V
+
+## Versioning
+
+The controlled evolution of business objects, prompts, connectors and platform components while preserving historical traceability.
+
+---
+
+# W
+
+## Workspace
+
+The primary interaction model of the Presentation Platform.
+
+A workspace groups all functionality required to complete a business process.
+
+Examples include:
+
+- Dashboard Workspace
+- Source Workspace
+- Monitoring Workspace
+- Knowledge Workspace
+- Risk Workspace
+- Operational Workspace
+
+---
+
+# Guiding Principle
+
+> **Every architectural term has one authoritative definition. Every business object has one canonical meaning. Every participant—human or AI—uses the same vocabulary.**

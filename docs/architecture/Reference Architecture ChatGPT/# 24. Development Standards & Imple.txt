@@ -1,0 +1,505 @@
+# 24. Development Standards & Implementation Guidelines
+
+---
+
+# Purpose
+
+This chapter defines the development standards, implementation guidelines and engineering practices used throughout the AI Knowledge & Risk Intelligence Platform.
+
+The objective is to ensure that all developers, contributors and AI coding assistants implement platform components consistently while preserving the architectural principles defined in previous chapters.
+
+These standards apply equally to backend services, frontend applications, connectors, AI Gateway components and future platform extensions.
+
+---
+
+# Engineering Principles
+
+Every implementation should follow these principles.
+
+- Business First
+- Single Responsibility
+- Loose Coupling
+- High Cohesion
+- Configuration over Code
+- API First
+- AI First
+- Explainability
+- Testability
+- Reuse before Reinvention
+
+---
+
+# Project Structure
+
+The platform is organised into independent projects.
+
+```
+frontend/
+
+backend/
+
+shared/
+
+docs/
+
+scripts/
+
+tests/
+
+deployment/
+
+connectors/
+
+extensions/
+```
+
+Each project owns a clearly defined responsibility.
+
+---
+
+# Layered Architecture
+
+Every backend component follows the same structure.
+
+```
+Controller
+
+↓
+
+Service
+
+↓
+
+Repository
+
+↓
+
+Storage
+```
+
+Business logic belongs exclusively in Services.
+
+---
+
+# Naming Conventions
+
+Business objects use business terminology.
+
+Examples
+
+✓ InformationSource
+
+✓ MonitoringObjective
+
+✓ RiskSignal
+
+Avoid technical names such as:
+
+✗ RSSObject
+
+✗ CosmosEntity
+
+✗ DatabaseRow
+
+---
+
+# Folder Naming
+
+```
+controllers/
+
+services/
+
+repositories/
+
+workers/
+
+middleware/
+
+routes/
+
+schemas/
+
+config/
+
+utils/
+```
+
+Folder names represent responsibilities rather than technologies.
+
+---
+
+# Configuration Management
+
+Configuration must never be hardcoded.
+
+Configuration categories include:
+
+- Application Settings
+- Connector Settings
+- AI Settings
+- Runtime Parameters
+- Secrets
+
+Environment-specific values are externalised.
+
+---
+
+# Error Handling
+
+Errors follow a common structure.
+
+```
+Validation Error
+
+Business Error
+
+Connector Error
+
+AI Error
+
+Infrastructure Error
+
+Security Error
+```
+
+Every error includes:
+
+- correlationId
+- timestamp
+- component
+- severity
+- message
+
+---
+
+# Logging Standards
+
+Every component produces structured logs.
+
+Minimum fields
+
+```
+timestamp
+
+service
+
+operation
+
+correlationId
+
+severity
+
+message
+```
+
+Logs should support automated analysis.
+
+---
+
+# Correlation IDs
+
+Every request receives a Correlation ID.
+
+The same identifier follows the entire processing chain.
+
+```
+REST Request
+
+↓
+
+Connector
+
+↓
+
+Knowledge
+
+↓
+
+Risk Signal
+
+↓
+
+Recommendation
+```
+
+This enables complete traceability.
+
+---
+
+# Documentation Standards
+
+Every public component should include:
+
+Purpose
+
+Responsibilities
+
+Inputs
+
+Outputs
+
+Dependencies
+
+Example Usage
+
+Documentation should be maintained alongside implementation.
+
+---
+
+# API Guidelines
+
+REST APIs should:
+
+- expose business capabilities
+- remain versioned
+- remain stateless
+- avoid implementation details
+
+Responses follow common response structures.
+
+---
+
+# Event Guidelines
+
+Platform communication should use canonical events.
+
+Events should:
+
+- represent business facts
+- remain immutable
+- include correlation IDs
+- avoid implementation-specific data
+
+---
+
+# AI Development Standards
+
+All AI functionality must use the AI Gateway.
+
+Business services must never:
+
+- call AI providers directly
+- construct prompts
+- select models
+
+Business services ask business questions.
+
+The AI Gateway performs AI engineering.
+
+---
+
+# Connector Development Standards
+
+Every connector shall:
+
+- implement Connector SDK
+- generate Raw Records only
+- remain stateless
+- expose health
+- support automated testing
+- support versioning
+
+Connectors never perform Knowledge Processing.
+
+---
+
+# Frontend Standards
+
+The Presentation Platform follows:
+
+Workspace-oriented design
+
+Reusable components
+
+Progressive disclosure
+
+Responsive layouts
+
+Backend-driven business logic
+
+Frontend components remain lightweight.
+
+---
+
+# Testing Strategy
+
+Testing occurs at multiple levels.
+
+Unit Tests
+
+↓
+
+Integration Tests
+
+↓
+
+Connector Tests
+
+↓
+
+AI Prompt Tests
+
+↓
+
+End-to-End Tests
+
+↓
+
+User Acceptance Tests
+
+Every major capability should have automated tests where practical.
+
+---
+
+# AI Coding Assistant Guidelines
+
+The platform is designed to support AI-assisted development.
+
+Generated code should:
+
+- follow architecture
+- use canonical objects
+- preserve service boundaries
+- avoid duplicated logic
+- generate documentation
+- generate tests where possible
+
+AI-generated code should always be reviewed before production deployment.
+
+---
+
+# Code Review Checklist
+
+Before merging code verify:
+
+- follows architecture
+- follows naming conventions
+- uses canonical objects
+- includes tests
+- includes documentation
+- uses AI Gateway where appropriate
+- supports logging
+- supports observability
+
+---
+
+# Git Strategy
+
+Recommended workflow
+
+```
+main
+
+↓
+
+develop
+
+↓
+
+feature/*
+
+↓
+
+pull request
+
+↓
+
+review
+
+↓
+
+merge
+```
+
+Small, focused pull requests are preferred.
+
+---
+
+# Versioning
+
+Platform components follow semantic versioning.
+
+```
+Major.Minor.Patch
+```
+
+Examples
+
+```
+2.1.0
+
+2.1.1
+
+2.2.0
+```
+
+Breaking architectural changes require a major version.
+
+---
+
+# Continuous Integration
+
+Every commit should trigger:
+
+Build
+
+↓
+
+Lint
+
+↓
+
+Tests
+
+↓
+
+Security Checks
+
+↓
+
+Documentation Validation
+
+↓
+
+Deployment (where applicable)
+
+Automation should detect architectural violations as early as possible.
+
+---
+
+# Continuous Improvement
+
+The platform evolves continuously.
+
+Improvements may originate from:
+
+- user feedback
+- operational metrics
+- AI evaluation
+- architectural reviews
+- new business requirements
+
+Changes should preserve compatibility with the overall architecture.
+
+---
+
+# Architectural Decisions
+
+Implementation follows architecture rather than individual developer preferences.
+
+Business terminology is used consistently throughout the codebase.
+
+AI capabilities are engineered through the AI Gateway.
+
+Canonical objects provide the common language across all platform components.
+
+Documentation is treated as part of the implementation.
+
+---
+
+# Guiding Principle
+
+> **Architecture defines what to build. Development standards define how to build it consistently.**
+
+The Development Standards ensure that every contribution—whether written by developers or AI coding assistants—strengthens rather than fragments the platform architecture.
