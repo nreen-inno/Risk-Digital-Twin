@@ -107,6 +107,44 @@ async function request(path, { method = "GET", signal, timeout = 12000, ...rest 
 // -----------------------------------------------------------------------------
 
 /**
+ * Executive risk overview — objectives + illustrative posture scores.
+ * GET /api/risk/overview
+ */
+export async function getRiskOverview({ signal } = {}) {
+  return request("/api/risk/overview", { signal });
+}
+
+/**
+ * Demo risk case payload (narrative, factors, network, actions).
+ * GET /api/risk/cases/:caseId
+ */
+export async function getRiskCaseById(caseId, { signal } = {}) {
+  return request(`/api/risk/cases/${encodeURIComponent(caseId)}`, { signal });
+}
+
+/**
+ * Primary risk case for a monitoring objective (if published).
+ * GET /api/risk/objectives/:objectiveId/case
+ */
+export async function getRiskCaseForObjective(objectiveId, { signal } = {}) {
+  return request(
+    `/api/risk/objectives/${encodeURIComponent(objectiveId)}/case`,
+    { signal }
+  );
+}
+
+/**
+ * List risk cases under one monitoring objective.
+ * GET /api/risk/objectives/:objectiveId/cases
+ */
+export async function getRiskCasesForObjective(objectiveId, { signal } = {}) {
+  return request(
+    `/api/risk/objectives/${encodeURIComponent(objectiveId)}/cases`,
+    { signal }
+  );
+}
+
+/**
  * Load the Monitoring Objectives the user can choose from.
  * GET /api/monitoring-capabilities
  */

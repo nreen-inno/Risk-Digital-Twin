@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Executive Risk Overview — proposed starting page</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f4f6fb; --surface:#fff; --ink:#1f2a3a; --ink-2:#4a5567; --ink-3:#8794a7;
+    --navy:#14335f; --navy-900:#0f2748; --accent:#2f6bff; --accent-600:#1f56e0;
+    --border:#e6eaf1; --border-2:#d7deea; --inset:#f3f6fb; --surface-2:#f9fbfd;
+    --crit:#D32F2F; --high:#F57C00; --elev:#E0A400; --ok:#2E8B57;
+    --r:16px; --sh:0 1px 2px rgba(16,39,72,.05),0 12px 30px rgba(16,39,72,.07);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.5;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);}
+  .topbar__in{max-width:1220px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:14px;}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(150deg,#1a3f6b,#2f6bff);display:flex;align-items:center;justify-content:center;color:#fff;}
+  .brand{font-weight:800;letter-spacing:-.01em;color:var(--navy);font-size:15px;}
+  .brand span{color:var(--ink-3);font-weight:600;}
+  .topbar__sp{flex:1;}
+  .topbar__chip{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--inset);border:1px solid var(--border);border-radius:999px;padding:6px 12px;}
+  .wrap{max-width:1220px;margin:0 auto;padding:34px 28px 80px;}
+
+  .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);}
+  h1{font-size:clamp(24px,3.2vw,32px);font-weight:800;letter-spacing:-.02em;margin:8px 0 0;color:var(--navy);}
+  .head__sub{font-size:14.5px;color:var(--ink-2);margin:6px 0 0;}
+  .updated{font-size:12px;color:var(--ink-3);display:inline-flex;align-items:center;gap:7px;}
+  .updated i{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(46,139,87,.18);}
+
+  /* KPI strip */
+  .kpis{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr;gap:14px;margin:22px 0 34px;}
+  @media(max-width:900px){.kpis{grid-template-columns:1fr 1fr;}}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);}
+  .kpi--hero{display:flex;align-items:center;gap:18px;}
+  .kpi__label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);}
+  .kpi__val{font-size:30px;font-weight:800;letter-spacing:-.02em;color:var(--navy);line-height:1;margin-top:8px;}
+  .kpi__val small{font-size:14px;font-weight:700;color:var(--ink-3);}
+  .kpi__trend{font-size:12px;font-weight:700;margin-top:8px;display:inline-flex;align-items:center;gap:5px;}
+  .up{color:var(--crit);} .down{color:var(--ok);} .flat{color:var(--ink-3);}
+  .kpi__hero-meta{flex:1;}
+  .kpi__hero-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);}
+  .kpi__hero-val{font-size:40px;font-weight:800;letter-spacing:-.02em;line-height:1;margin-top:4px;}
+  .kpi__hero-tag{font-size:12px;font-weight:800;letter-spacing:.02em;padding:3px 9px;border-radius:999px;display:inline-block;margin-top:8px;}
+
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 16px;}
+  .section-head h2{font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--navy);margin:0;}
+  .section-head span{font-size:13px;color:var(--ink-3);}
+
+  /* Objective risk tiles */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  @media(max-width:1180px){.grid{grid-template-columns:1fr;}}
+  /* two-column: objectives on the left, risk summary rail on the right */
+  .ov-cols{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;align-items:start;}
+  @media(max-width:1040px){.ov-cols{grid-template-columns:1fr;}}
+  .rail{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);padding:18px 18px 8px;position:sticky;top:16px;}
+  .rail__h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);}
+  .rail__title{font-size:16px;font-weight:800;color:var(--navy);margin:5px 0 2px;display:flex;align-items:baseline;gap:8px;}
+  .rail__title small{font-size:12px;font-weight:700;color:var(--ink-3);}
+  .rail__sub{font-size:12px;color:var(--ink-3);margin-bottom:8px;line-height:1.4;}
+  .rrow{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--border);padding:11px 6px;cursor:pointer;font:inherit;transition:background .12s;border-radius:8px;text-decoration:none;color:inherit;}
+  .rrow:first-of-type{border-top:0;}
+  .rrow:hover{background:var(--inset);}
+  .rrow--nolink,.rrow--nolink:hover{cursor:default;background:transparent;}
+  .rrow__dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .rrow__main{flex:1;min-width:0;}
+  .rrow__name{font-size:13px;font-weight:600;color:var(--ink);line-height:1.3;}
+  .rrow__obj{font-size:11px;color:var(--ink-3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .rrow__go{color:var(--ink-3);font-size:14px;flex:none;font-weight:700;}
+  .rrow:hover .rrow__go{color:var(--accent);}
+  .rrow__prep{font-size:10px;color:var(--ink-3);font-style:italic;flex:none;}
+  .tile{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);
+    padding:22px 24px;box-shadow:var(--sh);cursor:pointer;transition:transform .18s,box-shadow .18s,border-color .18s;overflow:hidden;}
+  .tile::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;}
+  .tile--crit::before{background:var(--crit);} .tile--high::before{background:var(--high);}
+  .tile--elev::before{background:var(--elev);} .tile--ok::before{background:var(--ok);}
+  .tile:hover{transform:translateY(-3px);box-shadow:0 6px 16px rgba(16,39,72,.10),0 20px 44px rgba(16,39,72,.12);border-color:var(--border-2);}
+  .tile:focus-visible{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(47,107,255,.18),var(--sh);}
+  .tile__top{display:flex;gap:14px;align-items:flex-start;}
+  .tile__icon{flex:none;width:44px;height:44px;border-radius:12px;background:#eef2fb;color:var(--accent);display:flex;align-items:center;justify-content:center;}
+  .tile__name{font-size:17px;font-weight:800;color:var(--navy);margin:0;letter-spacing:-.01em;}
+  .tile__q{font-size:13px;color:var(--accent);font-weight:600;margin-top:3px;}
+
+  .gaugewrap{display:flex;align-items:center;gap:18px;margin:18px 0 0;padding:14px 16px;border:1px solid var(--border);border-radius:12px;background:var(--surface-2);}
+  .gauge{position:relative;width:74px;height:74px;flex:none;}
+  .gauge__num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:var(--navy);}
+  .gaugewrap__meta{flex:1;min-width:0;}
+  .risklvl{font-size:11.5px;font-weight:800;letter-spacing:.04em;padding:3px 9px;border-radius:999px;}
+  .risklvl--crit{color:var(--crit);background:rgba(211,69,69,.1);}
+  .risklvl--high{color:var(--high);background:rgba(245,124,0,.12);}
+  .risklvl--elev{color:#9a7300;background:rgba(224,164,0,.15);}
+  .risklvl--ok{color:var(--ok);background:rgba(46,139,87,.12);}
+  .gaugewrap__cap{font-size:12px;color:var(--ink-3);margin-top:7px;}
+  .spark{margin-left:auto;flex:none;}
+
+  .tlabel{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:18px 0 8px;}
+  .drivers{display:flex;flex-direction:column;gap:7px;}
+  .driver{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2);}
+  .driver i{width:8px;height:8px;border-radius:50%;flex:none;}
+  .driver__bar{flex:1;height:5px;border-radius:999px;background:var(--inset);overflow:hidden;}
+  .driver__bar span{display:block;height:100%;border-radius:999px;}
+  .factors{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
+  .factor{font-size:12px;font-weight:600;color:var(--ink-2);background:var(--surface);border:1px solid var(--border-2);border-radius:999px;padding:4px 11px;}
+
+  .tile__foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding-top:15px;border-top:1px solid var(--border);}
+  .srcline{font-size:12.5px;color:var(--ink-3);}
+  .srcline strong{color:var(--ink);font-weight:800;}
+  .open{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700;color:var(--accent-600);}
+  .tile:hover .open{gap:10px;}
+  .tile--nolink{cursor:default;}
+  .tile--nolink:hover{transform:none;box-shadow:var(--sh);border-color:var(--border);}
+  .open--muted{color:var(--ink-3);font-weight:600;font-size:12.5px;}
+  .backlink{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-3);text-decoration:none;margin-bottom:14px;}
+  .backlink:hover{color:var(--accent);}
+  .explore{background:none;border:0;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;color:var(--ink-3);display:inline-flex;align-items:center;gap:6px;padding:0;}
+  .explore:hover{color:var(--accent-600);}
+
+  .note{margin-top:38px;background:linear-gradient(180deg,#f7faff,#f2f6fc);border:1px solid #dce6f4;border-radius:var(--r);padding:22px 24px;}
+  .note h3{margin:0 0 8px;font-size:16px;color:var(--navy);}
+  .note p{font-size:13.5px;color:var(--ink-2);margin:6px 0 0;}
+  .note code{font-weight:700;color:var(--navy);}
+  .footer{margin-top:30px;font-size:12px;color:var(--ink-3);}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar__in">
+      <span class="logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
+      </span>
+      <span class="brand">Digital Twin Risk Room <span>· Executive overview</span></span>
+      <span class="topbar__sp"></span>
+      <span class="topbar__chip">Newbuild Programme · Q3 2026</span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <a href="index.html" class="backlink">← Artefact Gallery</a>
+    <div class="head">
+      <div>
+        <div class="eyebrow">Enterprise risk posture</div>
+        <h1>Risk overview</h1>
+        <p class="head__sub">Live risk across every monitoring objective. Open a card to drill into its drivers, sources and AI advisor.</p>
+      </div>
+      <span class="updated"><i></i> Updated just now · auto-refresh on</span>
+    </div>
+
+    <!-- Executive KPI strip -->
+    <div class="kpis">
+      <div class="kpi kpi--hero">
+        <div class="gauge" aria-label="Overall enterprise risk 68">
+          <svg width="74" height="74" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#eef1f6" stroke-width="10"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#F57C00" stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="166 264" transform="rotate(-90 50 50)"/>
+          </svg>
+          <span class="gauge__num">63</span>
+        </div>
+        <div class="kpi__hero-meta">
+          <div class="kpi__hero-label">Overall enterprise risk</div>
+          <div class="kpi__hero-val" style="color:var(--high)">High</div>
+          <span class="kpi__hero-tag" style="color:var(--crit);background:rgba(211,69,69,.1)">▲ +6 vs last month</span>
+        </div>
+      </div>
+
+      <div class="kpi">
+        <div class="kpi__label">Critical objectives</div>
+        <div class="kpi__val" style="color:var(--crit)">1<small> / 6</small></div>
+        <div class="kpi__trend up">▲ +1 this quarter</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__label">Objectives monitored</div>
+        <div class="kpi__val">6</div>
+        <div class="kpi__trend flat">— stable</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__label">Sources in use</div>
+        <div class="kpi__val">11</div>
+        <div class="kpi__trend down">▲ 3 in setup</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi__label">AI confidence</div>
+        <div class="kpi__val">82<small>%</small></div>
+        <div class="kpi__trend flat">forecast horizon 90d</div>
+      </div>
+    </div>
+
+    <div class="ov-cols">
+      <div class="ov-main">
+        <div class="section-head">
+          <h2>Monitoring objectives</h2>
+          <span>Sorted by risk · click a card to open its risk case</span>
+        </div>
+        <div class="grid" id="grid"></div>
+      </div>
+
+      <aside class="rail">
+        <div class="rail__h">Identified risks</div>
+        <div class="rail__title">Risks <small id="riskcount"></small></div>
+        <div class="rail__sub">Risk definitions that arise from the risk factors each objective monitors, worst-first. Press a risk to open its case.</div>
+        <div id="risklist"></div>
+      </aside>
+    </div>
+
+    <div class="note">
+      <h3>Why this as the starting page</h3>
+      <p>It answers the executive's first question — <strong>“where is my risk right now?”</strong> — before any configuration. Each tile is a live risk signal (score, 6-month trend, top drivers) and a doorway: <code>Open objective →</code> drills straight into the workspace we built (<code>/monitoring-objectives/:id</code>), where the same objective's sources, setup and AI advisor live. One object — the monitoring objective — carries the executive headline and the management detail.</p>
+      <p>The tiles reuse your “Signal Room” unicorn-card concept, elevated with a composite risk gauge and portfolio sorting. The top strip is a lightweight first slice of the fuller Risk Room (KPI bar, heatmap, time machine) that can grow above this grid later.</p>
+    </div>
+    <div class="footer">Proposal mockup · navy/premium tokens · monitoring objectives per Ontology v2.1 §6 (Geopolitical, Supplier, Weather, Commodity) plus a Customer &amp; Commercial objective for the customer case. Tiles show risk <em>factors</em>; the rail shows risks (risk definitions). Scores/trends are illustrative pending a backend risk-scoring field.</div>
+  </div>
+
+<script>
+  const R = 264; // circumference approx for r=42
+  const LEVEL = (s) => s>=75?["crit","Critical risk","#D32F2F"]:s>=60?["high","High risk","#F57C00"]:s>=45?["elev","Elevated risk","#E0A400"]:["ok","Stable","#2E8B57"];
+  const spark = (pts,color)=>{
+    const w=120,h=36, max=Math.max(...pts),min=Math.min(...pts),rng=(max-min)||1;
+    const d=pts.map((p,i)=>`${(i/(pts.length-1))*w},${h-((p-min)/rng)*(h-6)-3}`).join(" ");
+    return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  };
+  // Monitoring objectives per Ontology v2.1 §6 (Geopolitical, Supplier, Weather,
+  // Commodity) plus a Customer & Commercial objective for the customer case.
+  // `factors` and `drivers` are Risk FACTORS (conditions the objective monitors)
+  // — the risks (definitions) live in the right rail and the cases.
+  const OBJ=[
+    {icon:'<path d="M3 12h18M12 3c2.5 2.6 2.5 15.4 0 18M12 3c-2.5 2.6-2.5 15.4 0 18"/><circle cx="12" cy="12" r="9"/>',
+     name:"Geopolitical & Regulatory Monitoring", q:"Which political, regulatory or trade developments could affect suppliers, logistics and shipbuilding projects?",
+     score:78, trend:[60,62,61,66,70,74,78], sources:6, real:true, caseHref:"risk-cases.html#c2",
+     drivers:[["Sanctions & export controls",88,"#D32F2F"],["Trade restrictions",74,"#F57C00"],["Regulatory change",58,"#E0A400"]],
+     factors:["Geopolitical instability","Sanctions","Trade restrictions","Export controls","Regulatory change"]},
+    {icon:'<path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/>',
+     name:"Supplier Stability", q:"Are any suppliers becoming a risk to project cost, quality or schedule?",
+     score:64, trend:[54,56,58,57,60,62,64], sources:5, real:true, caseHref:"risk-cases.html#c1",
+     drivers:[["Supplier financial pressure",80,"#F57C00"],["Material availability",62,"#F57C00"],["Delivery performance",48,"#E0A400"]],
+     factors:["Supplier capacity","Supplier financial pressure","Material availability","Transport disruption","Delivery performance","Supplier quality"]},
+    {icon:'<path d="M17.5 19a4.5 4.5 0 00.5-8.96A6 6 0 006 9.5 3.5 3.5 0 006.5 19z"/><path d="M8 22l1-2M12 22l1-2M16 22l1-2"/>',
+     name:"Weather & Natural Hazards", q:"Could weather or natural hazards disrupt logistics, production, commissioning or sea trials?",
+     score:42, trend:[48,46,45,43,41,40,42], sources:4, real:false, caseHref:null,
+     drivers:[["Severe weather",50,"#E0A400"],["Sea state",40,"#E0A400"],["Transport disruption",32,"#2E8B57"]],
+     factors:["Severe weather","High wind","Storms","Flooding","Sea state"]},
+    {icon:'<path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 4-6"/>',
+     name:"Commodity & Energy Prices", q:"Are changes in material or energy prices increasing procurement and project cost risks?",
+     score:55, trend:[62,60,58,57,55,54,55], sources:4, real:false, caseHref:null,
+     drivers:[["Commodity-price volatility",66,"#F57C00"],["Energy-price volatility",52,"#E0A400"],["Inflation",44,"#E0A400"]],
+     factors:["Commodity-price volatility","Energy-price volatility","Inflation","Procurement cost","Supplier financial pressure"]},
+    {icon:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/>',
+     name:"Customer & Commercial", q:"Is customer demand, order-book strength or customer credit becoming a commercial risk?",
+     score:68, trend:[52,54,53,57,61,65,68], sources:3, real:false, caseHref:"risk-cases.html#c3",
+     drivers:[["Customer demand softening",72,"#F57C00"],["Order-book deferral",64,"#F57C00"],["Customer credit pressure",56,"#E0A400"]],
+     factors:["Demand softening","Order-book deferral","Customer credit","Economic cycle"]},
+    {icon:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 016-6h4a6 6 0 016 6v1"/>',
+     name:"Workforce & HSE", q:"Is workforce availability and safety performance holding up?",
+     score:34, trend:[40,39,38,37,36,35,34], sources:3, real:false, caseHref:"sources.html",
+     drivers:[["Workforce availability",44,"#E0A400"],["Skilled-labour capacity",34,"#2E8B57"],["HSE / safety performance",28,"#2E8B57"]],
+     factors:["Workforce availability","Capacity","HSE performance"]},
+  ];
+  const grid=document.getElementById('grid');
+  grid.innerHTML=OBJ.map((o,idx)=>{
+    const [lv,lbl,col]=LEVEL(o.score);
+    const dash=Math.round((o.score/100)*R);
+    const nav=o.caseHref?`onclick="location.href='${o.caseHref}'" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();location.href='${o.caseHref}'}"`:"";
+    return `<div class="tile tile--${lv} ${o.caseHref?'':'tile--nolink'}" role="button" tabindex="0" aria-label="Open ${o.name}" ${nav}>
+      <div class="tile__top">
+        <span class="tile__icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">${o.icon}</svg></span>
+        <div><h3 class="tile__name">${o.name}</h3><div class="tile__q">${o.q}</div></div>
+      </div>
+      <div class="gaugewrap">
+        <div class="gauge">
+          <svg width="74" height="74" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="#eef1f6" stroke-width="10"/>
+            <circle cx="50" cy="50" r="42" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${dash} ${R}" transform="rotate(-90 50 50)"/>
+          </svg>
+          <span class="gauge__num">${o.score}</span>
+        </div>
+        <div class="gaugewrap__meta">
+          <span class="risklvl risklvl--${lv}">${lbl.toUpperCase()}</span>
+          <div class="gaugewrap__cap">Composite risk · 6-month trend</div>
+        </div>
+        ${spark(o.trend,col)}
+      </div>
+
+      <div id="exp-${idx}" style="display:none">
+        <div class="tlabel">Top risk drivers</div>
+        <div class="drivers">
+          ${o.drivers.map(d=>`<div class="driver"><i style="background:${d[2]}"></i>${d[0]}<span class="driver__bar"><span style="width:${d[1]}%;background:${d[2]}"></span></span></div>`).join("")}
+        </div>
+      </div>
+
+      <div class="tlabel">Related risk factors</div>
+      <div class="factors">${o.factors.map(f=>`<span class="factor">${f}</span>`).join("")}</div>
+
+      <div class="tile__foot">
+        <span class="srcline"><strong>${o.sources}</strong> sources in use</span>
+        <span style="display:flex;gap:16px;align-items:center">
+          <button class="explore" onclick="event.stopPropagation();var e=document.getElementById('exp-${idx}');e.style.display=e.style.display==='none'?'block':'none';">Explore drivers ↕</button>
+          ${o.caseHref?'<span class="open">Open objective →</span>':'<span class="open open--muted">Detailed case in preparation</span>'}
+        </span>
+      </div>
+    </div>`;
+  }).join("");
+
+  // ---- Right rail: Risks (Risk Definitions) per the ontology ----
+  // A Risk is a Risk Definition (e.g. Supplier Insolvency) — the case name.
+  // It ARISES FROM the risk factors an objective monitors (Ch.4: Risk Factor
+  // influences → Risk Definition). So this rail lists risk definitions, not
+  // factors, and each maps to its case. Sorted worst-first.
+  const RISKS=[
+    {name:"Supplier insolvency",            obj:"Supplier Stability",          score:83, href:"risk-cases.html#c1"},
+    {name:"Customs & trade disruption",     obj:"Geopolitical & Regulatory",   score:78, href:"risk-cases.html#c2"},
+    {name:"Customer order deferral",        obj:"Customer & Commercial",       score:68, href:"risk-cases.html#c3"},
+    {name:"Material shortage",              obj:"Supplier Stability",          score:60, href:null},
+    {name:"Regulatory compliance failure",  obj:"Geopolitical & Regulatory",   score:60, href:null},
+    {name:"Late delivery",                  obj:"Supplier Stability",          score:56, href:null},
+    {name:"Budget overrun",                 obj:"Commodity & Energy",          score:55, href:null},
+    {name:"Procurement cost increase",      obj:"Commodity & Energy",          score:50, href:null},
+    {name:"Project schedule delay",         obj:"Supplier Stability",          score:48, href:null},
+    {name:"Sea trial delay",                obj:"Weather & Natural Hazards",   score:44, href:null},
+  ].sort((a,b)=>b.score-a.score);
+  document.getElementById('riskcount').textContent=`· ${RISKS.length}`;
+  document.getElementById('risklist').innerHTML=RISKS.map(r=>{
+    const col=LEVEL(r.score)[2];
+    const inner=`<span class="rrow__dot" style="background:${col}"></span>
+      <span class="rrow__main"><span class="rrow__name">${r.name}</span><span class="rrow__obj">${r.obj}</span></span>`;
+    // A risk that has a case becomes a real link to its case page.
+    return r.href
+      ? `<a class="rrow" href="${r.href}" aria-label="Open case: ${r.name}">${inner}<span class="rrow__go">→</span></a>`
+      : `<div class="rrow rrow--nolink" aria-label="${r.name} — case in preparation">${inner}<span class="rrow__prep">in prep</span></div>`;
+  }).join("");
+</script>
+</body>
+</html>

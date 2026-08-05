@@ -1,7 +1,8 @@
+import { Link } from "react-router-dom";
 import BrandLogo from "./BrandLogo.jsx";
 
 /** Premium application chrome — brand, section nav, environment status. */
-export default function TopBar() {
+export default function TopBar({ active = "overview" }) {
   return (
     <header className="topbar">
       <div className="container topbar__inner">
@@ -16,10 +17,21 @@ export default function TopBar() {
         </div>
 
         <nav className="topbar__nav" aria-label="Primary">
-          <a href="#" aria-current="true">Configure</a>
-          <a href="#">Sources</a>
-          <a href="#">Intelligence</a>
-          <a href="#">Governance</a>
+          <Link to="/" aria-current={active === "overview" ? "page" : undefined}>
+            Risk overview
+          </Link>
+          <Link
+            to="/configure/objectives"
+            aria-current={active === "configure" ? "page" : undefined}
+          >
+            Configure sources
+          </Link>
+          <a href="#" aria-disabled="true">
+            Intelligence
+          </a>
+          <a href="#" aria-disabled="true">
+            Governance
+          </a>
         </nav>
 
         <div className="topbar__right">
@@ -27,7 +39,9 @@ export default function TopBar() {
             <i />
             Platform online
           </span>
-          <span className="avatar" title="Signed in">RS</span>
+          <span className="avatar" title="Signed in">
+            RS
+          </span>
         </div>
       </div>
     </header>

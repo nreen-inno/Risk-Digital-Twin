@@ -60,7 +60,7 @@ export default function MonitoringObjectivesPage() {
 
   return (
     <div className="app">
-      <TopBar />
+      <TopBar active="configure" />
 
       <main className="container">
         <Hero />

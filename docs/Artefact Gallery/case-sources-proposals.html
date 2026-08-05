@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Case page — reflecting risk sources & factors</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f4f6fb;--surface:#fff;--ink:#1f2a3a;--ink-2:#4a5567;--ink-3:#8794a7;
+    --navy:#14335f;--accent:#2f6bff;--accent-600:#1f56e0;--border:#e6eaf1;--border-2:#d7deea;
+    --inset:#f3f6fb;--surface-2:#f9fbfd;--crit:#D32F2F;--high:#F57C00;--elev:#E0A400;--ok:#2E8B57;
+    --int:#3b6fe0;--ext:#17b3a6;--hist:#7c5cd6;--r:16px;--sh:0 1px 2px rgba(16,39,72,.05),0 12px 30px rgba(16,39,72,.07);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55;}
+  .wrap{max-width:1080px;margin:0 auto;padding:34px 26px 90px;}
+  .backlink{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-3);text-decoration:none;}
+  .backlink:hover{color:var(--accent);}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);}
+  h1{font-size:clamp(23px,3vw,31px);font-weight:800;letter-spacing:-.02em;margin:8px 0 6px;color:var(--navy);}
+  .lede{font-size:14.5px;color:var(--ink-2);max-width:840px;margin:0;}
+  .arch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:16px 0 0;padding:12px 15px;background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--sh);font-size:12px;color:var(--ink-2);}
+  .arch b{color:var(--navy);} .arch .ar{color:var(--ink-3);}
+  .nav{position:sticky;top:0;z-index:9;background:rgba(244,246,251,.92);backdrop-filter:blur(8px);display:flex;gap:8px;flex-wrap:wrap;padding:14px 0;margin:20px 0 24px;border-bottom:1px solid var(--border);}
+  .nav a{font-size:12.5px;font-weight:600;color:var(--ink-2);text-decoration:none;padding:6px 12px;border:1px solid var(--border-2);border-radius:999px;background:#fff;}
+  .nav a:hover{border-color:var(--accent);color:var(--accent);}
+  section.p{margin:0 0 42px;}
+  .p__head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px;}
+  .badge{flex:none;width:30px;height:30px;border-radius:9px;background:var(--navy);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;}
+  h2{font-size:20px;font-weight:800;letter-spacing:-.01em;margin:0;color:var(--navy);}
+  .p__sub{font-size:14px;color:var(--ink-2);margin:2px 0 16px;max-width:850px;}
+  .stage{background:#fff;border:1px solid var(--border);border-radius:18px;padding:22px 24px;box-shadow:var(--sh);}
+  .cap{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;}
+  .note{font-size:12.5px;color:var(--ink-3);margin-top:12px;}
+  .tier{flex:none;font-size:10px;font-weight:800;letter-spacing:.03em;padding:2px 7px;border-radius:5px;text-transform:uppercase;}
+  .tier--int{color:var(--int);background:rgba(59,111,224,.1);}
+  .tier--ext{color:#0f8f83;background:rgba(23,179,166,.12);}
+  .tier--hist{color:var(--hist);background:rgba(124,92,214,.12);}
+
+  /* Proposal A — evidence-backed factors */
+  .fac{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+  .fac__row{display:flex;align-items:center;gap:11px;padding:13px 15px;cursor:pointer;background:#fff;}
+  .fac__row:hover{background:var(--surface-2);}
+  .fac__dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .fac__name{flex:1;font-size:14px;font-weight:600;color:var(--ink);}
+  .fac__src{font-size:11.5px;color:var(--ink-3);display:inline-flex;align-items:center;gap:6px;}
+  .fac__chev{color:var(--ink-3);transition:transform .2s;}
+  .fac.open .fac__chev{transform:rotate(180deg);}
+  .fac__ev{display:none;padding:0 15px 14px 35px;background:var(--surface-2);border-top:1px solid var(--border);}
+  .fac.open .fac__ev{display:block;}
+  .fac__ev-line{font-size:13px;color:var(--ink-2);margin:12px 0 0;}
+  .fac__ev-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--ink-3);}
+  .fac__ev-meta b{color:var(--ink-2);font-weight:700;}
+  .fac__ev-link{font-size:12px;font-weight:700;color:var(--accent-600);margin-top:8px;display:inline-block;}
+
+  /* Proposal B — sources & evidence panel */
+  .srcbar{display:flex;gap:18px;flex-wrap:wrap;padding:12px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;font-size:12.5px;}
+  .srcbar b{color:var(--navy);font-weight:800;font-size:15px;}
+  .srcbar span{color:var(--ink-3);}
+  .srow{display:grid;grid-template-columns:1.6fr auto auto auto;gap:12px;align-items:center;padding:11px 4px;border-top:1px solid var(--border);}
+  .srow:first-of-type{border-top:0;}
+  @media(max-width:640px){.srow{grid-template-columns:1fr auto;}}
+  .srow__id{display:flex;flex-direction:column;gap:2px;}
+  .srow__n{font-size:13.5px;font-weight:700;color:var(--navy);}
+  .srow__ev{font-size:11.5px;color:var(--ink-3);}
+  .srow__stat{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ok);font-weight:600;}
+  .srow__stat i{width:7px;height:7px;border-radius:50%;background:var(--ok);}
+  .srow__num{font-size:12.5px;color:var(--ink-2);text-align:right;}
+  .srow__go{font-size:12px;font-weight:700;color:var(--accent-600);text-align:right;}
+
+  /* Proposal C — provenance chain */
+  .chain{display:flex;align-items:stretch;gap:0;overflow-x:auto;padding:6px 0;}
+  .cnode{flex:1;min-width:150px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 13px;position:relative;}
+  .cnode + .cnode{margin-left:26px;}
+  .cnode + .cnode::before{content:"→";position:absolute;left:-21px;top:50%;transform:translateY(-50%);color:var(--ink-3);font-weight:700;}
+  .cnode__k{font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);}
+  .cnode__t{font-size:13px;font-weight:700;color:var(--navy);margin-top:4px;}
+  .cnode__d{font-size:11.5px;color:var(--ink-3);margin-top:5px;line-height:1.5;}
+  .cnode--signal{background:#fff;border-color:#f2c9c9;}
+
+  /* Proposal D — header strip */
+  .hdr{border:1px solid var(--border);border-radius:14px;padding:16px 18px;}
+  .hdr__title{font-size:18px;font-weight:800;color:var(--navy);}
+  .hdr__strip{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border-2);font-size:12px;color:var(--ink-2);}
+  .hdr__sig{display:inline-flex;align-items:center;gap:7px;font-weight:800;color:var(--navy);}
+  .hdr__sig i{width:8px;height:8px;border-radius:50%;background:var(--crit);}
+  .hdr__chip{background:var(--inset);border:1px solid var(--border);border-radius:999px;padding:4px 11px;font-weight:600;}
+  .hdr__link{margin-left:auto;font-size:12px;font-weight:700;color:var(--accent-600);}
+
+  .notes{display:grid;grid-template-columns:1fr 1fr;gap:12px 26px;margin-top:16px;}
+  @media(max-width:680px){.notes{grid-template-columns:1fr}}
+  .n h4{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:0 0 4px;}
+  .n p{font-size:13px;color:var(--ink-2);margin:0;}
+  .reco{background:linear-gradient(180deg,#f7faff,#f2f6fc);border:1px solid #dce6f4;border-radius:16px;padding:22px 24px;}
+  .reco h2{margin:0 0 8px;} .reco p{font-size:14px;color:var(--ink-2);margin:8px 0 0;}
+  .foot{margin-top:28px;font-size:12px;color:var(--ink-3);border-top:1px solid var(--border);padding-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="index.html" class="backlink">← Artefact Gallery</a>
+  <div class="eyebrow">Risk case · architecture-aligned</div>
+  <h1>Reflecting risk sources &amp; risk factors in the case</h1>
+  <p class="lede">Per the backend/AI reference architecture, a case <b>is a Risk Signal</b>: generated by AI Enrichment of RawRecords that connectors collect from Information Sources — and every risk must stay <b>traceable to its evidence and source</b>. These proposals surface that provenance directly on the case (using the Supplier Insolvency case as the example), so a risk manager sees not just <i>what</i> the risk is, but <i>where it comes from</i> and <i>how confident</i> it is.</p>
+
+  <div class="arch">
+    <b>Information Source</b><span class="ar">→</span><b>RawRecord</b><span class="ar">→</span>Pre-filter<span class="ar">→</span><b>AI Enrichment</b><span class="ar">→</span><b>Risk Signal (this case)</b><span class="ar">→</span>Monitoring Objective
+  </div>
+
+  <nav class="nav">
+    <a href="#a">A · Evidence-backed factors</a>
+    <a href="#b">B · Risk sources panel</a>
+    <a href="#c">C · Provenance chain</a>
+    <a href="#d">D · Risk-Signal header</a>
+    <a href="#reco">Recommendation</a>
+  </nav>
+
+  <!-- A -->
+  <section class="p" id="a">
+    <div class="p__head"><span class="badge">A</span><h2>Risk factors, evidenced and source-traced</h2></div>
+    <p class="p__sub">Each contributing risk factor keeps its severity, but now carries the <b>observation</b> that evidences it, the <b>source</b> it came from, when it was observed, and AI confidence. This is the ontology's "Risk Factor <i>is evidenced by</i> Observations, traceable to source" made visible. Click a factor to inspect its evidence.</p>
+    <div class="stage">
+      <div class="cap">Why — contributing risk factors</div>
+      <div id="facs"></div>
+    </div>
+    <div class="notes">
+      <div class="n"><h4>Applies</h4><p>RiskFactor ← evidenced by Observation ← RawRecord ← Information Source. Full traceability, per architecture principle.</p></div>
+      <div class="n"><h4>Best for</h4><p>Making each factor defensible — a risk manager can see the proof and its source without leaving the case.</p></div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="p" id="b">
+    <div class="p__head"><span class="badge">B</span><h2>“Risk sources &amp; evidence” panel</h2></div>
+    <p class="p__sub">A dedicated block answering “where does this risk come from?” — the Information Sources feeding this Risk Signal, each with tier, connector status, how many observations it contributed, last update, and which factors it evidences.</p>
+    <div class="stage">
+      <div class="cap">Risk sources &amp; evidence</div>
+      <div class="srcbar">
+        <span>Derived from <b>4</b> sources</span><span>·</span><span><b>12</b> observations</span><span>·</span><span>AI-enrichment confidence <b>84%</b></span><span>·</span><span>updated <b>2h ago</b></span>
+      </div>
+      <div id="srcs"></div>
+    </div>
+    <div class="notes">
+      <div class="n"><h4>Applies</h4><p>“Business apps consume Risk Signals” + “traceable to evidence and source”. Sources stay decoupled from the risk logic.</p></div>
+      <div class="n"><h4>Best for</h4><p>Trust and auditability — shows the risk isn't a guess; it's aggregated from live, named sources.</p></div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="p" id="c">
+    <div class="p__head"><span class="badge">C</span><h2>Provenance chain — how this risk was derived</h2></div>
+    <p class="p__sub">A compact rendering of the runtime pipeline, scoped to this case: which sources fed it, the raw evidence, what AI extracted (entities, topics, sentiment), and the resulting Risk Signal. Reinforces “AI enriches but never replaces the original evidence.”</p>
+    <div class="stage">
+      <div class="cap">How this risk was derived</div>
+      <div class="chain">
+        <div class="cnode"><div class="cnode__k">Information sources</div><div class="cnode__t">D&amp;B · Internal ERP · MEPS</div><div class="cnode__d">4 sources · internal, external, historical</div></div>
+        <div class="cnode"><div class="cnode__k">Raw records</div><div class="cnode__t">12 evidence items</div><div class="cnode__d">Credit note, sole-source flag, lead times, steel index — preserved unchanged</div></div>
+        <div class="cnode"><div class="cnode__k">AI enrichment</div><div class="cnode__t">Entities · topics · sentiment</div><div class="cnode__d">Supplier, propulsion; insolvency, single-source; negative · conf 84%</div></div>
+        <div class="cnode cnode--signal"><div class="cnode__k">Risk signal</div><div class="cnode__t">Supplier Insolvency</div><div class="cnode__d">Severity Critical · impact €180M · objective Supplier Stability</div></div>
+      </div>
+      <p class="note">Each node would be inspectable — e.g. open a Raw Record to see the original source payload.</p>
+    </div>
+  </section>
+
+  <!-- D -->
+  <section class="p" id="d">
+    <div class="p__head"><span class="badge">D</span><h2>Risk-Signal header strip</h2></div>
+    <p class="p__sub">A light addition under the case title that names the case as a Risk Signal and summarises its provenance in one line — no new section, minimal footprint.</p>
+    <div class="stage">
+      <div class="hdr">
+        <div class="hdr__title">Potential insolvency of a key propulsion &amp; steel supplier</div>
+        <div class="hdr__strip">
+          <span class="hdr__sig"><i></i>Risk Signal</span>
+          <span class="hdr__chip">generated by AI Enrichment</span>
+          <span class="hdr__chip">4 sources · 12 observations</span>
+          <span class="hdr__chip">confidence 84%</span>
+          <span class="hdr__chip">updated 2h ago</span>
+          <span class="hdr__link">Inspect evidence →</span>
+        </div>
+      </div>
+    </div>
+    <div class="notes">
+      <div class="n"><h4>Applies</h4><p>Frames the case as a RiskSignal (severity, impact, objective) with generation metadata — the architecture's core object.</p></div>
+      <div class="n"><h4>Best for</h4><p>A subtle, always-visible provenance cue without restructuring the case.</p></div>
+    </div>
+  </section>
+
+  <!-- Reco -->
+  <section class="p" id="reco">
+    <div class="reco">
+      <h2>Recommendation — combine A + B + D</h2>
+      <p>They layer cleanly: <b>D</b> adds the Risk-Signal provenance strip to the header (always visible), <b>A</b> turns each risk factor into an evidenced, source-traced row (the “why”, made defensible), and <b>B</b> adds the “Risk sources &amp; evidence” panel (the “where from”, auditable). <b>C</b> is the optional deep-dive for anyone who wants the full derivation — good behind an “Inspect evidence” click rather than always on screen.</p>
+      <p>This keeps the case readable for an executive while making it fully traceable underneath — exactly the architecture's intent: dashboards consume Risk Signals, but every signal stays connected to its evidence and sources. None of it needs real backend data yet; when Risk Signals, RawRecords and AIEnrichments exist, these blocks bind straight to them (source name, observation, confidence, generatedAt).</p>
+    </div>
+  </section>
+
+  <div class="foot">Illustrative proposal · Supplier Insolvency case · figures indicative. Architecture-aligned to RiskSignal ← AIEnrichment ← RawRecord ← Information Source.</div>
+</div>
+
+<script>
+  const COL={crit:"#D32F2F",high:"#F57C00",elev:"#E0A400",ok:"#2E8B57"};
+  const TIER={internal:["int","Internal"],external:["ext","External"],historical:["hist","Historical"]};
+  const FACTORS=[
+    {name:"Rating downgraded two notches; going-concern note flagged",sev:"crit",obs:"Credit rating lowered BBB → BB; auditor going-concern note filed.",src:"Dun & Bradstreet supplier risk",tier:"external",when:"2d ago",conf:91},
+    {name:"Single-source for propulsion modules across 3 programmes",sev:"crit",obs:"Sole-source flag on propulsion BOM; no alternate purchase order on record.",src:"Internal ERP / Procurement",tier:"internal",when:"1d ago",conf:88},
+    {name:"Long-lead items (12–16 wk) with no qualified alternate",sev:"high",obs:"Lead time 14 wk; alternate supplier not yet qualified.",src:"Internal ERP / Procurement",tier:"internal",when:"1d ago",conf:84},
+    {name:"Rising raw-material costs squeezing supplier margins",sev:"high",obs:"MEPS steel index +12% QoQ; supplier margin compression.",src:"MEPS steel price",tier:"external",when:"3d ago",conf:79},
+  ];
+  document.getElementById('facs').innerHTML=FACTORS.map((f,i)=>{
+    const t=TIER[f.tier];
+    return `<div class="fac" id="fac-${i}">
+      <div class="fac__row" onclick="document.getElementById('fac-${i}').classList.toggle('open')">
+        <span class="fac__dot" style="background:${COL[f.sev]}"></span>
+        <span class="fac__name">${f.name}</span>
+        <span class="fac__src"><span class="tier tier--${t[0]}">${t[1]}</span>${f.src}</span>
+        <span class="fac__chev">⌄</span>
+      </div>
+      <div class="fac__ev">
+        <p class="fac__ev-line"><b>Observation:</b> ${f.obs}</p>
+        <div class="fac__ev-meta"><span><b>Source:</b> ${f.src}</span><span><b>Observed:</b> ${f.when}</span><span><b>AI confidence:</b> ${f.conf}%</span></div>
+        <a class="fac__ev-link" href="#">Inspect raw record →</a>
+      </div>
+    </div>`;
+  }).join("");
+
+  const SOURCES=[
+    {n:"Dun & Bradstreet supplier risk",tier:"external",ev:"evidences: rating downgrade",obs:5,upd:"2d ago"},
+    {n:"Internal ERP / Procurement",tier:"internal",ev:"evidences: single-source, long-lead items",obs:4,upd:"1d ago"},
+    {n:"MEPS steel price",tier:"external",ev:"evidences: raw-material cost pressure",obs:2,upd:"3d ago"},
+    {n:"Historical supplier incidents",tier:"historical",ev:"evidences: prior late deliveries",obs:1,upd:"—"},
+  ];
+  document.getElementById('srcs').innerHTML=SOURCES.map(s=>{
+    const t=TIER[s.tier];
+    return `<div class="srow">
+      <div class="srow__id"><span class="srow__n"><span class="tier tier--${t[0]}" style="margin-right:7px">${t[1]}</span>${s.n}</span><span class="srow__ev">${s.ev}</span></div>
+      <span class="srow__stat"><i></i>Connected</span>
+      <span class="srow__num">${s.obs} obs · ${s.upd}</span>
+      <span class="srow__go">Inspect →</span>
+    </div>`;
+  }).join("");
+</script>
+</body>
+</html>

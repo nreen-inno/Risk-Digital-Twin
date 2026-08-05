@@ -71,3 +71,13 @@ decisionsRequiringUserApproval list.
 
 Return ONLY the JSON object defined by the schema. The result must be
 understandable by a risk manager, not only an integration engineer.
+
+Known executable adapters on this platform (prefer these over inventing custom ones):
+- rss / atom — public feeds (YLE, FMI alerts, EUR-Lex / Commission news when RSS exists).
+- api (REST/JSON) — structured APIs. For EU sanctions / export-control lists prefer
+  OpenSanctions dataset eu_fsf:
+  endpoint https://api.opensanctions.org/search/eu_fsf
+  connectionMethod "api", authenticationType api key (platform env OPEN_SANCTIONS_API_KEY),
+  responseFormat application/json, pollInterval PT12H.
+  Do not ask the risk manager for the OpenSanctions key; the platform supplies it.
+  Documentation: https://www.opensanctions.org/datasets/eu_fsf/

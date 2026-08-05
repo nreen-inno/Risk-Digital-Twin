@@ -30,6 +30,13 @@ const monitoringCapabilities = [
                 requiresSimulation: false
             },
             {
+                id: "eu-fsf-opensanctions",
+                name: "EU Financial Sanctions (OpenSanctions eu_fsf)",
+                sourceKind: "restApi",
+                sourceRole: "external",
+                requiresSimulation: false
+            },
+            {
                 id: "imo-news",
                 name: "IMO news and regulatory updates",
                 sourceKind: "rss",
@@ -182,6 +189,95 @@ const monitoringCapabilities = [
                 sourceKind: "csv",
                 sourceRole: "internal",
                 requiresSimulation: true
+            }
+        ]
+    },
+
+    {
+        id: "customer-commercial",
+        name: "Customer & Commercial",
+        businessQuestion:
+            "Is customer demand, order-book strength or customer credit becoming a commercial risk?",
+        description:
+            "Monitor customer demand, order-book strength, contract deferrals and customer credit conditions that may affect commercial exposure, revenue and programme commitments.",
+        relatedRiskFactors: [
+            "demand-softening",
+            "order-book-deferral",
+            "customer-credit",
+            "economic-cycle"
+        ],
+        relatedRiskDefinitions: [
+            "Customer order deferral",
+            "Revenue shortfall",
+            "Customer credit default",
+            "Order-book concentration",
+            "Contract renegotiation"
+        ],
+        suggestedSources: [
+            {
+                id: "crm-pipeline",
+                name: "CRM or sales pipeline",
+                sourceKind: "restApi",
+                sourceRole: "internal",
+                requiresSimulation: true
+            },
+            {
+                id: "order-book",
+                name: "Order-book / contract register",
+                sourceKind: "database",
+                sourceRole: "internal",
+                requiresSimulation: true
+            },
+            {
+                id: "credit-ratings",
+                name: "Customer credit ratings or financial news",
+                sourceKind: "restApi",
+                sourceRole: "external",
+                requiresSimulation: false
+            }
+        ]
+    },
+
+    {
+        id: "workforce-hse",
+        name: "Workforce & HSE",
+        businessQuestion:
+            "Is workforce availability and safety performance holding up?",
+        description:
+            "Monitor workforce availability, skilled-labour capacity and health, safety and environment performance that may affect production, commissioning and project delivery.",
+        relatedRiskFactors: [
+            "workforce-availability",
+            "skilled-labour-capacity",
+            "hse-performance"
+        ],
+        relatedRiskDefinitions: [
+            "Workforce shortage",
+            "Skilled-labour bottleneck",
+            "HSE incident",
+            "Production interruption",
+            "Commissioning delay"
+        ],
+        suggestedSources: [
+            {
+                id: "hr-workforce",
+                name: "HR / workforce planning system",
+                sourceKind: "restApi",
+                sourceRole: "internal",
+                requiresSimulation: true
+            },
+            {
+                id: "hse-incidents",
+                name: "HSE incident and near-miss register",
+                sourceKind: "csv",
+                sourceRole: "internal",
+                requiresSimulation: true
+            },
+            {
+                id: "labour-market",
+                name: "Labour-market or union bulletins",
+                sourceKind: "rss",
+                sourceRole: "external",
+                requiresSimulation: false
             }
         ]
     }

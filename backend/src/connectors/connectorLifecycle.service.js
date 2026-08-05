@@ -5,6 +5,13 @@ import {
   resolveAdapterType
 } from "./adapters/index.js";
 import { normalizeFeedEndpoint, fallbackFeedEndpoints, expandFeedDirectoryCandidates } from "./adapters/rss.adapter.js";
+import {
+  detectRestProfile,
+  resolveRestConfig,
+  fallbackRestEndpoints,
+  REST_PROFILES
+} from "./adapters/rest.adapter.js";
+
 
 function cleanCosmosFields(item) {
   if (!item) return item;
@@ -282,13 +289,12 @@ export async function acceptConnectorSpecification({
       )
     : false;
 
-  let endpoint = normalizeFeedEndpoint(
-    String(technical.endpoint || "").trim(),
-    { preferEnglish }
-  );
+  let endpoint = String(technical.endpoint || "").trim();
   let verification = null;
+  let restProfile = null;
 
   if (adapterType === "rss") {
+    endpoint = normalizeFeedEndpoint(endpoint, { preferEnglish });
     verification = await discoverAndVerifyFeedEndpoint({
       source,
       proposal,
@@ -306,6 +312,51 @@ export async function acceptConnectorSpecification({
     }
 
     endpoint = verification.endpoint;
+  } else if (adapterType === "rest") {
+    restProfile =
+      detectRestProfile(source, endpoint) ||
+      detectRestProfile(
+        { ...source, name: proposal?.recommendation?.name || source.name },
+        technical.documentationUrl || ""
+      );
+
+    const restConfig = resolveRestConfig(
+      {
+        endpoint,
+        authenticationType: technical.authenticationType || restProfile?.authenticationType,
+        documentationUrl: technical.documentationUrl || restProfile?.documentationUrl,
+        responseFormat: technical.responseFormat || restProfile?.responseFormat,
+        profileId: restProfile?.id,
+        query: restProfile?.query,
+        itemsPath: restProfile?.itemsPath,
+        apiKeyEnv: restProfile?.apiKeyEnv,
+        apiKeyHeader: restProfile?.apiKeyHeader,
+        apiKeyPrefix: restProfile?.apiKeyPrefix
+      },
+      source
+    );
+
+    endpoint = restConfig.endpoint || endpoint;
+    if (!endpoint) {
+      const err = new Error(
+        "REST proposal has no API endpoint. Prefer OpenSanctions EU FSF (eu_fsf) for sanctions, or include a concrete HTTPS API URL."
+      );
+      err.code = "MISSING_ENDPOINT";
+      throw err;
+    }
+
+    const adapter = getAdapter("rest");
+    verification = await adapter.testConnection(restConfig, { source });
+    if (!verification.ok) {
+      const err = new Error(
+        verification.message || "Could not verify the REST API before building the connector."
+      );
+      err.code = "VERIFICATION_FAILED";
+      err.verification = verification;
+      throw err;
+    }
+    endpoint = restConfig.endpoint;
+    restProfile = REST_PROFILES[restConfig.profileId] || restProfile;
   } else if (!endpoint && adapterType === "rss") {
     const err = new Error(
       "Proposal has no feed endpoint. Refine the proposal so AI includes a concrete RSS/Atom URL before accepting."
@@ -333,6 +384,7 @@ export async function acceptConnectorSpecification({
       pollInterval:
         technical.pollInterval ||
         proposal.recommendedApproach?.refreshFrequency ||
+        restProfile?.pollInterval ||
         "PT6H",
       responseFormat: technical.responseFormat || "",
       proposedFieldMapping: technical.proposedFieldMapping || {}
@@ -376,15 +428,38 @@ export async function acceptConnectorSpecification({
     status: "readyForTest",
     adapterType,
     connectionMethod,
-    executable: adapterType === "rss",
+    executable: adapterType === "rss" || adapterType === "rest",
     config: {
       endpoint,
-      authenticationType: technical.authenticationType || "none",
+      authenticationType:
+        technical.authenticationType ||
+        restProfile?.authenticationType ||
+        "none",
       pollInterval: specification.technicalConfiguration.pollInterval,
-      responseFormat: technical.responseFormat || "",
-      documentationUrl: technical.documentationUrl || "",
-      fieldMapping: technical.proposedFieldMapping || {},
-      languages: monitoring.languages || []
+      responseFormat:
+        technical.responseFormat ||
+        restProfile?.responseFormat ||
+        "",
+      documentationUrl:
+        technical.documentationUrl ||
+        restProfile?.documentationUrl ||
+        "",
+      fieldMapping:
+        technical.proposedFieldMapping ||
+        restProfile?.fieldMapping ||
+        {},
+      languages: monitoring.languages || [],
+      ...(adapterType === "rest"
+        ? {
+            profileId: restProfile?.id || null,
+            method: restProfile?.method || "GET",
+            query: restProfile?.query || {},
+            itemsPath: restProfile?.itemsPath || "results",
+            apiKeyEnv: restProfile?.apiKeyEnv || null,
+            apiKeyHeader: restProfile?.apiKeyHeader || null,
+            apiKeyPrefix: restProfile?.apiKeyPrefix ?? null
+          }
+        : {})
     },
     monitoringConfiguration: specification.monitoringConfiguration,
     generatedBy: "acceptConnectorSpecification",
@@ -517,30 +592,43 @@ export async function testConnectorForSource(
     };
   }
 
-  const connection = await adapter.testConnection(definition.config || {});
+  const connection = await adapter.testConnection(definition.config || {}, {
+    source
+  });
   if (!connection.ok) {
-    // Demo recovery: if the stored URL 404s / is empty, try known-good feeds
-    // for this provider (FMI warnings, Yle recent, …).
-    const candidates = fallbackFeedEndpoints(source, { preferEnglish }).filter(
-      (u) => u && u !== definition.config?.endpoint
-    );
+    // Demo recovery: known-good endpoints for this provider / adapter.
+    const candidates =
+      definition.adapterType === "rest"
+        ? fallbackRestEndpoints(source).filter(
+            (u) => u && u !== definition.config?.endpoint
+          )
+        : fallbackFeedEndpoints(source, { preferEnglish }).filter(
+            (u) => u && u !== definition.config?.endpoint
+          );
 
     let recovered = null;
     for (const candidate of candidates) {
-      const retryConfig = {
-        ...(definition.config || {}),
-        endpoint: candidate,
-        languages
-      };
-      const retry = await adapter.testConnection(retryConfig);
+      const retryConfig =
+        definition.adapterType === "rest"
+          ? resolveRestConfig(
+              { ...(definition.config || {}), endpoint: candidate },
+              source
+            )
+          : {
+              ...(definition.config || {}),
+              endpoint: candidate,
+              languages
+            };
+      const retry = await adapter.testConnection(retryConfig, { source });
       if (retry.ok) {
         definition.config = {
           ...(definition.config || {}),
+          ...retryConfig,
           endpoint: retry.endpoint || candidate
         };
         definition.updatedAt = new Date().toISOString();
         await container.items.upsert(definition);
-        recovered = { connection: retry, config: retryConfig };
+        recovered = { connection: retry, config: definition.config };
         break;
       }
     }
@@ -577,12 +665,17 @@ export async function testConnectorForSource(
     definition.config = recovered.config;
   }
 
-  const fetched = await adapter.fetch(definition.config || {}, { limit });
+  const fetched = await adapter.fetch(definition.config || {}, {
+    limit,
+    source
+  });
   const mapped = adapter.mapToRawRecords(fetched.items, {
     informationSourceId: source.id,
     connectorDefinitionId: definition.id,
     connectorExecutionId: executionId,
-    sourceName: source.name
+    sourceName: source.name,
+    profileId: definition.config?.profileId || "",
+    mode: fetched.mode || ""
   });
 
   const createdRecords = [];

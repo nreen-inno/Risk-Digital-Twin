@@ -1,4 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import RiskOverviewPage from "./pages/RiskOverviewPage.jsx";
+import RiskCasePage from "./pages/RiskCasePage.jsx";
+import ObjectiveRiskCasesPage from "./pages/ObjectiveRiskCasesPage.jsx";
 import MonitoringObjectivesPage from "./pages/MonitoringObjectivesPage.jsx";
 import MonitoringObjectiveWorkspacePage from "./pages/MonitoringObjectiveWorkspacePage.jsx";
 import InformationSourcesPage from "./pages/InformationSourcesPage.jsx";
@@ -9,23 +12,27 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/configure/objectives" replace />} />
+        {/* Executive home */}
+        <Route path="/" element={<RiskOverviewPage />} />
+        <Route
+          path="/monitoring-objectives/:id/cases"
+          element={<ObjectiveRiskCasesPage />}
+        />
+        <Route path="/risk-cases/:caseId" element={<RiskCasePage />} />
+
+        {/* Source / connector configuration */}
         <Route path="/configure/objectives" element={<MonitoringObjectivesPage />} />
-        {/* Monitoring Objective Workspace — open & manage one objective's sources */}
         <Route path="/monitoring-objectives/:id" element={<MonitoringObjectiveWorkspacePage />} />
-        {/* AI Source Advisor — earlier standalone advisor flow, kept reachable */}
         <Route
           path="/configure/objectives/:objectiveId/source-advisor"
           element={<SourceAdvisorPage />}
         />
-        {/* Source Details — business access, guidance & connector advice (Sprint 3) */}
         <Route path="/information-sources/:id" element={<SourceDetailsPage />} />
-        {/* Earlier manual-selection variant, kept reachable for comparison */}
         <Route
           path="/configure/objectives/:objectiveId/sources"
           element={<InformationSourcesPage />}
         />
-        <Route path="*" element={<Navigate to="/configure/objectives" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

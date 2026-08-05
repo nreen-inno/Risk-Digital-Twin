@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Enterprise Risk Cases — Digital Twin Risk Room</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#f4f6fb;--surface:#fff;--ink:#1f2a3a;--ink-2:#4a5567;--ink-3:#8794a7;
+    --navy:#14335f;--navy-900:#0f2748;--accent:#2f6bff;--accent-600:#1f56e0;
+    --border:#e6eaf1;--border-2:#d7deea;--inset:#f3f6fb;--surface-2:#f9fbfd;
+    --crit:#D32F2F;--high:#F57C00;--elev:#E0A400;--ok:#2E8B57;
+    --r:16px;--sh:0 1px 2px rgba(16,39,72,.05),0 14px 34px rgba(16,39,72,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.55;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);}
+  .topbar__in{max-width:1200px;margin:0 auto;padding:14px 28px;display:flex;align-items:center;gap:14px;}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(150deg,#1a3f6b,#2f6bff);display:flex;align-items:center;justify-content:center;color:#fff;}
+  .brand{font-weight:800;letter-spacing:-.01em;color:var(--navy);font-size:15px;}
+  .brand span{color:var(--ink-3);font-weight:600;}
+  .wrap{max-width:1200px;margin:0 auto;padding:34px 28px 90px;}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);}
+  h1{font-size:clamp(24px,3.2vw,33px);font-weight:800;letter-spacing:-.02em;margin:8px 0 6px;color:var(--navy);}
+  .lede{font-size:15px;color:var(--ink-2);max-width:840px;margin:0;}
+  .nav{position:sticky;top:0;z-index:9;background:rgba(244,246,251,.92);backdrop-filter:blur(8px);display:flex;gap:8px;flex-wrap:wrap;padding:14px 0;margin:20px 0 26px;border-bottom:1px solid var(--border);}
+  .nav a{font-size:12.5px;font-weight:600;color:var(--ink-2);text-decoration:none;padding:7px 13px;border:1px solid var(--border-2);border-radius:999px;background:#fff;transition:.15s;}
+  .nav a:hover{border-color:var(--accent);color:var(--accent);}
+  .nav__back{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .nav__back:hover{background:var(--navy-900);color:#fff;border-color:var(--navy-900);}
+  .nav__back--soft{background:#fff;color:var(--navy);border-color:var(--border-2);}
+  .nav__back--soft:hover{color:var(--navy);border-color:var(--accent);}
+  .nav__sp{flex:1;}
+
+  .case{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--sh);padding:28px 30px;margin-bottom:30px;position:relative;overflow:hidden;}
+  .case::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--cc,#ccc);}
+  .case__head{display:flex;gap:20px;align-items:center;flex-wrap:wrap;}
+  .cat{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 11px;border-radius:999px;background:var(--inset);color:var(--ink-2);}
+  .gauge{position:relative;width:76px;height:76px;flex:none;}
+  .gauge__num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:800;color:var(--navy);}
+  .case__id{flex:1;min-width:240px;}
+  .case__title{font-size:21px;font-weight:800;letter-spacing:-.015em;color:var(--navy);margin:8px 0 0;}
+  .case__def{font-size:12px;color:var(--ink-3);margin:8px 0 2px;}
+  .case__def b{color:var(--ink-2);font-weight:700;}
+  .lvl{font-size:11.5px;font-weight:800;letter-spacing:.04em;padding:3px 10px;border-radius:999px;}
+  .trendbox{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-size:12px;color:var(--ink-3);}
+  .trendbox b{font-size:12.5px;font-weight:800;}
+
+  .qa{display:grid;grid-template-columns:1.3fr 1fr;gap:26px;margin-top:22px;}
+  @media(max-width:820px){.qa{grid-template-columns:1fr;}}
+  .block-h{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px;}
+  .now{font-size:14.5px;color:var(--ink-2);line-height:1.65;}
+  .why{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px;}
+  .why li{display:flex;align-items:flex-start;gap:10px;font-size:13.5px;color:var(--ink-2);}
+  .why i{width:8px;height:8px;border-radius:50%;flex:none;margin-top:6px;}
+  .impacts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .impact{border:1px solid var(--border);border-radius:12px;padding:13px 15px;background:var(--surface-2);}
+  .impact__v{font-size:21px;font-weight:800;color:var(--navy);letter-spacing:-.01em;}
+  .impact__l{font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.4;}
+
+  .net{margin-top:24px;border:1px solid var(--border);border-radius:14px;background:var(--surface-2);padding:16px 12px 8px;}
+  .net svg{display:block;width:100%;height:auto;}
+  .netcap{font-size:12px;color:var(--ink-3);padding:0 8px 8px;}
+
+  .actions{margin-top:24px;}
+  .act{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--border);}
+  .act:first-of-type{border-top:0;}
+  .prio{flex:none;font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:4px 8px;border-radius:6px;color:#fff;margin-top:2px;}
+  .prio--1{background:var(--crit);} .prio--2{background:var(--high);} .prio--3{background:var(--accent);}
+  .act__body{flex:1;}
+  .act__t{font-size:14.5px;font-weight:700;color:var(--navy);}
+  .act__d{font-size:13px;color:var(--ink-3);margin-top:2px;}
+  .effects{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;}
+  .eff{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(46,139,87,.1);color:#1a6f4e;border:1px solid rgba(46,139,87,.24);}
+  .eff--warn{background:rgba(245,124,0,.1);color:#9a5a00;border-color:rgba(245,124,0,.24);}
+
+  .ailine{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:22px;padding:14px 16px;border-radius:12px;background:linear-gradient(180deg,#f7faff,#f2f6fc);border:1px solid #dce6f4;}
+  .ailine__i{width:30px;height:30px;border-radius:8px;background:rgba(47,107,255,.12);color:var(--accent);display:flex;align-items:center;justify-content:center;flex:none;}
+  .ailine__t{font-size:13px;color:var(--ink-2);}
+  .ailine__t b{color:var(--navy);}
+  .conf{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--ink-2);}
+  .conf__bar{width:70px;height:6px;border-radius:999px;background:var(--inset);overflow:hidden;}
+  .conf__bar span{display:block;height:100%;background:var(--accent);border-radius:999px;}
+  .foot{margin-top:20px;font-size:12px;color:var(--ink-3);}
+
+  /* Risk-Signal provenance strip (D) */
+  .case__prov{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:12px;padding-top:11px;border-top:1px dashed var(--border-2);}
+  .case__prov-sig{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--navy);}
+  .case__prov-sig i{width:8px;height:8px;border-radius:50%;}
+  .case__prov-chip{font-size:11.5px;font-weight:600;color:var(--ink-2);background:var(--inset);border:1px solid var(--border);border-radius:999px;padding:4px 11px;}
+  .case__prov-link{font-size:11.5px;font-weight:700;color:var(--accent-600);text-decoration:none;}
+  .case__prov-link:hover{text-decoration:underline;}
+
+  /* tier tag */
+  .tier{flex:none;font-size:10px;font-weight:800;letter-spacing:.03em;padding:2px 7px;border-radius:5px;text-transform:uppercase;}
+  .tier--int{color:#3b6fe0;background:rgba(59,111,224,.1);}
+  .tier--ext{color:#0f8f83;background:rgba(23,179,166,.12);}
+  .tier--hist{color:#7c5cd6;background:rgba(124,92,214,.12);}
+
+  /* Evidence-backed factors (A) */
+  .facs-sec{margin-top:24px;}
+  .fac{border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+  .fac__row{display:flex;align-items:center;gap:11px;padding:13px 15px;cursor:pointer;background:#fff;}
+  .fac__row:hover{background:var(--surface-2);}
+  .fac__dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .fac__name{flex:1;font-size:14px;font-weight:600;color:var(--ink);}
+  .fac__src{font-size:11.5px;color:var(--ink-3);display:inline-flex;align-items:center;gap:6px;}
+  .fac__chev{color:var(--ink-3);transition:transform .2s;}
+  .fac.open .fac__chev{transform:rotate(180deg);}
+  .fac__ev{display:none;padding:0 15px 14px 36px;background:var(--surface-2);border-top:1px solid var(--border);}
+  .fac.open .fac__ev{display:block;}
+  .fac__ev-line{font-size:13px;color:var(--ink-2);margin:12px 0 0;}
+  .fac__ev-meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:var(--ink-3);}
+  .fac__ev-meta b{color:var(--ink-2);font-weight:700;}
+  .fac__ev-link{font-size:12px;font-weight:700;color:var(--accent-600);margin-top:8px;display:inline-block;text-decoration:none;}
+
+  /* Risk sources & evidence (B) */
+  .src-sec{margin-top:24px;}
+  .srcbar{display:flex;gap:14px;flex-wrap:wrap;padding:12px 15px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;font-size:12.5px;}
+  .srcbar b{color:var(--navy);font-weight:800;} .srcbar span{color:var(--ink-3);}
+  .srow{display:grid;grid-template-columns:1.6fr auto auto auto;gap:12px;align-items:center;padding:11px 4px;border-top:1px solid var(--border);}
+  .srow:first-of-type{border-top:0;}
+  @media(max-width:640px){.srow{grid-template-columns:1fr auto;}}
+  .srow__id{display:flex;flex-direction:column;gap:2px;}
+  .srow__n{font-size:13.5px;font-weight:700;color:var(--navy);}
+  .srow__ev{font-size:11.5px;color:var(--ink-3);}
+  .srow__stat{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ok);font-weight:600;}
+  .srow__stat i{width:7px;height:7px;border-radius:50%;background:var(--ok);}
+  .srow__num{font-size:12.5px;color:var(--ink-2);text-align:right;}
+  .srow__go{font-size:12px;font-weight:700;color:var(--accent-600);text-align:right;}
+</style>
+</head>
+<body>
+  <div class="topbar"><div class="topbar__in">
+    <span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span>
+    <span class="brand">Digital Twin Risk Room <span>· Enterprise risk cases</span></span>
+  </div></div>
+
+  <div class="wrap">
+    <div class="eyebrow">Executive risk intelligence</div>
+    <h1>Three enterprise risk cases</h1>
+    <p class="lede">Each case answers the same four questions an executive actually asks — <b>what is happening, why, how does it spread, and what should we do</b> — with quantified enterprise impact, the relationship network showing how the risk propagates through the yard, and prioritised mitigations with their expected effect.</p>
+
+    <nav class="nav">
+      <a href="risk-overview.html" class="nav__back">← Risk overview</a>
+      <a href="index.html" class="nav__back nav__back--soft">Gallery</a>
+      <span class="nav__sp"></span>
+      <a href="#c1">1 · Supplier bankruptcy</a>
+      <a href="#c2">2 · Geopolitical</a>
+      <a href="#c3">3 · Customer demand</a>
+    </nav>
+
+    <div id="cases"></div>
+
+    <div class="foot">Illustrative mock for user testing · enterprise-level (portfolio-wide, not single-project) · figures and relationships are indicative. Relationship networks use the “situation-room” lane layout (Version C).</div>
+  </div>
+
+<script>
+  const COL={crit:"#D32F2F",high:"#F57C00",elev:"#E0A400",ok:"#2E8B57"};
+  const LEVELLABEL={crit:"Critical risk",high:"High risk",elev:"Elevated risk",ok:"Stable"};
+  const TIER={internal:["int","Internal"],external:["ext","External"],historical:["hist","Historical"]};
+  const R=264;
+  const spark=(pts,color)=>{const w=110,h=30,mx=Math.max(...pts),mn=Math.min(...pts),rg=(mx-mn)||1;const d=pts.map((p,i)=>`${(i/(pts.length-1))*w},${h-((p-mn)/rg)*(h-5)-2}`).join(" ");return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;};
+
+  function net(model){
+    const {lanes,nodes,links}=model;
+    const W=1120,laneW=W/lanes.length,boxW=Math.min(180,laneW-26),boxH=42,vgap=15;
+    const byLane={}; nodes.forEach(n=>{(byLane[n.lane]=byLane[n.lane]||[]).push(n);});
+    const maxCount=Math.max(...Object.values(byLane).map(a=>a.length));
+    const H=maxCount*(boxH+vgap)-vgap+16;
+    const pos={};
+    Object.keys(byLane).forEach(l=>{const arr=byLane[l];const cx=laneW*(+l)+laneW/2;const total=arr.length*(boxH+vgap)-vgap;let sy=(H-total)/2;arr.forEach((n,i)=>{const y=sy+i*(boxH+vgap);pos[n.id]={x:cx-boxW/2,y,cx,cy:y+boxH/2};});});
+    const linkSvg=links.map(([a,b])=>{const p=pos[a],q=pos[b];if(!p||!q)return"";const x1=p.x+boxW,y1=p.cy,x2=q.x,y2=q.cy,mx=(x1+x2)/2;return `<path d="M${x1} ${y1} C${mx} ${y1} ${mx} ${y2} ${x2} ${y2}" fill="none" stroke="#cbd5e3" stroke-width="1.6" marker-end="url(#ah)"/>`;}).join("");
+    const nodeSvg=nodes.map(n=>{
+      const p=pos[n.id];
+      const cur=!!n.current, link=!!n.href;
+      const dot=n.level==="src"?"#9aa6ba":(COL[n.level]||"#9aa6ba");
+      const fill=cur?"#14335f":"#fff";
+      const stroke=cur?"#14335f":(link?"#c9d5ea":"#e4e9f2");
+      const txt=cur?"#ffffff":(link?"#235d97":"#1f2a3a");
+      const tx=cur?p.x+14:p.x+27;
+      const dotSvg=cur?"":`<circle cx="${p.x+16}" cy="${p.cy}" r="4.5" fill="${dot}"/>`;
+      const chev=link?`<text x="${p.x+boxW-13}" y="${p.cy+4}" font-size="13" font-weight="700" fill="#235d97">&#8250;</text>`:"";
+      const inner=`<rect x="${p.x}" y="${p.y}" width="${boxW}" height="${boxH}" rx="10" fill="${fill}" stroke="${stroke}" stroke-width="${cur?1.4:1}"/>${dotSvg}<text x="${tx}" y="${p.cy+4}" font-size="11" font-weight="600" fill="${txt}">${n.name}</text>${chev}`;
+      return link?`<a href="${n.href}" style="cursor:pointer">${inner}</a>`:`<g>${inner}</g>`;
+    }).join("");
+    const laneSvg=lanes.map((l,i)=>`<text x="${laneW*i+laneW/2}" y="12" text-anchor="middle" font-size="10" font-weight="800" letter-spacing="0.07em" fill="#2f6bff">${l.toUpperCase()}</text>`).join("");
+    const seps=lanes.slice(1).map((_,i)=>`<line x1="${laneW*(i+1)}" y1="20" x2="${laneW*(i+1)}" y2="${H+22}" stroke="#eef1f6"/>`).join("");
+    return `<svg viewBox="0 0 ${W} ${H+30}"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#a9b4c4"/></marker></defs>${seps}${laneSvg}<g transform="translate(0,24)">${linkSvg}${nodeSvg}</g></svg>`;
+  }
+
+  const CASES=[
+    {
+      id:"c1", cc:"#D32F2F", cat:"Supplier · Financial", def:"Supplier Insolvency", category:"Financial · Supply Chain", objective:"Supplier Stability", level:"crit", score:83, trend:[58,60,63,68,74,79,83],
+      title:"Potential insolvency of a key propulsion & steel supplier",
+      now:"Credit signals on a Tier-1 supplier feeding multiple newbuild programmes have deteriorated sharply — a two-notch rating downgrade, lengthening payment terms to their own sub-tiers, and two missed interim deliveries in the last quarter. Because this vendor is single-sourced for critical propulsion modules and long-lead steel packages, a failure would cascade across the portfolio, not one hull.",
+      factors:[
+        {name:"Rating downgraded two notches; going-concern note flagged",sev:"crit",obs:"Credit rating lowered BBB → BB; auditor going-concern note filed.",src:"Dun & Bradstreet supplier risk",tier:"external",when:"2d ago",conf:91},
+        {name:"Single-source for propulsion modules across 3 active programmes",sev:"crit",obs:"Sole-source flag on propulsion BOM; no alternate purchase order on record.",src:"Internal ERP / Procurement",tier:"internal",when:"1d ago",conf:88},
+        {name:"Long-lead items (12–16 wk) with no qualified alternate in place",sev:"high",obs:"Lead time 14 wk; alternate supplier not yet qualified.",src:"Internal ERP / Procurement",tier:"internal",when:"1d ago",conf:84},
+        {name:"Rising raw-material costs squeezing the supplier's margins",sev:"high",obs:"MEPS steel index +12% QoQ; supplier margin compression.",src:"MEPS steel price",tier:"external",when:"3d ago",conf:79}],
+      sources:[
+        {n:"Dun & Bradstreet supplier risk",tier:"external",ev:"evidences: rating downgrade",obs:5,upd:"2d ago"},
+        {n:"Internal ERP / Procurement",tier:"internal",ev:"evidences: single-source, long-lead items",obs:4,upd:"1d ago"},
+        {n:"MEPS steel price",tier:"external",ev:"evidences: raw-material cost pressure",obs:2,upd:"3d ago"},
+        {n:"Historical supplier incidents",tier:"historical",ev:"evidences: prior late deliveries",obs:1,upd:"—"}],
+      prov:{sources:4,observations:12,confidence:84,updated:"2h ago"},
+      impacts:[["€180M","Contract value exposed across 3 programmes"],["72% → 55%","Portfolio delivery confidence if supplier fails"],["Up to 14 wk","Schedule slip on the lead vessel"],["€6–9M","Liquidated-damages exposure to customers"]],
+      net:{lanes:["Risk sources","Risk factors","Risk","Linked risks","Enterprise impact"],
+        nodes:[
+          {id:"src1",name:"Dun & Bradstreet",lane:0,level:"src"},
+          {id:"src2",name:"Internal ERP",lane:0,level:"src"},
+          {id:"src3",name:"MEPS steel price",lane:0,level:"src"},
+          {id:"f1",name:"Rating downgrade",lane:1,level:"crit"},
+          {id:"f2",name:"Single-source exposure",lane:1,level:"crit"},
+          {id:"f3",name:"Long-lead items",lane:1,level:"high"},
+          {id:"f4",name:"Raw-material costs ↑",lane:1,level:"high"},
+          {id:"r1",name:"Supplier Insolvency",lane:2,level:"crit",current:true},
+          {id:"l1",name:"Material shortage",lane:3,level:"high"},
+          {id:"l2",name:"Late delivery",lane:3,level:"high"},
+          {id:"l3",name:"Customer order deferral",lane:3,level:"elev",href:"#c3"},
+          {id:"i1",name:"Delivery slippage",lane:4,level:"high"},
+          {id:"i2",name:"LDs & cash-flow hit",lane:4,level:"crit"},
+          {id:"i3",name:"Revenue exposure",lane:4,level:"high"}],
+        links:[["src1","f1"],["src2","f2"],["src2","f3"],["src3","f4"],
+          ["f1","r1"],["f2","r1"],["f3","r1"],["f4","r1"],
+          ["r1","l1"],["r1","l2"],["r1","l3"],
+          ["l1","i1"],["l2","i1"],["l2","i2"],["l3","i3"]]},
+      actions:[
+        {p:1,t:"Qualify and activate a secondary propulsion supplier",d:"Fast-track technical qualification of a pre-screened alternate for the two most critical modules.",eff:[["Delivery confidence +12%"],["Single-source exposure −1 programme"]]},
+        {p:1,t:"Secure long-lead steel with safety stock & escrowed PO",d:"Place a protected purchase order and buffer 6 weeks of the critical steel packages.",eff:[["Schedule risk −18%"],["Working capital −€4M","warn"]]},
+        {p:2,t:"Financial standstill / step-in clause with the supplier",d:"Negotiate milestone security and a step-in right to protect tooling and IP if they fail.",eff:[["Recovery time −5 wk"],["Continuity secured"]]},
+        {p:3,t:"Weekly supplier-health monitoring across the portfolio",d:"Add credit-watch and delivery-adherence signals to the twin for all Tier-1 vendors.",eff:[["Early warning +3–4 wk"]]}],
+      ai:["Probability of a supply disruption in the next 90 days: <b>High (~62%)</b>. Estimated avoided impact if P1 actions taken this month: <b>€5–7M</b> and ~11 days of schedule.",78]
+    },
+    {
+      id:"c2", cc:"#F57C00", cat:"Geopolitical · Trade", def:"Customs & Trade Disruption", category:"Regulatory · Supply Chain", objective:"Geopolitical & Regulatory Monitoring", level:"high", score:74, trend:[55,58,60,64,68,71,74],
+      title:"China export restrictions & tariffs on critical materials",
+      now:"New export-licensing requirements and tariff changes are tightening access to specialty steel, castings and certain electronics sourced from China and routed via Asia–Europe lanes. The effect is portfolio-wide: it lengthens transport, raises landed cost, and injects licensing uncertainty into procurement for every programme drawing on those categories.",
+      factors:[
+        {name:"Export licensing added for specialty steel & castings",sev:"crit",obs:"New export-licence requirement published for specialty steel and castings.",src:"European Commission news & updates",tier:"external",when:"1d ago",conf:89},
+        {name:"Tariff step-up raising landed procurement cost 8–15%",sev:"high",obs:"Tariff schedule change; landed cost +8–15% on affected HS codes.",src:"Government & customs authority bulletins",tier:"external",when:"2d ago",conf:82},
+        {name:"Asia–Europe transit lengthening; capacity tight",sev:"high",obs:"Transit +3–5 wk; capacity constrained on Asia–EU lanes.",src:"Internal ERP / Procurement",tier:"internal",when:"2d ago",conf:76},
+        {name:"Currency (EUR/USD) amplifying cost swings",sev:"elev",obs:"EUR/USD moved ~4%; landed-cost volatility on USD-priced inputs.",src:"Financial-market feed",tier:"external",when:"4d ago",conf:71}],
+      sources:[
+        {n:"European Commission news & updates",tier:"external",ev:"evidences: export licensing",obs:4,upd:"1d ago"},
+        {n:"Government & customs authority bulletins",tier:"external",ev:"evidences: tariff step-up",obs:3,upd:"2d ago"},
+        {n:"Internal ERP / Procurement",tier:"internal",ev:"evidences: transport time & cost",obs:2,upd:"2d ago"},
+        {n:"IMO regulatory updates",tier:"external",ev:"evidences: regulatory change (supporting)",obs:2,upd:"3d ago"}],
+      prov:{sources:4,observations:11,confidence:80,updated:"3h ago"},
+      impacts:[["+11%","Weighted landed cost on affected categories"],["+3–5 wk","Added transport duration, Asia lanes"],["€24M","Annualised budget pressure across portfolio"],["4 of 6","Programmes drawing on restricted categories"]],
+      net:{lanes:["Risk sources","Risk factors","Risk","Linked risks","Enterprise impact"],
+        nodes:[
+          {id:"src1",name:"European Commission",lane:0,level:"src"},
+          {id:"src2",name:"Customs bulletins",lane:0,level:"src"},
+          {id:"src3",name:"Internal ERP",lane:0,level:"src"},
+          {id:"f1",name:"Export licensing",lane:1,level:"crit"},
+          {id:"f2",name:"Tariff step-up +8–15%",lane:1,level:"high"},
+          {id:"f3",name:"Transit time ↑",lane:1,level:"high"},
+          {id:"f4",name:"EUR/USD volatility",lane:1,level:"elev"},
+          {id:"r1",name:"Customs & Trade Disruption",lane:2,level:"high",current:true},
+          {id:"l1",name:"Material shortage",lane:3,level:"high"},
+          {id:"l2",name:"Supplier insolvency",lane:3,level:"high",href:"#c1"},
+          {id:"l3",name:"Cost overrun",lane:3,level:"high"},
+          {id:"i1",name:"Procurement cost → budget",lane:4,level:"high"},
+          {id:"i2",name:"Schedule pressure",lane:4,level:"high"},
+          {id:"i3",name:"Delivery confidence ↓",lane:4,level:"high"}],
+        links:[["src1","f1"],["src2","f2"],["src3","f3"],["src2","f4"],
+          ["f1","r1"],["f2","r1"],["f3","r1"],["f4","r1"],
+          ["r1","l1"],["r1","l2"],["r1","l3"],
+          ["l1","i2"],["l1","i3"],["l2","i2"],["l3","i1"]]},
+      actions:[
+        {p:1,t:"Dual-region sourcing for restricted categories",d:"Stand up qualified EU/Turkey/Korea alternates for specialty steel and castings.",eff:[["Availability risk −40%"],["Landed cost −4%"]]},
+        {p:2,t:"Reserve logistics capacity & re-route",d:"Lock forward freight capacity and shift critical flows to less-exposed lanes.",eff:[["Transport time −2 wk"],["Freight cost +€1.2M","warn"]]},
+        {p:2,t:"Customs & tariff engineering review",d:"Reclassify where legitimate, use bonded warehousing and origin planning.",eff:[["Duty cost −3–6%"]]},
+        {p:3,t:"Forward-buy & FX hedge on key inputs",d:"Hedge 2–3 quarters of the most price-volatile categories.",eff:[["Budget variance −50%"]]}],
+      ai:["Probability the restrictions persist through the next 2 quarters: <b>High (~70%)</b>. Dual-sourcing plus tariff engineering is modelled to recover <b>~5–7 pts</b> of the cost pressure.",73]
+    },
+    {
+      id:"c3", cc:"#F57C00", cat:"Customer · Demand & credit", def:"Customer Order Deferral / Demand Decline", category:"Strategic · Financial", objective:"Customer & Commercial", level:"high", score:68, trend:[52,54,53,57,61,65,68],
+      title:"US downturn softening cruise demand & the order book",
+      now:"A weakening US consumer outlook is cooling cruise-operator confidence. Two prospective customers have signalled possible deferral of order-book slots, and one existing customer's credit metrics have slipped — raising the risk of milestone-payment delays and slot gaps that would leave expensive yard capacity underutilised.",
+      factors:[
+        {name:"US consumer & travel demand indicators trending down",sev:"high",obs:"US consumer-confidence and travel-demand indices down 3 consecutive months.",src:"Cruise-market demand indices",tier:"external",when:"2d ago",conf:80},
+        {name:"Two prospects signalling slot deferral",sev:"high",obs:"Two prospective orders flagged 'deferral likely' in the pipeline.",src:"Order book / CRM",tier:"internal",when:"1d ago",conf:85},
+        {name:"One key customer's credit metrics weakening",sev:"high",obs:"Key customer credit-rating outlook revised to negative.",src:"Customer credit rating service",tier:"external",when:"3d ago",conf:83},
+        {name:"High fixed-cost yard capacity sensitive to slot gaps",sev:"elev",obs:"2027–28 slots at risk of gapping; high fixed-cost utilisation exposure.",src:"Internal capacity plan",tier:"internal",when:"2d ago",conf:72}],
+      sources:[
+        {n:"Cruise-market demand indices",tier:"external",ev:"evidences: demand decline",obs:3,upd:"2d ago"},
+        {n:"Order book / CRM",tier:"internal",ev:"evidences: slot deferral",obs:3,upd:"1d ago"},
+        {n:"Customer credit rating service",tier:"external",ev:"evidences: credit weakening",obs:2,upd:"3d ago"},
+        {n:"Internal capacity plan",tier:"internal",ev:"evidences: slot-gap exposure",obs:1,upd:"2d ago"}],
+      prov:{sources:4,observations:9,confidence:78,updated:"4h ago"},
+      impacts:[["€320M","Order-book value exposed to deferral"],["2 slots","At risk of gapping in 2027–28"],["€40–60M","Milestone-payment cash-flow exposure"],["−18%","Utilisation if both slots gap"]],
+      net:{lanes:["Risk sources","Risk factors","Risk","Linked risks","Enterprise impact"],
+        nodes:[
+          {id:"src1",name:"Cruise demand indices",lane:0,level:"src"},
+          {id:"src2",name:"Order book / CRM",lane:0,level:"src"},
+          {id:"src3",name:"Customer credit rating",lane:0,level:"src"},
+          {id:"f1",name:"US demand ↓",lane:1,level:"high"},
+          {id:"f2",name:"Prospects deferring",lane:1,level:"high"},
+          {id:"f3",name:"Customer credit ↓",lane:1,level:"high"},
+          {id:"f4",name:"High fixed-cost slots",lane:1,level:"elev"},
+          {id:"r1",name:"Customer Order Deferral",lane:2,level:"high",current:true},
+          {id:"l1",name:"Revenue shortfall",lane:3,level:"crit"},
+          {id:"l2",name:"Cash-flow strain",lane:3,level:"high"},
+          {id:"l3",name:"Supplier insolvency",lane:3,level:"high",href:"#c1"},
+          {id:"i1",name:"Revenue & cash flow",lane:4,level:"crit"},
+          {id:"i2",name:"Slot / utilisation gap",lane:4,level:"elev"},
+          {id:"i3",name:"Milestone-payment risk",lane:4,level:"high"}],
+        links:[["src1","f1"],["src2","f2"],["src3","f3"],["src2","f4"],
+          ["f1","r1"],["f2","r1"],["f3","r1"],["f4","r1"],
+          ["r1","l1"],["r1","l2"],["r1","l3"],
+          ["l1","i1"],["l2","i1"],["l2","i3"],["l3","i2"]]},
+      actions:[
+        {p:1,t:"Secure milestone payments (guarantees / escrow)",d:"Tighten payment security and refund-guarantee terms with the at-risk customer.",eff:[["Cash-flow exposure −60%"],["Bad-debt risk −45%"]]},
+        {p:2,t:"Diversify the commercial pipeline",d:"Accelerate talks with non-US operators and adjacent segments (expedition, ferry).",eff:[["Slot-gap risk −1 slot"],["Order-book resilience +"]]},
+        {p:2,t:"Flexible slot & modular capacity plan",d:"Pre-plan a fallback programme to fill a gapped slot and protect utilisation.",eff:[["Utilisation +11%"]]},
+        {p:3,t:"Customer credit-watch in the twin",d:"Monitor key customers' financial health and demand signals continuously.",eff:[["Early warning +1 quarter"]]}],
+      ai:["Probability of at least one slot deferral in the next 12 months: <b>Elevated (~48%)</b>. Payment-security plus pipeline diversification is modelled to protect <b>~€30–45M</b> of cash flow.",71]
+    }
+  ];
+
+  document.getElementById('cases').innerHTML=CASES.map(c=>{
+    const dash=Math.round(c.score/100*R), col=COL[c.level];
+    return `<section class="case" id="${c.id}" style="--cc:${c.cc}">
+      <div class="case__head">
+        <div class="gauge"><svg width="76" height="76" viewBox="0 0 100 100"><circle cx="50" cy="50" r="42" fill="none" stroke="#eef1f6" stroke-width="10"/><circle cx="50" cy="50" r="42" fill="none" stroke="${col}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${dash} ${R}" transform="rotate(-90 50 50)"/></svg><span class="gauge__num">${c.score}</span></div>
+        <div class="case__id">
+          <span class="cat">${c.cat}</span>
+          <h2 class="case__title">${c.title}</h2>
+          <div class="case__def">Risk definition · <b>${c.def}</b> &nbsp;·&nbsp; monitored via <b>${c.objective}</b> &nbsp;·&nbsp; enterprise category · ${c.category}</div>
+          <span class="lvl" style="color:${col};background:${col}1a">${LEVELLABEL[c.level].toUpperCase()}</span>
+          <div class="case__prov">
+            <span class="case__prov-sig"><i style="background:${col}"></i>Risk Signal</span>
+            <span class="case__prov-chip">generated by AI Enrichment</span>
+            <span class="case__prov-chip">${c.prov.sources} sources · ${c.prov.observations} observations</span>
+            <span class="case__prov-chip">confidence ${c.prov.confidence}%</span>
+            <span class="case__prov-chip">updated ${c.prov.updated}</span>
+            <a class="case__prov-link" href="#" onclick="return false">Inspect evidence →</a>
+          </div>
+        </div>
+        <div class="trendbox"><span>Composite risk · 6-mo</span>${spark(c.trend,col)}<b style="color:${COL.crit}">▲ +${c.trend[c.trend.length-1]-c.trend[0]} pts</b></div>
+      </div>
+
+      <div class="qa">
+        <div>
+          <div class="block-h">What is happening now</div>
+          <p class="now">${c.now}</p>
+        </div>
+        <div>
+          <div class="block-h">Enterprise impact</div>
+          <div class="impacts">${c.impacts.map(im=>`<div class="impact"><div class="impact__v">${im[0]}</div><div class="impact__l">${im[1]}</div></div>`).join("")}</div>
+        </div>
+      </div>
+
+      <div class="facs-sec">
+        <div class="block-h">Why — contributing risk factors</div>
+        ${c.factors.map((f,i)=>{const t=TIER[f.tier];return `<div class="fac" id="fac-${c.id}-${i}">
+          <div class="fac__row" onclick="document.getElementById('fac-${c.id}-${i}').classList.toggle('open')">
+            <span class="fac__dot" style="background:${COL[f.sev]}"></span>
+            <span class="fac__name">${f.name}</span>
+            <span class="fac__src"><span class="tier tier--${t[0]}">${t[1]}</span>${f.src}</span>
+            <span class="fac__chev">⌄</span>
+          </div>
+          <div class="fac__ev">
+            <p class="fac__ev-line"><b>Observation:</b> ${f.obs}</p>
+            <div class="fac__ev-meta"><span><b>Source:</b> ${f.src}</span><span><b>Observed:</b> ${f.when}</span><span><b>AI confidence:</b> ${f.conf}%</span></div>
+            <a class="fac__ev-link" href="#" onclick="return false">Inspect raw record →</a>
+          </div>
+        </div>`;}).join("")}
+      </div>
+
+      <div class="src-sec">
+        <div class="block-h">Risk sources &amp; evidence</div>
+        <div class="srcbar"><span>Derived from <b>${c.prov.sources}</b> sources</span><span>·</span><span><b>${c.prov.observations}</b> observations</span><span>·</span><span>AI-enrichment confidence <b>${c.prov.confidence}%</b></span><span>·</span><span>updated <b>${c.prov.updated}</b></span></div>
+        ${c.sources.map(s=>{const t=TIER[s.tier];return `<div class="srow">
+          <div class="srow__id"><span class="srow__n"><span class="tier tier--${t[0]}" style="margin-right:7px">${t[1]}</span>${s.n}</span><span class="srow__ev">${s.ev}</span></div>
+          <span class="srow__stat"><i></i>Connected</span>
+          <span class="srow__num">${s.obs} obs · ${s.upd}</span>
+          <span class="srow__go">Inspect →</span>
+        </div>`;}).join("")}
+      </div>
+
+      <div class="net">
+        <div class="block-h" style="padding:4px 8px 10px">How this risk propagates</div>
+        ${net(c.net)}
+        <div class="netcap">Risk sources → risk factors → <b>this risk</b> (navy) → linked enterprise risks → impact. Linked risks marked <b>›</b> open their own case. Colour = current severity.</div>
+      </div>
+
+      <div class="actions">
+        <div class="block-h">What we should do</div>
+        ${c.actions.map(a=>`<div class="act"><span class="prio prio--${a.p}">P${a.p}</span><div class="act__body"><div class="act__t">${a.t}</div><div class="act__d">${a.d}</div><div class="effects">${a.eff.map(e=>`<span class="eff ${e[1]==="warn"?"eff--warn":""}">${e[0]}</span>`).join("")}</div></div></div>`).join("")}
+      </div>
+
+      <div class="ailine">
+        <span class="ailine__i"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/></svg></span>
+        <span class="ailine__t">${c.ai[0]}</span>
+        <span class="conf">AI confidence <span class="conf__bar"><span style="width:${c.ai[1]}%"></span></span>${c.ai[1]}%</span>
+      </div>
+    </section>`;
+  }).join("");
+
+  // Cases are rendered here by JS, so a #c1/#c2/#c3 hash from another page has
+  // no target yet when the browser first tries to scroll. Re-apply it now, and
+  // on any later hash change, so pressing a risk always lands on its case.
+  function scrollToHash(){
+    if(!location.hash) return;
+    const el=document.querySelector(location.hash);
+    if(el) el.scrollIntoView({behavior:"auto",block:"start"});
+  }
+  scrollToHash();
+  window.addEventListener("hashchange",scrollToHash);
+</script>
+</body>
+</html>
