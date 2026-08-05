@@ -66,9 +66,10 @@
   gap: 12px;
 }
 .brand__mark {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 11px;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -80,17 +81,26 @@
   width: 100%;
   height: 100%;
 }
+.brand__text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.15;
+}
 .brand__name {
+  display: block;
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.01em;
   color: var(--ink);
-  line-height: 1.1;
+  line-height: 1.15;
 }
 .brand__sub {
+  display: block;
   font-size: 11px;
   color: var(--ink-3);
   font-weight: 500;
+  line-height: 1.2;
 }
 .topbar__nav {
   margin-left: 18px;

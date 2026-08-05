@@ -10,7 +10,7 @@ export default function TopBar({ active = "overview" }) {
           <span className="brand__mark">
             <BrandLogo />
           </span>
-          <span>
+          <span className="brand__text">
             <span className="brand__name">Risk Digital Twin</span>
             <span className="brand__sub">Enterprise Risk Intelligence</span>
           </span>
