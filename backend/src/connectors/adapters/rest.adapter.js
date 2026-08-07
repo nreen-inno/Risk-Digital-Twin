@@ -1,13 +1,28 @@
 /**
  * Generic REST/JSON connector adapter.
  *
- * First demo profile: EU Financial Sanctions via OpenSanctions search API
- * (dataset eu_fsf). Set OPEN_SANCTIONS_API_KEY in backend .env for live calls.
- * Without a key, verification/fetch use a small built-in EU FSF-shaped fixture
- * so Accept → sample → In use still works for demos.
+ * Profiles (OpenSanctions, Open-Meteo, …) are convenience overlays. Unknown
+ * GET JSON APIs can still onboard when the proposal includes a concrete HTTPS
+ * endpoint: the adapter heuristically finds an item list (or wraps a single
+ * object snapshot) and maps common title/url fields.
+ *
+ * Limits: no POST bodies, OAuth flows, XML/WFS, GraphQL, or pagination yet.
+ * OpenSanctions still falls back to a fixture when OPEN_SANCTIONS_API_KEY is unset.
  */
 
 const DEFAULT_TIMEOUT_MS = 25000;
+
+/** Common JSON list keys used by public APIs. */
+const LIST_PATH_CANDIDATES = [
+  "results",
+  "features",
+  "data",
+  "items",
+  "records",
+  "entries",
+  "hits",
+  "value"
+];
 
 /** Known REST source profiles (config overlays). */
 export const REST_PROFILES = {
@@ -27,14 +42,38 @@ export const REST_PROFILES = {
       limit: "15"
     },
     itemsPath: "results",
+    mapStrategy: "opensanctions",
     responseFormat: "application/json",
     pollInterval: "PT12H",
-    fieldMapping: {
-      title: "caption",
-      summary: "schema+datasets",
-      externalId: "id",
-      canonicalUrl: "id→opensanctions"
-    }
+    accessNote:
+      "Requires OPEN_SANCTIONS_API_KEY (trial/free public-interest keys at opensanctions.org). Without a key the platform uses a demo fixture."
+  },
+  "open-meteo-forecast": {
+    id: "open-meteo-forecast",
+    label: "Open-Meteo weather forecast (Turku yard)",
+    provider: "Open-Meteo",
+    documentationUrl: "https://open-meteo.com/en/docs",
+    endpoint: "https://api.open-meteo.com/v1/forecast",
+    method: "GET",
+    authenticationType: "none",
+    query: {
+      latitude: "60.45",
+      longitude: "22.27",
+      current:
+        "temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation,weather_code",
+      hourly:
+        "temperature_2m,wind_speed_10m,wind_gusts_10m,precipitation,weather_code",
+      daily:
+        "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max",
+      forecast_days: "3",
+      timezone: "Europe/Helsinki"
+    },
+    itemsPath: "hourly",
+    mapStrategy: "open-meteo-forecast",
+    responseFormat: "application/json",
+    pollInterval: "PT1H",
+    accessNote:
+      "Open access JSON API — no API key required for non-commercial use (CC BY 4.0). Sample stores current + hourly + daily forecast rows."
   }
 };
 
@@ -93,6 +132,10 @@ function asArray(value) {
   return [value];
 }
 
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
 export function detectRestProfile(source = {}, endpoint = "") {
   const blob = [
     source.name,
@@ -103,6 +146,13 @@ export function detectRestProfile(source = {}, endpoint = "") {
   ]
     .map((v) => String(v || "").toLowerCase())
     .join(" ");
+
+  if (
+    /open-?meteo|openmeteo/i.test(blob) ||
+    /api\.open-meteo\.com/i.test(blob)
+  ) {
+    return REST_PROFILES["open-meteo-forecast"];
+  }
 
   if (
     /opensanctions|eu_fsf|financial sanctions|eu sanctions|sanctions list|fsf/i.test(
@@ -126,6 +176,7 @@ export function resolveRestConfig(config = {}, source = {}) {
     headers: {},
     query: {},
     itemsPath: "",
+    mapStrategy: "",
     ...(profile || {}),
     ...config,
     query: { ...(profile?.query || {}), ...(config.query || {}) },
@@ -137,6 +188,9 @@ export function resolveRestConfig(config = {}, source = {}) {
   }
   if (profile) {
     merged.profileId = profile.id;
+    if (!config.mapStrategy && profile.mapStrategy) {
+      merged.mapStrategy = profile.mapStrategy;
+    }
   }
 
   return merged;
@@ -153,7 +207,8 @@ function buildUrl(endpoint, query = {}) {
 
 function resolveApiKey(config) {
   if (config.apiKey) return String(config.apiKey).trim();
-  const envName = config.apiKeyEnv || "OPEN_SANCTIONS_API_KEY";
+  const envName = config.apiKeyEnv;
+  if (!envName) return "";
   const fromEnv = process.env[envName];
   return fromEnv ? String(fromEnv).trim() : "";
 }
@@ -168,10 +223,14 @@ function buildHeaders(config) {
   if (authType === "apikey" || authType === "api_key" || authType === "api-key") {
     const key = resolveApiKey(config);
     if (key) {
-      const headerName = config.apiKeyHeader || "Authorization";
-      const prefix =
-        config.apiKeyPrefix != null ? config.apiKeyPrefix : "ApiKey ";
-      headers[headerName] = `${prefix}${key}`;
+      if (config.apiKeyQueryParam) {
+        // Query-param keys are applied in buildUrl via resolved query merge at call sites.
+      } else {
+        const headerName = config.apiKeyHeader || "Authorization";
+        const prefix =
+          config.apiKeyPrefix != null ? config.apiKeyPrefix : "ApiKey ";
+        headers[headerName] = `${prefix}${key}`;
+      }
     }
   } else if (authType === "bearer") {
     const key = resolveApiKey(config);
@@ -179,6 +238,20 @@ function buildHeaders(config) {
   }
 
   return headers;
+}
+
+function withApiKeyQuery(query, config) {
+  const authType = String(config.authenticationType || "none").toLowerCase();
+  if (
+    !(authType === "apikey" || authType === "api_key" || authType === "api-key")
+  ) {
+    return query;
+  }
+  const param = config.apiKeyQueryParam;
+  if (!param) return query;
+  const key = resolveApiKey(config);
+  if (!key) return query;
+  return { ...query, [param]: key };
 }
 
 function hasRequiredAuth(config) {
@@ -214,48 +287,314 @@ function mapOpenSanctionsHit(hit) {
   };
 }
 
-function extractItems(payload, config) {
-  const path = config.itemsPath || "results";
-  let items = getByPath(payload, path);
-  if (!items && Array.isArray(payload)) items = payload;
-  if (!items && Array.isArray(payload?.results)) items = payload.results;
-  items = asArray(items);
+function openMeteoPlace(payload) {
+  const lat = payload?.latitude;
+  const lon = payload?.longitude;
+  if (lat == null || lon == null) return "configured location";
+  return `${Number(lat).toFixed(2)}°N, ${Number(lon).toFixed(2)}°E`;
+}
 
-  if (config.profileId === "opensanctions-eu-fsf" || path === "results") {
-    return items.map(mapOpenSanctionsHit);
+function openMeteoCanonicalUrl(payload, config = {}) {
+  try {
+    const endpoint =
+      config.endpoint || REST_PROFILES["open-meteo-forecast"].endpoint;
+    const query = {
+      ...(REST_PROFILES["open-meteo-forecast"].query || {}),
+      ...(config.query || {})
+    };
+    if (payload?.latitude != null) query.latitude = String(payload.latitude);
+    if (payload?.longitude != null) query.longitude = String(payload.longitude);
+    return buildUrl(endpoint, query);
+  } catch {
+    return "https://open-meteo.com/en/docs";
+  }
+}
+
+function formatOpenMeteoMetric(value, unit, label) {
+  if (value == null || value === "") return null;
+  return `${label} ${value}${unit || ""}`;
+}
+
+/** Map Open-Meteo forecast JSON into current + hourly + daily RawRecord rows. */
+function mapOpenMeteoForecast(payload, config = {}) {
+  const place = openMeteoPlace(payload);
+  const canonicalUrl = openMeteoCanonicalUrl(payload, config);
+  const lat = payload?.latitude;
+  const lon = payload?.longitude;
+  const items = [];
+
+  const current = payload?.current;
+  const currentUnits = payload?.current_units || {};
+  if (isPlainObject(current)) {
+    const parts = [
+      formatOpenMeteoMetric(
+        current.temperature_2m,
+        currentUnits.temperature_2m || "°C",
+        "Temp"
+      ),
+      formatOpenMeteoMetric(
+        current.wind_speed_10m,
+        currentUnits.wind_speed_10m || " km/h",
+        "Wind"
+      ),
+      formatOpenMeteoMetric(
+        current.wind_gusts_10m,
+        currentUnits.wind_gusts_10m || " km/h",
+        "Gusts"
+      ),
+      formatOpenMeteoMetric(
+        current.precipitation,
+        currentUnits.precipitation || " mm",
+        "Precip"
+      ),
+      current.weather_code != null ? `WMO code ${current.weather_code}` : null
+    ].filter(Boolean);
+    const when = current.time || new Date().toISOString();
+    items.push({
+      externalId: `open-meteo-current-${when}`,
+      title: `Current conditions · wind ${current.wind_speed_10m ?? "—"} · gusts ${current.wind_gusts_10m ?? "—"} · ${place}`,
+      summary: parts.join(" · ") || "Current weather snapshot",
+      canonicalUrl,
+      publishedAt: when,
+      language: "en",
+      payload: {
+        kind: "current",
+        latitude: lat,
+        longitude: lon,
+        timezone: payload?.timezone,
+        current,
+        current_units: currentUnits
+      }
+    });
   }
 
-  return items.map((item, index) => {
-    if (typeof item === "string") {
-      return {
-        externalId: `item-${index}`,
-        title: item,
-        summary: "",
-        canonicalUrl: "",
-        publishedAt: null,
-        language: "",
-        payload: { value: item }
-      };
-    }
-    const title =
-      item.title ||
-      item.name ||
-      item.caption ||
-      item.label ||
-      item.id ||
-      `Record ${index + 1}`;
+  const hourly = payload?.hourly;
+  const hourlyUnits = payload?.hourly_units || {};
+  const daily = payload?.daily;
+  const dailyUnits = payload?.daily_units || {};
+  const dailyTimes = asArray(daily?.time);
+  for (let i = 0; i < dailyTimes.length; i++) {
+    const day = dailyTimes[i];
+    const tmax = daily.temperature_2m_max?.[i];
+    const tmin = daily.temperature_2m_min?.[i];
+    const precip = daily.precipitation_sum?.[i];
+    const wind = daily.wind_speed_10m_max?.[i];
+    const code = daily.weather_code?.[i];
+    const parts = [
+      formatOpenMeteoMetric(tmax, dailyUnits.temperature_2m_max || "°C", "Max"),
+      formatOpenMeteoMetric(tmin, dailyUnits.temperature_2m_min || "°C", "Min"),
+      formatOpenMeteoMetric(
+        precip,
+        dailyUnits.precipitation_sum || " mm",
+        "Precip"
+      ),
+      formatOpenMeteoMetric(
+        wind,
+        dailyUnits.wind_speed_10m_max || " km/h",
+        "Wind max"
+      ),
+      code != null ? `WMO code ${code}` : null
+    ].filter(Boolean);
+    items.push({
+      externalId: `open-meteo-daily-${day}`,
+      title: `Daily forecast · wind max ${wind ?? "—"} · precip ${precip ?? "—"} · ${day}`,
+      summary: `${place} · ${parts.join(" · ")}`,
+      canonicalUrl,
+      publishedAt: `${day}T12:00:00`,
+      language: "en",
+      payload: {
+        kind: "daily",
+        latitude: lat,
+        longitude: lon,
+        date: day,
+        temperature_2m_max: tmax,
+        temperature_2m_min: tmin,
+        precipitation_sum: precip,
+        wind_speed_10m_max: wind,
+        weather_code: code,
+        units: dailyUnits
+      }
+    });
+  }
+
+  const hourlyTimes = asArray(hourly?.time);
+  const maxHourly = 24;
+  for (let i = 0; i < Math.min(hourlyTimes.length, maxHourly); i++) {
+    const when = hourlyTimes[i];
+    const temp = hourly.temperature_2m?.[i];
+    const wind = hourly.wind_speed_10m?.[i];
+    const gusts = hourly.wind_gusts_10m?.[i];
+    const precip = hourly.precipitation?.[i];
+    const code = hourly.weather_code?.[i];
+    const parts = [
+      formatOpenMeteoMetric(temp, hourlyUnits.temperature_2m || "°C", "Temp"),
+      formatOpenMeteoMetric(wind, hourlyUnits.wind_speed_10m || " km/h", "Wind"),
+      formatOpenMeteoMetric(
+        gusts,
+        hourlyUnits.wind_gusts_10m || " km/h",
+        "Gusts"
+      ),
+      formatOpenMeteoMetric(
+        precip,
+        hourlyUnits.precipitation || " mm",
+        "Precip"
+      ),
+      code != null ? `WMO code ${code}` : null
+    ].filter(Boolean);
+    items.push({
+      externalId: `open-meteo-hourly-${when}`,
+      title: `Hourly forecast · wind ${wind ?? "—"} · gusts ${gusts ?? "—"} · ${when}`,
+      summary: `${place} · ${parts.join(" · ")}`,
+      canonicalUrl,
+      publishedAt: when,
+      language: "en",
+      payload: {
+        kind: "hourly",
+        latitude: lat,
+        longitude: lon,
+        time: when,
+        temperature_2m: temp,
+        wind_speed_10m: wind,
+        wind_gusts_10m: gusts,
+        precipitation: precip,
+        weather_code: code,
+        units: hourlyUnits
+      }
+    });
+  }
+
+  return items;
+}
+
+function mapGenericItem(item, index, rootPayload) {
+  if (typeof item === "string" || typeof item === "number") {
     return {
-      externalId: String(item.id || item.externalId || title),
-      title: String(title),
-      summary: String(
-        item.summary || item.description || item.detail || ""
-      ).slice(0, 2000),
-      canonicalUrl: item.url || item.canonicalUrl || item.link || "",
-      publishedAt: item.publishedAt || item.updated || item.date || null,
-      language: item.language || "",
-      payload: item
+      externalId: `item-${index}`,
+      title: String(item),
+      summary: "",
+      canonicalUrl: "",
+      publishedAt: null,
+      language: "",
+      payload: { value: item }
     };
-  });
+  }
+
+  if (!isPlainObject(item)) {
+    return {
+      externalId: `item-${index}`,
+      title: `Record ${index + 1}`,
+      summary: "",
+      canonicalUrl: "",
+      publishedAt: null,
+      language: "",
+      payload: { value: item }
+    };
+  }
+
+  const props = item.properties && isPlainObject(item.properties) ? item.properties : null;
+  const title =
+    item.title ||
+    item.name ||
+    item.caption ||
+    item.label ||
+    item.headline ||
+    item.place ||
+    item.id ||
+    (Array.isArray(props?.name) ? props.name[0] : props?.name) ||
+    `Record ${index + 1}`;
+
+  const summary = String(
+    item.summary ||
+      item.description ||
+      item.detail ||
+      item.properties?.description ||
+      ""
+  ).slice(0, 2000);
+
+  const canonicalUrl =
+    item.url ||
+    item.canonicalUrl ||
+    item.link ||
+    item.uri ||
+    item.href ||
+    "";
+
+  return {
+    externalId: String(item.id || item.externalId || item.code || title),
+    title: String(title),
+    summary,
+    canonicalUrl: String(canonicalUrl || ""),
+    publishedAt:
+      item.publishedAt ||
+      item.updated ||
+      item.updatedAt ||
+      item.time ||
+      item.date ||
+      item.properties?.time ||
+      null,
+    language: item.language || "",
+    payload: rootPayload && item === rootPayload ? item : item
+  };
+}
+
+/**
+ * Pull a list of row-like objects from arbitrary JSON.
+ * Prefer explicit itemsPath, then common list keys, then first object array,
+ * then wrap a single object as one record.
+ */
+function locateRawItems(payload, config = {}) {
+  if (payload == null) return [];
+
+  if (config.itemsPath) {
+    const atPath = getByPath(payload, config.itemsPath);
+    if (Array.isArray(atPath)) return atPath;
+    if (isPlainObject(atPath)) return [atPath];
+  }
+
+  if (Array.isArray(payload)) return payload;
+
+  if (!isPlainObject(payload)) return [];
+
+  for (const key of LIST_PATH_CANDIDATES) {
+    if (Array.isArray(payload[key]) && payload[key].length) {
+      return payload[key];
+    }
+  }
+
+  for (const [key, value] of Object.entries(payload)) {
+    if (
+      Array.isArray(value) &&
+      value.length &&
+      value.every((v) => isPlainObject(v) || typeof v === "string")
+    ) {
+      if (["bbox", "coordinates"].includes(key)) continue;
+      return value;
+    }
+  }
+
+  // Snapshot-style APIs (forecast current, rates, status): one logical record.
+  return [payload];
+}
+
+function extractItems(payload, config = {}) {
+  const strategy = config.mapStrategy || "";
+
+  if (strategy === "opensanctions" || config.profileId === "opensanctions-eu-fsf") {
+    return locateRawItems(payload, { ...config, itemsPath: config.itemsPath || "results" }).map(
+      mapOpenSanctionsHit
+    );
+  }
+
+  if (
+    strategy === "open-meteo-forecast" ||
+    strategy === "open-meteo-current" ||
+    config.profileId === "open-meteo-forecast"
+  ) {
+    return mapOpenMeteoForecast(payload, config);
+  }
+
+  const rawItems = locateRawItems(payload, config);
+  return rawItems.map((item, index) => mapGenericItem(item, index, payload));
 }
 
 async function httpGetJson(url, headers) {
@@ -302,7 +641,8 @@ export const restAdapter = {
     if (!resolved.endpoint) {
       return {
         ok: false,
-        message: "REST connector has no endpoint configured."
+        message:
+          "REST connector has no endpoint configured. Include a concrete HTTPS API URL in the proposal, or use a known profile (Open-Meteo, OpenSanctions EU FSF)."
       };
     }
 
@@ -314,16 +654,19 @@ export const restAdapter = {
           endpoint: fix.endpoint,
           message: fix.message,
           mode: "fixture",
-          sampleTitles: fix.sampleTitles
+          sampleTitles: fix.sampleTitles,
+          accessNote: REST_PROFILES["opensanctions-eu-fsf"].accessNote
         };
       }
       return {
         ok: false,
-        message: `REST API key missing (env ${resolved.apiKeyEnv || "API key"}).`
+        message: `REST API key missing (env ${resolved.apiKeyEnv || "API key"}).`,
+        accessNote: resolved.accessNote || null
       };
     }
 
-    const url = buildUrl(resolved.endpoint, resolved.query);
+    const query = withApiKeyQuery(resolved.query, resolved);
+    const url = buildUrl(resolved.endpoint, query);
     try {
       const { response, json } = await httpGetJson(url, buildHeaders(resolved));
       if (!response.ok) {
@@ -344,12 +687,21 @@ export const restAdapter = {
         };
       }
 
+      if (json == null) {
+        return {
+          ok: false,
+          endpoint: url,
+          message: "REST endpoint did not return JSON."
+        };
+      }
+
       const items = extractItems(json, resolved);
       if (!items.length) {
         return {
           ok: false,
           endpoint: url,
-          message: "REST endpoint returned no items for the configured itemsPath."
+          message:
+            "REST endpoint returned JSON but no list/snapshot items could be mapped. Set itemsPath in the proposal or add a profile."
         };
       }
 
@@ -357,8 +709,11 @@ export const restAdapter = {
         ok: true,
         endpoint: url,
         mode: "live",
-        message: `REST OK · ${items.length} items`,
-        sampleTitles: items.slice(0, 5).map((i) => i.title)
+        message: `REST OK · ${items.length} item(s)${
+          resolved.profileId ? ` · profile ${resolved.profileId}` : " · generic JSON"
+        }`,
+        sampleTitles: items.slice(0, 5).map((i) => i.title),
+        accessNote: resolved.accessNote || null
       };
     } catch (error) {
       if (resolved.profileId === "opensanctions-eu-fsf") {
@@ -383,10 +738,13 @@ export const restAdapter = {
     const limit = opts.limit == null ? 15 : opts.limit;
     const sourceCtx = opts.source || opts.context?.source || null;
     const resolved = resolveRestConfig(config, sourceCtx);
-    const query = {
-      ...resolved.query,
-      ...(resolved.query?.limit != null ? { limit: String(limit) } : {})
-    };
+    const query = withApiKeyQuery(
+      {
+        ...resolved.query,
+        ...(resolved.query?.limit != null ? { limit: String(limit) } : {})
+      },
+      resolved
+    );
 
     if (!hasRequiredAuth(resolved) && resolved.profileId === "opensanctions-eu-fsf") {
       const fix = fixtureResult({ ...resolved, query }, { limit });
@@ -414,6 +772,9 @@ export const restAdapter = {
           };
         }
         throw new Error(`HTTP ${response.status} from REST endpoint (${url})`);
+      }
+      if (json == null) {
+        throw new Error(`REST endpoint did not return JSON (${url})`);
       }
       const items = extractItems(json, resolved).slice(0, limit);
       return {

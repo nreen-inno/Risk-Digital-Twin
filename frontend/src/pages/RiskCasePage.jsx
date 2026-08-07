@@ -6,6 +6,7 @@ import Footer from "../components/layout/Footer.jsx";
 import LoadingState from "../components/shared/LoadingState.jsx";
 import ErrorState from "../components/shared/ErrorState.jsx";
 import RiskCaseNetwork from "../components/risk/RiskCaseNetwork.jsx";
+import EnterpriseImpactGrid from "../components/risk/EnterpriseImpactGrid.jsx";
 import "../styles/risk-room.css";
 
 const SEV = { crit: "crit", high: "high", elev: "elev", ok: "ok" };
@@ -86,13 +87,29 @@ export default function RiskCasePage() {
                   </button>
                 </p>
                 <span className={`risk-lvl risk-lvl--${riskCase.level}`}>
-                  Score {riskCase.score} · {String(riskCase.level).toUpperCase()}
+                  {riskCase.scoreBump > 0 && riskCase.baselineScore != null ? (
+                    <>
+                      Score {riskCase.baselineScore}→{riskCase.score} ·{" "}
+                      {String(riskCase.level).toUpperCase()} · +{riskCase.scoreBump} live
+                    </>
+                  ) : (
+                    <>
+                      Score {riskCase.score} · {String(riskCase.level).toUpperCase()}
+                    </>
+                  )}
                 </span>
-                {riskCase.provenance?.illustrative && (
-                  <span className="risk-home__badge" style={{ marginLeft: 8 }}>
-                    Illustrative intelligence
+                {riskCase.provenance?.liveBackedFactors > 0 ? (
+                  <span className="risk-home__badge risk-home__badge--live" style={{ marginLeft: 8 }}>
+                    {riskCase.provenance.liveBackedFactors} live-backed · conf{" "}
+                    {riskCase.provenance.confidenceBaseline != null
+                      ? `${riskCase.provenance.confidenceBaseline}→${riskCase.provenance.confidence}%`
+                      : `${riskCase.provenance.confidence}%`}
                   </span>
-                )}
+                ) : riskCase.provenance?.illustrative ? (
+                  <span className="risk-home__badge" style={{ marginLeft: 8 }}>
+                    Illustrative baseline — add sources to raise confidence
+                  </span>
+                ) : null}
               </div>
             </header>
 
@@ -103,14 +120,7 @@ export default function RiskCasePage() {
               </section>
               <section>
                 <h2 className="risk-case__h">Enterprise impact</h2>
-                <div className="risk-impacts">
-                  {(riskCase.impacts || []).map((im) => (
-                    <div className="risk-impact" key={im.label}>
-                      <div className="risk-impact__v">{im.value}</div>
-                      <div className="risk-impact__l">{im.label}</div>
-                    </div>
-                  ))}
-                </div>
+                <EnterpriseImpactGrid impacts={riskCase.impacts} />
               </section>
             </div>
 
@@ -125,6 +135,31 @@ export default function RiskCasePage() {
                 {riskCase.liveEvidence?.note ||
                   "Only signals that match this risk case theme are shown."}
               </p>
+              {(riskCase.liveEvidence?.scanned > 0 ||
+                riskCase.liveEvidence?.matched > 0) && (
+                <div className="risk-live__funnel" aria-label="Evidence filter funnel">
+                  <span>
+                    <b>{riskCase.liveEvidence.scanned || 0}</b> scanned
+                  </span>
+                  <span className="risk-live__funnel-sep">→</span>
+                  <span>
+                    <b>{riskCase.liveEvidence.droppedByProfile || 0}</b> off-profile
+                  </span>
+                  <span className="risk-live__funnel-sep">→</span>
+                  <span>
+                    <b>{riskCase.liveEvidence.droppedByCase || 0}</b> off-case
+                  </span>
+                  <span className="risk-live__funnel-sep">→</span>
+                  <span>
+                    <b>
+                      {riskCase.liveEvidence.matched ??
+                        riskCase.liveEvidence.signals?.length ??
+                        0}
+                    </b>{" "}
+                    matched
+                  </span>
+                </div>
+              )}
               {(riskCase.liveEvidence?.sourcesUsed || []).length > 0 && (
                 <div className="risk-live__sources">
                   {riskCase.liveEvidence.sourcesUsed.map((s) => (
@@ -143,8 +178,9 @@ export default function RiskCasePage() {
               )}
               {(riskCase.liveEvidence?.signals || []).length === 0 ? (
                 <p className="risk-live__empty">
-                  No collected records yet. Open sources, run a connector fetch / approve
-                  sample, then refresh this case.
+                  {riskCase.liveEvidence?.scanned > 0
+                    ? "Records were collected on this objective, but none passed Monitoring Profile + this case theme. Onboard a China/trade-focused source, or refine case keywords."
+                    : "No collected records yet. Open sources, run a connector fetch / approve sample, then refresh this case."}
                 </p>
               ) : (
                 <ul className="risk-live__list">
@@ -200,10 +236,16 @@ export default function RiskCasePage() {
                         />
                         <span className="risk-fac__name">{f.name}</span>
                         <span className="risk-fac__src">
-                          {f.liveSignalCount > 0
-                            ? `${f.liveSignalCount} live · `
-                            : ""}
-                          {f.illustrative ? "illustrative · " : ""}
+                          {f.emerging ? "emerging · " : ""}
+                          {f.liveBacked
+                            ? `live-backed · ${f.liveSignalCount} signal${f.liveSignalCount === 1 ? "" : "s"} · `
+                            : f.illustrative
+                              ? "illustrative · "
+                              : ""}
+                          conf {f.confidenceBaseline != null && f.liveBacked
+                            ? `${f.confidenceBaseline}→${f.confidence}%`
+                            : `${f.confidence}%`}
+                          {" · "}
                           {f.tier} · {f.sourceName}
                         </span>
                       </button>

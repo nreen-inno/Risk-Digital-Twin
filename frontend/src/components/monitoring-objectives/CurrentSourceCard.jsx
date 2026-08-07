@@ -44,6 +44,39 @@ function asText(value, fallback = "Not configured") {
   return value || fallback;
 }
 
+function shortenFocus(value, max = 100) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const at = Math.max(cut.lastIndexOf(", "), cut.lastIndexOf(" "));
+  return `${(at > 40 ? cut.slice(0, at) : cut).trim()}…`;
+}
+
+function monitoringFocusOf(source) {
+  const raw = source?.raw || {};
+  // Prefer the user's source description when present; else short generated focus.
+  const preferred =
+    source?.informationNeed ||
+    raw.informationNeed ||
+    raw.monitoringFocus ||
+    source?.monitoringFocus ||
+    "";
+  if (preferred) return shortenFocus(preferred, 100);
+
+  const mp =
+    raw.monitoringConfiguration?.monitoringProfile ||
+    raw.connectorDefinition?.monitoringConfiguration?.monitoringProfile ||
+    {};
+  const terms = [
+    ...(mp.includeTerms || []),
+    ...(mp.entities || []),
+    ...(mp.locations || []),
+  ].filter(Boolean);
+  if (terms.length) return shortenFocus(terms.slice(0, 4).join(", "), 100);
+  return "Not configured";
+}
+
 export default function CurrentSourceCard({ source, onModify, onDisable, busy = false }) {
   const [expanded, setExpanded] = useState(false);
   const frequency = formatFrequency(
@@ -55,13 +88,14 @@ export default function CurrentSourceCard({ source, onModify, onDisable, busy = 
       "schedule",
     ])
   );
+  const monitoringFocus = monitoringFocusOf(source);
 
   const operational = [
     ["Connector status", source.connectorStatusLabel || "Not configured"],
     ["Connection method", asText(firstValue(source, ["connectionMethod", "transport", "connectorType", "sourceKind"]), source.sourceKindLabel)],
     ["Collection frequency", frequency],
     ["Filters / topics", asText(firstValue(source, ["filters", "monitoringFilters", "topics", "keywords", "tags"]))],
-    ["Monitoring instructions", asText(firstValue(source, ["monitoringInstructions", "aiInstructions", "informationNeed"]), source.informationNeed || "Not configured")],
+    ["Monitoring instructions", asText(monitoringFocus)],
     ["Last collection", asText(firstValue(source, ["lastCollectedAt", "lastRunAt", "lastSuccessfulRunAt"]))],
     ["Next collection", asText(firstValue(source, ["nextCollectionAt", "nextRunAt"]))],
   ];
@@ -87,7 +121,7 @@ export default function CurrentSourceCard({ source, onModify, onDisable, busy = 
         </div>
         <div className="msrc__meta-row">
           <dt>Monitoring focus</dt>
-          <dd>{source.informationNeed || "Not configured"}</dd>
+          <dd>{monitoringFocus}</dd>
         </div>
       </dl>
 

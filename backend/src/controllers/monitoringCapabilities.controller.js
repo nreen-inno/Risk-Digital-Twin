@@ -5,7 +5,8 @@ import {
 
 import { container } from "../config/cosmos.js";
 import {
-  formatPollInterval
+  formatPollInterval,
+  applyMonitoringFocusToSource
 } from "../connectors/connectorLifecycle.service.js";
 
 
@@ -121,6 +122,12 @@ export async function getMonitoringCapabilityInformationSources(
         }
         if (!source.connectionMethod) {
           source.connectionMethod = def.connectionMethod || def.adapterType || "";
+        }
+        applyMonitoringFocusToSource(source, def);
+        // Prefer the user's short description on the card; only use generated
+        // focus when informationNeed is empty.
+        if (!String(source.informationNeed || "").trim() && source.monitoringFocus) {
+          source.informationNeed = source.monitoringFocus;
         }
         if (
           (!source.connectorStatus || source.connectorStatus === "notConfigured") &&

@@ -4,14 +4,19 @@ import {
   getAdapter,
   resolveAdapterType
 } from "./adapters/index.js";
-import { normalizeFeedEndpoint, fallbackFeedEndpoints, expandFeedDirectoryCandidates } from "./adapters/rss.adapter.js";
+import { normalizeFeedEndpoint, fallbackFeedEndpoints, expandFeedDirectoryCandidates, looksLikeFeedDirectory } from "./adapters/rss.adapter.js";
 import {
   detectRestProfile,
   resolveRestConfig,
   fallbackRestEndpoints,
   REST_PROFILES
 } from "./adapters/rest.adapter.js";
-
+import {
+  detectScrapeProfile,
+  resolveScrapeConfig,
+  fallbackScrapeEndpoints,
+  SCRAPE_PROFILES
+} from "./adapters/scrape.adapter.js";
 
 function cleanCosmosFields(item) {
   if (!item) return item;
@@ -68,6 +73,63 @@ function applyConnectorScheduleToSource(source, definition) {
   if (definition?.adapterType || definition?.connectionMethod) {
     source.connectionMethod =
       definition.connectionMethod || definition.adapterType;
+  }
+  applyMonitoringFocusToSource(source, definition);
+  return source;
+}
+
+/**
+ * Short monitoring-focus label for source cards.
+ * Prefer a few include terms / places — not languages, excludes, or long dumps.
+ */
+export function summarizeMonitoringFocus(monitoringConfiguration = {}, fallback = "") {
+  const mc = monitoringConfiguration || {};
+  const mp = mc.monitoringProfile || {};
+  const terms = [
+    ...(Array.isArray(mp.includeTerms) ? mp.includeTerms : []),
+    ...(Array.isArray(mp.entities) ? mp.entities : []),
+    ...(Array.isArray(mp.locations) ? mp.locations : []),
+    ...(Array.isArray(mc.geographicScope) ? mc.geographicScope : [])
+  ]
+    .map((t) => String(t || "").trim())
+    .filter(Boolean);
+
+  const unique = [...new Set(terms.map((t) => t.toLowerCase()))].map((key) =>
+    terms.find((t) => t.toLowerCase() === key)
+  );
+
+  if (unique.length) {
+    return unique.slice(0, 4).join(", ");
+  }
+
+  return shortenFocusText(fallback, 100);
+}
+
+export function shortenFocusText(value, max = 100) {
+  const text = String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return "";
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max - 1);
+  const at = Math.max(cut.lastIndexOf(", "), cut.lastIndexOf(" "));
+  return `${(at > 40 ? cut.slice(0, at) : cut).trim()}…`;
+}
+
+export function applyMonitoringFocusToSource(source, definition, proposal = null) {
+  if (!source) return source;
+  const fromDef = summarizeMonitoringFocus(
+    definition?.monitoringConfiguration || {},
+    proposal?.recommendedApproach?.purpose ||
+      proposal?.recommendation?.purpose ||
+      ""
+  );
+  if (fromDef) {
+    source.monitoringFocus = fromDef;
+    // Only fill informationNeed when the source has no user description yet.
+    if (!String(source.informationNeed || "").trim()) {
+      source.informationNeed = fromDef;
+    }
   }
   return source;
 }
@@ -185,19 +247,16 @@ export async function discoverAndVerifyFeedEndpoint({
   }
 
   // If proposal pointed at an HTML feed-directory page, scrape linked feeds.
+  // Also expand known provider directory fallbacks (e.g. IMO rss.aspx index).
   const directorySeeds = [
     technical.endpoint,
     technical.documentationUrl,
-    source?.documentationUrl
+    source?.documentationUrl,
+    ...fallbackFeedEndpoints(source, { preferEnglish })
   ].filter(Boolean);
 
   for (const seed of directorySeeds) {
-    const looksLikeDirectory =
-      /\.shtml|\.html|aboutrss|\/rss\/?$/i.test(String(seed)) ||
-      /select .*feed|feed directory/i.test(String(seed));
-    if (!looksLikeDirectory && !/nhc\.noaa\.gov\/aboutrss/i.test(String(seed))) {
-      continue;
-    }
+    if (!looksLikeFeedDirectory(seed)) continue;
     const expanded = await expandFeedDirectoryCandidates(seed);
     for (const link of expanded) {
       addCandidate(link, "directory.scrape");
@@ -256,6 +315,261 @@ export async function discoverAndVerifyFeedEndpoint({
 }
 
 /**
+ * Soft live-probe for HTML scrape proposals (before Accept).
+ */
+export async function enrichAdviceWithScrapeProbe(source, advice) {
+  if (!advice || typeof advice !== "object") return advice;
+
+  const method = String(
+    advice.recommendation?.connectionMethod ||
+      advice.recommendedApproach?.connectionMethod ||
+      ""
+  ).toLowerCase();
+
+  const looksScrape =
+    method === "scrape" ||
+    method === "web" ||
+    method === "html" ||
+    (!!detectScrapeProfile(
+      source,
+      advice.technicalConfiguration?.endpoint ||
+        advice.technicalConfiguration?.documentationUrl ||
+        ""
+    ) &&
+      (method === "" ||
+        method === "unknown" ||
+        (advice.endpointProbe && advice.endpointProbe.ok === false)));
+
+  if (!looksScrape && method && method !== "scrape") {
+    return advice;
+  }
+
+  // Prefer scrape when WCO-like and method was scrape or empty/unknown.
+  const profile = detectScrapeProfile(
+    source,
+    advice.technicalConfiguration?.endpoint ||
+      advice.technicalConfiguration?.documentationUrl ||
+      ""
+  );
+  if (!profile && method !== "scrape" && method !== "web" && method !== "html") {
+    return advice;
+  }
+
+  const scrapeConfig = resolveScrapeConfig(
+    {
+      ...(advice.technicalConfiguration || {}),
+      profileId: profile?.id
+    },
+    source
+  );
+
+  let adapter;
+  try {
+    adapter = getAdapter("scrape");
+  } catch {
+    return advice;
+  }
+
+  const verification = await adapter.testConnection(scrapeConfig, { source });
+  const technicalConfiguration = {
+    ...(advice.technicalConfiguration || {}),
+    endpoint: verification.ok
+      ? verification.endpoint || scrapeConfig.endpoint
+      : scrapeConfig.endpoint || advice.technicalConfiguration?.endpoint,
+    documentationUrl:
+      scrapeConfig.documentationUrl ||
+      advice.technicalConfiguration?.documentationUrl ||
+      "",
+    responseFormat: "text/html",
+    authenticationType: "none",
+    pollInterval:
+      scrapeConfig.pollInterval ||
+      advice.technicalConfiguration?.pollInterval ||
+      "PT12H"
+  };
+
+  const recommendation = {
+    ...(advice.recommendation || {}),
+    connectionMethod: "scrape"
+  };
+
+  const unresolvedTechnicalFacts = [
+    ...(Array.isArray(advice.unresolvedTechnicalFacts)
+      ? advice.unresolvedTechnicalFacts
+      : [])
+  ].filter(
+    (f) => !/none returned parseable items|could not live-verify/i.test(String(f))
+  );
+
+  if (!verification.ok) {
+    const note =
+      verification.message ||
+      "Could not live-verify the HTML scrape list page during proposal.";
+    if (!unresolvedTechnicalFacts.includes(note)) {
+      unresolvedTechnicalFacts.push(note);
+    }
+  }
+
+  return {
+    ...advice,
+    recommendation,
+    technicalConfiguration,
+    unresolvedTechnicalFacts,
+    connectorReadiness: verification.ok
+      ? advice.connectorReadiness === "ready-for-activation"
+        ? advice.connectorReadiness
+        : "ready-for-test"
+      : advice.connectorReadiness || "proposal-ready",
+    endpointProbe: {
+      ok: Boolean(verification.ok),
+      endpoint: verification.endpoint || scrapeConfig.endpoint || null,
+      message: verification.message || null,
+      attemptCount: 1,
+      adapterType: "scrape",
+      profileId: scrapeConfig.profileId || null
+    }
+  };
+}
+
+/**
+ * Soft live-probe during AI proposal (before Accept). Rewrites the proposed
+ * endpoint when a working feed is found; otherwise attaches a failure note so
+ * the UI can warn without blocking review.
+ */
+export async function enrichAdviceWithRssProbe(source, advice) {
+  if (!advice || typeof advice !== "object") return advice;
+
+  const method = String(
+    advice.recommendation?.connectionMethod ||
+      advice.recommendedApproach?.connectionMethod ||
+      ""
+  ).toLowerCase();
+  if (method && method !== "rss" && method !== "atom") {
+    return advice;
+  }
+
+  const preferEnglish = Array.isArray(advice.monitoringConfiguration?.languages)
+    ? advice.monitoringConfiguration.languages.some((l) =>
+        String(l).toLowerCase().startsWith("en")
+      )
+    : true;
+
+  const verification = await discoverAndVerifyFeedEndpoint({
+    source,
+    proposal: advice,
+    preferEnglish
+  });
+
+  const technicalConfiguration = {
+    ...(advice.technicalConfiguration || {})
+  };
+  if (verification.ok && verification.endpoint) {
+    technicalConfiguration.endpoint = verification.endpoint;
+    if (
+      !technicalConfiguration.documentationUrl &&
+      /imo\.org/i.test(verification.endpoint)
+    ) {
+      technicalConfiguration.documentationUrl =
+        "https://www.imo.org/en/about/pages/rss.aspx";
+    }
+    if (
+      !technicalConfiguration.documentationUrl &&
+      /wto\.org/i.test(verification.endpoint)
+    ) {
+      technicalConfiguration.documentationUrl =
+        "https://www.wto.org/english/res_e/webcas_e/rss_e.htm";
+    }
+  } else if (
+    /\bimo\b|imo\.org|international maritime/i.test(
+      `${source?.name || ""} ${source?.provider || ""}`
+    )
+  ) {
+    technicalConfiguration.documentationUrl =
+      technicalConfiguration.documentationUrl ||
+      "https://www.imo.org/en/about/pages/rss.aspx";
+  } else if (
+    /\bwto\b|world trade|einnews/i.test(
+      `${source?.name || ""} ${source?.provider || ""} ${technicalConfiguration.endpoint || ""} ${technicalConfiguration.documentationUrl || ""}`
+    )
+  ) {
+    technicalConfiguration.endpoint =
+      technicalConfiguration.endpoint ||
+      "https://www.wto.org/library/rss/latest_news_e.xml";
+    technicalConfiguration.documentationUrl =
+      technicalConfiguration.documentationUrl ||
+      "https://www.wto.org/english/res_e/webcas_e/rss_e.htm";
+  }
+
+  const attemptReasons = (verification.attempts || [])
+    .map((a) => String(a.message || "").toLowerCase())
+    .join(" ");
+  const registrationRequired =
+    !verification.ok &&
+    (/registration|signup|sign up|login|einnews|blocked anonymous/i.test(
+      `${verification.message || ""} ${attemptReasons}`
+    ) ||
+      /einnews\.com|einpresswire\.com/i.test(
+        `${technicalConfiguration.endpoint || ""} ${technicalConfiguration.documentationUrl || ""}`
+      ));
+
+  const unresolvedTechnicalFacts = [
+    ...(Array.isArray(advice.unresolvedTechnicalFacts)
+      ? advice.unresolvedTechnicalFacts
+      : [])
+  ];
+  const decisionsRequiringUserApproval = [
+    ...(Array.isArray(advice.decisionsRequiringUserApproval)
+      ? advice.decisionsRequiringUserApproval
+      : [])
+  ];
+
+  if (!verification.ok) {
+    if (registrationRequired) {
+      const decision =
+        "Aggregator RSS (e.g. EIN News) needs a free email registration before a personal feed URL works. For the demo prefer the official public WTO feed (https://www.wto.org/library/rss/latest_news_e.xml) — no account. If you still want EIN News, register outside the chat and paste only the authenticated feed URL afterward; do not share passwords here.";
+      if (!decisionsRequiringUserApproval.some((d) => /ein news|registration|official public wto/i.test(String(d)))) {
+        decisionsRequiringUserApproval.push(decision);
+      }
+      // Drop the generic "no parseable items" note when we have a clearer cause.
+      const cleaned = unresolvedTechnicalFacts.filter(
+        (f) =>
+          !/none returned parseable items|could not live-verify/i.test(String(f))
+      );
+      unresolvedTechnicalFacts.length = 0;
+      unresolvedTechnicalFacts.push(...cleaned);
+    } else {
+      const note =
+        verification.message ||
+        "Could not live-verify an RSS/Atom endpoint during proposal.";
+      if (!unresolvedTechnicalFacts.includes(note)) {
+        unresolvedTechnicalFacts.push(note);
+      }
+    }
+  }
+
+  return {
+    ...advice,
+    technicalConfiguration,
+    unresolvedTechnicalFacts,
+    decisionsRequiringUserApproval,
+    connectorReadiness: verification.ok
+      ? advice.connectorReadiness === "ready-for-activation"
+        ? advice.connectorReadiness
+        : "ready-for-test"
+      : advice.connectorReadiness || "proposal-ready",
+    endpointProbe: {
+      ok: Boolean(verification.ok),
+      endpoint: verification.endpoint || null,
+      message: verification.message || null,
+      attemptCount: Array.isArray(verification.attempts)
+        ? verification.attempts.length
+        : 0,
+      registrationRequired
+    }
+  };
+}
+
+/**
  * Accept Connector Proposal → verify working endpoint → Specification + Definition.
  * Source stays in onboarding until the user approves the collected sample.
  */
@@ -292,6 +606,7 @@ export async function acceptConnectorSpecification({
   let endpoint = String(technical.endpoint || "").trim();
   let verification = null;
   let restProfile = null;
+  let scrapeProfile = null;
 
   if (adapterType === "rss") {
     endpoint = normalizeFeedEndpoint(endpoint, { preferEnglish });
@@ -339,7 +654,7 @@ export async function acceptConnectorSpecification({
     endpoint = restConfig.endpoint || endpoint;
     if (!endpoint) {
       const err = new Error(
-        "REST proposal has no API endpoint. Prefer OpenSanctions EU FSF (eu_fsf) for sanctions, or include a concrete HTTPS API URL."
+        "REST proposal has no API endpoint. Prefer Open-Meteo for weather, OpenSanctions EU FSF for sanctions, or include a concrete HTTPS JSON API URL."
       );
       err.code = "MISSING_ENDPOINT";
       throw err;
@@ -357,9 +672,55 @@ export async function acceptConnectorSpecification({
     }
     endpoint = restConfig.endpoint;
     restProfile = REST_PROFILES[restConfig.profileId] || restProfile;
-  } else if (!endpoint && adapterType === "rss") {
+  } else if (adapterType === "scrape") {
+    scrapeProfile =
+      detectScrapeProfile(source, endpoint) ||
+      detectScrapeProfile(
+        { ...source, name: proposal?.recommendation?.name || source.name },
+        technical.documentationUrl || ""
+      );
+
+    const scrapeConfig = resolveScrapeConfig(
+      {
+        endpoint,
+        documentationUrl: technical.documentationUrl || scrapeProfile?.documentationUrl,
+        authenticationType:
+          technical.authenticationType || scrapeProfile?.authenticationType,
+        responseFormat: technical.responseFormat || scrapeProfile?.responseFormat,
+        pollInterval: technical.pollInterval || scrapeProfile?.pollInterval,
+        profileId: scrapeProfile?.id,
+        extractStrategy: scrapeProfile?.extractStrategy,
+        linkHrefIncludes: scrapeProfile?.linkHrefIncludes,
+        linkClassIncludes: scrapeProfile?.linkClassIncludes
+      },
+      source
+    );
+
+    endpoint = scrapeConfig.endpoint || endpoint;
+    if (!endpoint) {
+      const err = new Error(
+        "Scrape proposal has no HTML list-page endpoint. For WCO use https://www.wcoomd.org/en/media/newsroom.aspx."
+      );
+      err.code = "MISSING_ENDPOINT";
+      throw err;
+    }
+
+    const adapter = getAdapter("scrape");
+    verification = await adapter.testConnection(scrapeConfig, { source });
+    if (!verification.ok) {
+      const err = new Error(
+        verification.message ||
+          "Could not verify the HTML scrape page before building the connector."
+      );
+      err.code = "VERIFICATION_FAILED";
+      err.verification = verification;
+      throw err;
+    }
+    endpoint = scrapeConfig.endpoint;
+    scrapeProfile = SCRAPE_PROFILES[scrapeConfig.profileId] || scrapeProfile;
+  } else if (!endpoint) {
     const err = new Error(
-      "Proposal has no feed endpoint. Refine the proposal so AI includes a concrete RSS/Atom URL before accepting."
+      "Proposal has no endpoint. Refine so AI includes a concrete URL before accepting."
     );
     err.code = "MISSING_ENDPOINT";
     throw err;
@@ -385,8 +746,13 @@ export async function acceptConnectorSpecification({
         technical.pollInterval ||
         proposal.recommendedApproach?.refreshFrequency ||
         restProfile?.pollInterval ||
+        scrapeProfile?.pollInterval ||
         "PT6H",
-      responseFormat: technical.responseFormat || "",
+      responseFormat:
+        technical.responseFormat ||
+        restProfile?.responseFormat ||
+        scrapeProfile?.responseFormat ||
+        "",
       proposedFieldMapping: technical.proposedFieldMapping || {}
     },
     monitoringConfiguration: {
@@ -428,21 +794,27 @@ export async function acceptConnectorSpecification({
     status: "readyForTest",
     adapterType,
     connectionMethod,
-    executable: adapterType === "rss" || adapterType === "rest",
+    executable:
+      adapterType === "rss" ||
+      adapterType === "rest" ||
+      adapterType === "scrape",
     config: {
       endpoint,
       authenticationType:
         technical.authenticationType ||
         restProfile?.authenticationType ||
+        scrapeProfile?.authenticationType ||
         "none",
       pollInterval: specification.technicalConfiguration.pollInterval,
       responseFormat:
         technical.responseFormat ||
         restProfile?.responseFormat ||
+        scrapeProfile?.responseFormat ||
         "",
       documentationUrl:
         technical.documentationUrl ||
         restProfile?.documentationUrl ||
+        scrapeProfile?.documentationUrl ||
         "",
       fieldMapping:
         technical.proposedFieldMapping ||
@@ -458,6 +830,14 @@ export async function acceptConnectorSpecification({
             apiKeyEnv: restProfile?.apiKeyEnv || null,
             apiKeyHeader: restProfile?.apiKeyHeader || null,
             apiKeyPrefix: restProfile?.apiKeyPrefix ?? null
+          }
+        : {}),
+      ...(adapterType === "scrape"
+        ? {
+            profileId: scrapeProfile?.id || null,
+            extractStrategy: scrapeProfile?.extractStrategy || "generic-list",
+            linkHrefIncludes: scrapeProfile?.linkHrefIncludes || [],
+            linkClassIncludes: scrapeProfile?.linkClassIncludes || []
           }
         : {})
     },
@@ -479,6 +859,7 @@ export async function acceptConnectorSpecification({
   source.connectorDefinitionId = definitionId;
   source.connectorSpecificationId = specificationId;
   applyConnectorScheduleToSource(source, definition);
+  applyMonitoringFocusToSource(source, definition, proposal);
   source.updatedAt = now;
   try {
     if (source.objectType) {
@@ -602,9 +983,13 @@ export async function testConnectorForSource(
         ? fallbackRestEndpoints(source).filter(
             (u) => u && u !== definition.config?.endpoint
           )
-        : fallbackFeedEndpoints(source, { preferEnglish }).filter(
-            (u) => u && u !== definition.config?.endpoint
-          );
+        : definition.adapterType === "scrape"
+          ? fallbackScrapeEndpoints(source).filter(
+              (u) => u && u !== definition.config?.endpoint
+            )
+          : fallbackFeedEndpoints(source, { preferEnglish }).filter(
+              (u) => u && u !== definition.config?.endpoint
+            );
 
     let recovered = null;
     for (const candidate of candidates) {
@@ -614,11 +999,16 @@ export async function testConnectorForSource(
               { ...(definition.config || {}), endpoint: candidate },
               source
             )
-          : {
-              ...(definition.config || {}),
-              endpoint: candidate,
-              languages
-            };
+          : definition.adapterType === "scrape"
+            ? resolveScrapeConfig(
+                { ...(definition.config || {}), endpoint: candidate },
+                source
+              )
+            : {
+                ...(definition.config || {}),
+                endpoint: candidate,
+                languages
+              };
       const retry = await adapter.testConnection(retryConfig, { source });
       if (retry.ok) {
         definition.config = {
@@ -666,7 +1056,10 @@ export async function testConnectorForSource(
   }
 
   const fetched = await adapter.fetch(definition.config || {}, {
-    limit,
+    limit:
+      definition.config?.profileId === "open-meteo-forecast" && limit < 28
+        ? 28
+        : limit,
     source
   });
   const mapped = adapter.mapToRawRecords(fetched.items, {

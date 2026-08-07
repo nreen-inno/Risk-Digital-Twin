@@ -124,9 +124,16 @@ const monitoringCapabilities = [
         ],
         suggestedSources: [
             {
+                id: "open-meteo",
+                name: "Open-Meteo",
+                sourceKind: "restApi",
+                sourceRole: "external",
+                requiresSimulation: false
+            },
+            {
                 id: "fmi",
                 name: "Finnish Meteorological Institute",
-                sourceKind: "restApi",
+                sourceKind: "rss",
                 sourceRole: "external",
                 requiresSimulation: false
             },

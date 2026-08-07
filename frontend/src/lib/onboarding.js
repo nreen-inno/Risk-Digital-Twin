@@ -128,7 +128,7 @@ export function buildAiInstruction({ recommendation, objectiveId, objectiveName,
     ? `\n\nAdditional (optional) instructions from the risk manager:\n${extraInstructions.trim()}`
     : "";
   return [
-    core("For public sources, infer and propose the best official feed, API or open-data endpoint (prefer official APIs or RSS/Atom over scraping). For enterprise sources, propose the likely connector pattern and clearly label organisation-specific assumptions."),
+    core("For public sources, infer and propose the best official feed, API or open-data endpoint (prefer official APIs or RSS/Atom when they exist and work). Use connectionMethod scrape for stable HTML newsrooms with no reliable feed — e.g. WCO newsroom https://www.wcoomd.org/en/media/newsroom.aspx. For enterprise sources, propose the likely connector pattern and clearly label organisation-specific assumptions."),
     contextBlock({ recommendation, objectiveId, objectiveName }),
     extra,
     revisionBlock(revisions),

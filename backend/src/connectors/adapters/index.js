@@ -1,11 +1,14 @@
 import { rssAdapter } from "./rss.adapter.js";
 import { restAdapter } from "./rest.adapter.js";
+import { scrapeAdapter } from "./scrape.adapter.js";
 
 const adapters = {
   rss: rssAdapter,
   atom: rssAdapter,
   rest: restAdapter,
-  restapi: restAdapter
+  restapi: restAdapter,
+  scrape: scrapeAdapter,
+  web: scrapeAdapter
 };
 
 /**
@@ -22,7 +25,7 @@ export function resolveAdapterType(connectionMethod = "") {
   if (["file", "csv", "excel", "upload"].includes(method)) return "file";
   if (["database", "db", "sql"].includes(method)) return "database";
   if (["email", "mail"].includes(method)) return "email";
-  if (["scrape", "web"].includes(method)) return "scrape";
+  if (["scrape", "web", "html"].includes(method)) return "scrape";
 
   return method || "unknown";
 }
@@ -32,7 +35,7 @@ export function getAdapter(adapterType) {
   const adapter = adapters[type];
   if (!adapter) {
     const err = new Error(
-      `No executable adapter registered for type "${adapterType}". Demo currently supports RSS/Atom and REST JSON.`
+      `No executable adapter registered for type "${adapterType}". Demo currently supports RSS/Atom, REST JSON, and HTML scrape.`
     );
     err.code = "ADAPTER_NOT_IMPLEMENTED";
     throw err;

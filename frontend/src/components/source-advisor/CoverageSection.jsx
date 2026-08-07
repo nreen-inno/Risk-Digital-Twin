@@ -9,7 +9,10 @@ export default function CoverageSection({ summary, needs, counts }) {
     <section className="adv-section">
       <div className="section-head">
         <h2>Coverage assessment</h2>
-        <span>How well current sources cover this objective’s information needs</span>
+        <span>
+          How well <b>current on-platform sources</b> cover this objective’s information needs
+          (from your database — not a mock catalogue)
+        </span>
       </div>
 
       {summary && <p className="adv-summary">{summary}</p>}

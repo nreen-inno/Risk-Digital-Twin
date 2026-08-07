@@ -447,7 +447,11 @@ export function normalizeInformationSource(s, i = 0) {
     connectorStatus,
     connectorStatusLabel: connectorStatusLabel(connectorStatus),
     availability: typeof availabilityRaw === "string" ? availabilityRaw : humanizeId(availabilityRaw),
-    informationNeed: pick(s, ["informationNeed", "informationNeedLabel", "need"], ""),
+    informationNeed: pick(
+      s,
+      ["informationNeed", "monitoringFocus", "informationNeedLabel", "need"],
+      ""
+    ),
     businessAccessStatus: businessAccessStatusOf(s),
     lifecycle,
     lifecycleLabel:
@@ -613,18 +617,24 @@ export function normalizeObjectiveDetail(raw) {
 
 // ---- AI Source Advisor normalization ----
 
-function extractNeeds(coverage) {
+function extractNeeds(coverage, sourceIndex = {}) {
   if (!coverage) return [];
   const arr = Array.isArray(coverage)
     ? coverage
     : coverage.informationNeeds || coverage.needs || coverage.items || coverage.assessment || [];
   return (Array.isArray(arr) ? arr : []).map((n, i) => {
-    if (typeof n === "string") return { id: `need-${i}`, name: n, status: "unknown", detail: "", coverage: null };
+    if (typeof n === "string") return { id: `need-${i}`, name: n, status: "unknown", detail: "", coverage: null, sourceNames: [] };
+    const existingIds = Array.isArray(n.existingSourceIds) ? n.existingSourceIds : [];
+    const sourceNames = existingIds
+      .map((id) => sourceIndex[id] || id)
+      .filter(Boolean);
     return {
       id: String(pick(n, ["id", "key"], `need-${i}`)),
       name: pick(n, ["name", "need", "informationNeed", "label", "title"], `Information need ${i + 1}`),
       status: normalizeStatus(pick(n, ["status", "coverage", "level", "state"], "unknown")),
       detail: pick(n, ["detail", "note", "reason", "description", "explanation"], ""),
+      existingSourceIds: existingIds,
+      sourceNames,
       coverage:
         typeof n.coveragePercent === "number"
           ? n.coveragePercent
@@ -648,6 +658,11 @@ function normalizeRecommendation(r, i) {
     sourceName: pick(r, ["sourceName", "name", "source", "title"], "Suggested source"),
     provider: pick(r, ["provider", "vendor", "publisher"], ""),
     informationNeed: pick(r, ["informationNeed", "information_need", "need"], ""),
+    alreadyOnPlatform: Boolean(r.alreadyOnPlatform),
+    existingSourceId: r.existingSourceId ? String(r.existingSourceId) : null,
+    existingLifecycle: pick(r, ["existingLifecycle"], null),
+    existingSourceName: pick(r, ["existingSourceName"], ""),
+    existingConnectorStatus: pick(r, ["existingConnectorStatus"], ""),
     sourceRole: pick(r, ["sourceRole", "role"], ""),
     shortReason: pick(r, ["shortReason", "reason", "rationale", "summary"], ""),
     businessValue: pick(r, ["businessValue", "value", "impact"], ""),
@@ -686,10 +701,18 @@ function buildRecommendationPayload(rec) {
 }
 
 export function normalizeAdvisor(raw) {
-  const base = { summary: "", needs: [], coverageCounts: { strong: 0, partial: 0, missing: 0, unknown: 0 }, recommendations: [], assumptions: [] };
+  const base = { summary: "", needs: [], coverageCounts: { strong: 0, partial: 0, missing: 0, unknown: 0 }, recommendations: [], assumptions: [], existingSourceCount: 0 };
   if (!raw || typeof raw !== "object") return base;
 
-  const needs = extractNeeds(pick(raw, ["coverageAssessment", "coverage"], []));
+  const existing = Array.isArray(raw.existingInformationSources)
+    ? raw.existingInformationSources
+    : [];
+  const sourceIndex = {};
+  existing.forEach((s) => {
+    if (s?.id) sourceIndex[s.id] = s.name || s.provider || s.id;
+  });
+
+  const needs = extractNeeds(pick(raw, ["coverageAssessment", "coverage"], []), sourceIndex);
   const coverageCounts = { strong: 0, partial: 0, missing: 0, unknown: 0 };
   needs.forEach((n) => {
     coverageCounts[n.status] = (coverageCounts[n.status] || 0) + 1;
@@ -707,6 +730,11 @@ export function normalizeAdvisor(raw) {
     coverageCounts,
     recommendations,
     assumptions,
+    existingSourceCount:
+      typeof raw.existingSourceCount === "number"
+        ? raw.existingSourceCount
+        : existing.length,
+    groundedInDatabase: Boolean(raw.groundedInDatabase),
   };
 }
 
@@ -880,3 +908,4 @@ function deriveIconKey(name, explicit) {
   if (hint.includes("commod") || hint.includes("energy") || hint.includes("price") || hint.includes("market")) return "commodity";
   return "generic";
 }
+

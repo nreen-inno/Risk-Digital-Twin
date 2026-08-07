@@ -21,6 +21,10 @@ function Tags({ items }) {
   );
 }
 
+function isHttpUrl(value) {
+  return /^https?:\/\//i.test(String(value || "").trim());
+}
+
 function Grid({ rows }) {
   const filled = rows.filter(([, v]) => v);
   if (!filled.length) return null;
@@ -29,7 +33,19 @@ function Grid({ rows }) {
       {filled.map(([label, value]) => (
         <div className="op-row" key={label}>
           <span>{label}</span>
-          <strong>{value}</strong>
+          {isHttpUrl(value) ? (
+            <a
+              className="op-row__url"
+              href={String(value).trim()}
+              target="_blank"
+              rel="noreferrer"
+              title={String(value).trim()}
+            >
+              {String(value).trim()}
+            </a>
+          ) : (
+            <strong>{value}</strong>
+          )}
         </div>
       ))}
     </div>
@@ -56,7 +72,7 @@ export default function OnboardingResult({ advice, variant, recommendation, acce
           "Resolving official provider, documentation and endpoints",
           "Choosing the connection method and sensible defaults",
           "Proposing monitoring scope, languages and risk mappings",
-          "Separating test tasks from decisions you need to approve",
+          "Live-probing RSS/API candidates before you accept",
         ]}
       />
     );
@@ -138,6 +154,15 @@ export default function OnboardingResult({ advice, variant, recommendation, acce
           ["Poll interval", tc.pollInterval],
           ["Response format", tc.responseFormat],
         ]} />
+        {d.endpointProbe && (
+          <p className={`op-probe ${d.endpointProbe.ok ? "op-probe--ok" : "op-probe--fail"}`}>
+            {d.endpointProbe.ok
+              ? `Live probe passed before Accept — verified ${d.endpointProbe.endpoint}.`
+              : d.endpointProbe.registrationRequired
+                ? `Live probe hit a registration wall (${d.endpointProbe.message || "signup required"}). Prefer an official public feed for the demo, or register outside chat and paste only the feed URL — never a password.`
+                : `Live probe did not find a working feed yet (${d.endpointProbe.message || "verification failed"}). Accept will retry discovery; refine the endpoint or documentation URL if needed.`}
+          </p>
+        )}
       </section>
 
       <section className="op-section">

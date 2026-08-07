@@ -92,12 +92,24 @@ export default function RiskObjectiveTile({ objective, onOpenCases, onManageSour
           <span className={`risk-lvl risk-lvl--${level}`}>
             {(objective.levelLabel || level).toUpperCase()}
           </span>
-          <div className="risk-gauge__cap">Composite risk · 6-month trend</div>
-          <div
-            className={`risk-trend-delta ${delta > 0 ? "is-up" : delta < 0 ? "is-down" : ""}`}
-          >
-            {delta > 0 ? `▲ +${delta} pts` : delta < 0 ? `▼ ${delta} pts` : "— flat"}
+          <div className="risk-gauge__cap">
+            {objective.scoreBump > 0
+              ? `Live evidence +${objective.scoreBump} · was ${objective.baselineScore ?? "—"}`
+              : "Composite risk · 6-month trend"}
           </div>
+          {objective.liveBackedFactors > 0 ? (
+            <div className="risk-trend-delta is-up">
+              {objective.liveBackedFactors} live-backed factor
+              {objective.liveBackedFactors === 1 ? "" : "s"}
+              {objective.liveSignals ? ` · ${objective.liveSignals} signals` : ""}
+            </div>
+          ) : (
+            <div
+              className={`risk-trend-delta ${delta > 0 ? "is-up" : delta < 0 ? "is-down" : ""}`}
+            >
+              {delta > 0 ? `▲ +${delta} pts` : delta < 0 ? `▼ ${delta} pts` : "— flat"}
+            </div>
+          )}
         </div>
         <Sparkline points={objective.trend} color={color} />
       </div>

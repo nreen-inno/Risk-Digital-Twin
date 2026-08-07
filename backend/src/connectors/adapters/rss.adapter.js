@@ -70,6 +70,38 @@ export function normalizeFeedEndpoint(endpoint, { preferEnglish = false } = {}) 
     }
   }
 
+  // IMO: invented Media Centre /RSS paths and home pages → official RSS directory.
+  // Concrete *rss*.aspx / .xml feeds are left alone for live verification.
+  if (/imo\.org/i.test(value)) {
+    const bare = value.split("?")[0].toLowerCase();
+    const looksLikeConcreteFeed =
+      /\.(xml|rss|atom)$/i.test(bare) ||
+      /pressbriefingsrss|meetingsrss|audiopodcast/i.test(bare);
+    if (!looksLikeConcreteFeed) {
+      value = "https://www.imo.org/en/about/pages/rss.aspx";
+    }
+  }
+
+  // EIN News / third-party WTO aggregators → official public WTO news RSS (no signup).
+  if (/einnews\.com|einpresswire\.com/i.test(value) && /wto/i.test(value)) {
+    value = "https://www.wto.org/library/rss/latest_news_e.xml";
+  }
+
+  // WTO site: RSS gateway / news pages → concrete public feed.
+  if (/wto\.org/i.test(value)) {
+    const bare = value.split("?")[0].toLowerCase();
+    const looksLikeConcreteFeed = /\.(xml|rss|atom)$/i.test(bare);
+    if (!looksLikeConcreteFeed) {
+      value = "https://www.wto.org/library/rss/latest_news_e.xml";
+    } else {
+      // Prefer https for the known public news feed.
+      value = value.replace(
+        /^http:\/\/www\.wto\.org\/library\/rss\/latest_news_e\.xml$/i,
+        "https://www.wto.org/library/rss/latest_news_e.xml"
+      );
+    }
+  }
+
   try {
     const url = new URL(value);
     const host = url.hostname.toLowerCase();
@@ -126,11 +158,38 @@ export function fallbackFeedEndpoints(source = {}, { preferEnglish = false } = {
     );
   }
 
+  if (/\bimo\b|international maritime|imo\.org/.test(blob)) {
+    // Official feed index (links to press / meetings / podcast feeds).
+    list.push("https://www.imo.org/en/about/pages/rss.aspx");
+  }
+
+  if (/\bwto\b|world trade organization|einnews/.test(blob)) {
+    list.push(
+      "https://www.wto.org/library/rss/latest_news_e.xml",
+      "https://www.wto.org/english/res_e/webcas_e/rss_e.htm"
+    );
+  }
+
   return [...new Set(list)];
 }
 
+/** True for HTML pages that list feed links rather than serving XML themselves. */
+export function looksLikeFeedDirectory(url) {
+  const value = String(url || "").trim();
+  if (!value) return false;
+  return (
+    /\.shtml|\.html|\.htm|aboutrss|rss\.aspx|\/pages\/rss|\/about\/pages\/rss|\/rss\/?$|rss_e\.htm|all_rss/i.test(
+      value
+    ) ||
+    /select .*feed|feed directory|rss feeds|rss news feeds/i.test(value) ||
+    /nhc\.noaa\.gov\/aboutrss/i.test(value) ||
+    (/imo\.org/i.test(value) && /rss/i.test(value) && !/\.(xml|rss|atom)$/i.test(value))
+  );
+}
+
 /**
- * If a candidate is an HTML "feed directory" page, extract linked .xml/.rss URLs.
+ * If a candidate is an HTML "feed directory" page, extract linked feed URLs
+ * (.xml/.rss/.atom and site-specific *rss*.aspx paths such as IMO).
  */
 export async function expandFeedDirectoryCandidates(url) {
   const value = String(url || "").trim();
@@ -141,7 +200,8 @@ export async function expandFeedDirectoryCandidates(url) {
       method: "GET",
       headers: {
         Accept: "text/html,application/xhtml+xml,*/*",
-        "User-Agent": "RiskDigitalTwinConnector/0.1"
+        "User-Agent":
+          "Mozilla/5.0 (compatible; RiskDigitalTwinConnector/0.1)"
       },
       signal: AbortSignal.timeout(15000)
     });
@@ -157,21 +217,41 @@ export async function expandFeedDirectoryCandidates(url) {
     }
 
     const found = new Set();
-    const hrefRegex =
+    const absoluteExtRegex =
       /https?:\/\/[^"'>\s]+\.(?:xml|rss|atom)(?:\?[^"'>\s]*)?/gi;
-    const relativeRegex = /href=["']([^"']+\.(?:xml|rss|atom)(?:\?[^"']*)?)["']/gi;
+    const relativePatterns = [
+      /href=["']([^"']+\.(?:xml|rss|atom)(?:\?[^"']*)?)["']/gi,
+      // IMO and similar: /en/pages/pressbriefingsrss.aspx
+      /href=["']([^"']*rss[^"']*\.aspx(?:\?[^"']*)?)["']/gi,
+      /href=["']([^"']*atom[^"']*\.aspx(?:\?[^"']*)?)["']/gi
+    ];
+    const typeLinkRegex =
+      /<link[^>]+type=["']application\/(?:rss|atom)\+xml["'][^>]*>/gi;
 
-    for (const match of text.match(hrefRegex) || []) {
+    for (const match of text.match(absoluteExtRegex) || []) {
       found.add(match.replace(/[.,;]+$/g, ""));
     }
 
-    let rel;
     const base = new URL(value);
-    while ((rel = relativeRegex.exec(text))) {
+    for (const relativeRegex of relativePatterns) {
+      let rel;
+      while ((rel = relativeRegex.exec(text))) {
+        try {
+          found.add(new URL(rel[1], base).toString());
+        } catch {
+          // ignore bad relative URLs
+        }
+      }
+    }
+
+    let linkTag;
+    while ((linkTag = typeLinkRegex.exec(text))) {
+      const href = linkTag[0].match(/href=["']([^"']+)["']/i);
+      if (!href?.[1]) continue;
       try {
-        found.add(new URL(rel[1], base).toString());
+        found.add(new URL(href[1], base).toString());
       } catch {
-        // ignore bad relative URLs
+        // ignore
       }
     }
 
@@ -388,11 +468,18 @@ export const rssAdapter = {
     });
 
     if (!response.ok) {
+      const registrationHint =
+        response.status === 401 ||
+        response.status === 403 ||
+        /einnews\.com|einpresswire\.com/i.test(resolved.endpoint);
       return {
         ok: false,
-        message: `HTTP ${response.status} from feed endpoint`,
+        message: registrationHint
+          ? `HTTP ${response.status} — feed likely requires registration or blocks anonymous access. Prefer an official public feed when available.`
+          : `HTTP ${response.status} from feed endpoint`,
         statusCode: response.status,
-        endpoint: resolved.endpoint
+        endpoint: resolved.endpoint,
+        reason: registrationHint ? "registration_required" : "http_error"
       };
     }
 
@@ -406,12 +493,19 @@ export const rssAdapter = {
       /^\s*<!doctype html/i.test(text) ||
       /^\s*<html[\s>]/i.test(text)
     ) {
+      const lower = text.toLowerCase();
+      const registrationWall =
+        /signup|sign up|create .*account|register|log[\s-]?in|password|verify you are human|cloudflare/i.test(
+          lower
+        ) || /einnews\.com|einpresswire\.com/i.test(resolved.endpoint);
       return {
         ok: false,
-        message:
-          "Endpoint returned HTML, not an RSS/Atom feed. Use a real feed URL (for FMI e.g. alerts or press-release RSS).",
+        message: registrationWall
+          ? "Endpoint returned a registration/login page, not a public RSS/Atom feed. Free signup is required for this aggregator, or prefer an official public feed (e.g. WTO: https://www.wto.org/library/rss/latest_news_e.xml)."
+          : "Endpoint returned HTML, not an RSS/Atom feed. Use a real feed URL (for FMI e.g. alerts or press-release RSS).",
         statusCode: response.status,
-        endpoint: resolved.endpoint
+        endpoint: resolved.endpoint,
+        reason: registrationWall ? "registration_required" : "html_not_feed"
       };
     }
 

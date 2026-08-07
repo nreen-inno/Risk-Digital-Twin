@@ -20,6 +20,11 @@ export default function CoverageCard({ need }) {
         </div>
       )}
       {need.detail && <p className="cov-card__detail">{need.detail}</p>}
+      {need.sourceNames?.length > 0 && (
+        <p className="cov-card__sources">
+          On platform: {need.sourceNames.join(", ")}
+        </p>
+      )}
     </div>
   );
 }

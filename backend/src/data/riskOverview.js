@@ -43,8 +43,8 @@ const postureByObjectiveId = {
     score: 42,
     trend: [48, 46, 45, 43, 41, 40, 42],
     topDrivers: ["Severe weather", "Sea state", "Transport disruption"],
-    caseId: null,
-    hasCase: false
+    caseId: "yard-weather-disruption",
+    hasCase: true
   },
   "commodity-energy-prices": {
     score: 55,
@@ -196,6 +196,13 @@ const identifiedRisks = [
     objectiveName: "Supplier Stability",
     score: 48,
     caseId: null
+  },
+  {
+    name: "Weather & outdoor work disruption",
+    objectiveId: "weather-natural-hazards",
+    objectiveName: "Weather & Natural Hazards",
+    score: 42,
+    caseId: "yard-weather-disruption"
   },
   {
     name: "Sea trial delay",

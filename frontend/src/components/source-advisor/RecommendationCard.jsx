@@ -3,9 +3,8 @@ import { priorityMeta, statusMeta } from "../../lib/advisor.js";
 import { CheckIcon, ArrowIcon } from "../../lib/icons.jsx";
 
 /**
- * One AI recommendation. Accepting it now persists an Information Source
- * (Sprint 3) and reveals an "Open source details" action. Duplicate acceptance
- * is treated as success by the parent. No technical integration details shown.
+ * One AI recommendation. Accept persists a new Information Source.
+ * If the source is already on-platform, show Continue onboarding / Open instead.
  */
 export default function RecommendationCard({
   rec,
@@ -26,13 +25,24 @@ export default function RecommendationCard({
   const isError = acceptStatus === "error";
   const rejected = decision === "rejected";
 
+  const alreadyOnPlatform = Boolean(rec.alreadyOnPlatform && rec.existingSourceId);
+  const existingId = alreadyOnPlatform ? rec.existingSourceId : accept?.sourceId;
+  const inUse = rec.existingLifecycle === "inUse";
+
   return (
-    <article className={`rec ${isAccepted ? "rec--accepted" : ""} ${rejected ? "rec--rejected" : ""}`}>
+    <article
+      className={`rec ${isAccepted || alreadyOnPlatform ? "rec--accepted" : ""} ${rejected ? "rec--rejected" : ""}`}
+    >
       <div className="rec__top">
         <span className="rec__prio" style={{ color: pm.color, background: pm.bg, borderColor: pm.bd }}>
           {pm.label}
         </span>
         <span className="rec__type">{rec.recommendationType}</span>
+        {alreadyOnPlatform && (
+          <span className="rec__onplat">
+            {inUse ? "Already In use" : "Already on platform"}
+          </span>
+        )}
         {rec.confidence != null && (
           <span className="rec__conf" title="AI confidence">
             <span className="rec__conf-bar"><i style={{ width: `${Math.round(rec.confidence * 100)}%` }} /></span>
@@ -52,6 +62,14 @@ export default function RecommendationCard({
         </span>
 
         {rec.shortReason && <p className="rec__reason">{rec.shortReason}</p>}
+
+        {alreadyOnPlatform && (
+          <p className="rec__already">
+            {inUse
+              ? "This source is already In use for this objective — no need to accept again."
+              : "This source is already in Source onboarding — continue where you left off."}
+          </p>
+        )}
 
         {rec.businessValue && (
           <div className="rec__value">
@@ -91,8 +109,7 @@ export default function RecommendationCard({
           </button>
         )}
 
-        {/* Accepted confirmation */}
-        {isAccepted && (
+        {isAccepted && !alreadyOnPlatform && (
           <div className="rec__saved fade">
             <CheckIcon width={14} height={14} />
             {accept.duplicate
@@ -106,22 +123,29 @@ export default function RecommendationCard({
       </div>
 
       <div className="rec__actions">
-        {isAccepted ? (
+        {alreadyOnPlatform || isAccepted ? (
           <>
-            <button className="btn btn--accepted" disabled>
-              <CheckIcon width={14} height={14} /> Accepted
-            </button>
-            <button
-              className="btn btn--primary rec__details"
-              onClick={() => onOpenDetails(accept.sourceId)}
-            >
-              Open source details <ArrowIcon width={14} height={14} />
-            </button>
+            {inUse ? (
+              <button
+                className="btn btn--primary rec__details"
+                onClick={() => onOpenDetails(existingId)}
+              >
+                Open source <ArrowIcon width={14} height={14} />
+              </button>
+            ) : (
+              <button
+                className="btn btn--primary rec__details"
+                onClick={() => onOpenDetails(existingId)}
+              >
+                Continue onboarding <ArrowIcon width={14} height={14} />
+              </button>
+            )}
+            {/* No Accept / Reject — already on platform */}
           </>
         ) : (
           <>
             <button
-              className={`btn ${isError ? "btn--accept" : "btn--accept"}`}
+              className="btn btn--accept"
               onClick={onAccept}
               disabled={isAccepting}
             >

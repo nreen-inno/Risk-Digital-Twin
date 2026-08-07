@@ -9,6 +9,7 @@ import {
     PLATFORM_DEFAULTS
 } from "../ai/services/aiConnectorAdvisor.service.js";
 import { findMonitoringCapabilityById } from "../data/monitoringCapabilities.js";
+import { enrichAdviceWithRssProbe, enrichAdviceWithScrapeProbe } from "../connectors/connectorLifecycle.service.js";
 
 function cleanCosmosFields(item) {
     if (!item) {
@@ -372,11 +373,13 @@ export async function createInformationSourceFromRecommendation(
         SELECT *
         FROM c
         WHERE c.objectType = @objectType
-          AND c.sourceRecommendationId =
-              @sourceRecommendationId
           AND ARRAY_CONTAINS(
             c.monitoringObjectiveIds,
             @monitoringObjectiveId
+          )
+          AND (
+            c.sourceRecommendationId = @sourceRecommendationId
+            OR LOWER(c.name) = @nameLower
           )
       `,
             parameters: [
@@ -391,6 +394,10 @@ export async function createInformationSourceFromRecommendation(
                 {
                     name: "@monitoringObjectiveId",
                     value: monitoringObjectiveId
+                },
+                {
+                    name: "@nameLower",
+                    value: String(name || "").toLowerCase()
                 }
             ]
         };
@@ -858,6 +865,22 @@ export async function getInformationSourceConnectorAdvice(
                 );
 
             generatedBy = "ruleBasedFallback";
+        }
+
+        try {
+            connectorAdvice = await enrichAdviceWithRssProbe(
+                source,
+                connectorAdvice
+            );
+            connectorAdvice = await enrichAdviceWithScrapeProbe(
+                source,
+                connectorAdvice
+            );
+        } catch (probeError) {
+            console.warn(
+                "Endpoint probe during proposal failed:",
+                probeError.message
+            );
         }
 
         res.status(200).json({
