@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getRiskCaseById } from "../services/api.js";
+import { getRiskCaseById, reviewRiskCaseById } from "../services/api.js";
 import TopBar from "../components/layout/TopBar.jsx";
 import Footer from "../components/layout/Footer.jsx";
 import LoadingState from "../components/shared/LoadingState.jsx";
 import ErrorState from "../components/shared/ErrorState.jsx";
 import RiskCaseNetwork from "../components/risk/RiskCaseNetwork.jsx";
 import EnterpriseImpactGrid from "../components/risk/EnterpriseImpactGrid.jsx";
+import RiskCaseScoreTrend from "../components/risk/RiskCaseScoreTrend.jsx";
 import "../styles/risk-room.css";
 
 const SEV = { crit: "crit", high: "high", elev: "elev", ok: "ok" };
@@ -18,6 +19,7 @@ export default function RiskCasePage() {
   const [riskCase, setRiskCase] = useState(null);
   const [error, setError] = useState(null);
   const [openFactor, setOpenFactor] = useState(0);
+  const [dismissing, setDismissing] = useState(false);
 
   useEffect(() => {
     const ac = new AbortController();
@@ -50,6 +52,23 @@ export default function RiskCasePage() {
       });
   };
 
+  const onDismiss = async () => {
+    if (dismissing || !riskCase?.id) return;
+    setDismissing(true);
+    try {
+      await reviewRiskCaseById(riskCase.id, "delete");
+      navigate(
+        `/monitoring-objectives/${encodeURIComponent(
+          riskCase.monitoringObjectiveId
+        )}/cases`
+      );
+    } catch (err) {
+      setError(err);
+      setStatus("error");
+      setDismissing(false);
+    }
+  };
+
   return (
     <div className="app">
       <TopBar active="overview" />
@@ -65,51 +84,64 @@ export default function RiskCasePage() {
         {status === "ready" && riskCase && (
           <>
             <header className="risk-case__head">
-              <div>
-                <span className="cat">{riskCase.categoryLabel}</span>
-                <h1>{riskCase.title}</h1>
-                <p className="risk-case__def">
-                  Risk definition · <b>{riskCase.riskDefinition}</b>
-                  {" · "}
-                  monitored via{" "}
-                  <button
-                    type="button"
-                    className="linkish"
-                    onClick={() =>
-                      navigate(
-                        `/monitoring-objectives/${encodeURIComponent(
-                          riskCase.monitoringObjectiveId
-                        )}`
-                      )
-                    }
-                  >
-                    open sources
-                  </button>
-                </p>
-                <span className={`risk-lvl risk-lvl--${riskCase.level}`}>
-                  {riskCase.scoreBump > 0 && riskCase.baselineScore != null ? (
-                    <>
-                      Score {riskCase.baselineScore}→{riskCase.score} ·{" "}
-                      {String(riskCase.level).toUpperCase()} · +{riskCase.scoreBump} live
-                    </>
-                  ) : (
-                    <>
-                      Score {riskCase.score} · {String(riskCase.level).toUpperCase()}
-                    </>
-                  )}
-                </span>
-                {riskCase.provenance?.liveBackedFactors > 0 ? (
-                  <span className="risk-home__badge risk-home__badge--live" style={{ marginLeft: 8 }}>
-                    {riskCase.provenance.liveBackedFactors} live-backed · conf{" "}
-                    {riskCase.provenance.confidenceBaseline != null
-                      ? `${riskCase.provenance.confidenceBaseline}→${riskCase.provenance.confidence}%`
-                      : `${riskCase.provenance.confidence}%`}
+              <div className="risk-case__head-grid">
+                <div className="risk-case__head-main">
+                  <span className="cat">{riskCase.categoryLabel}</span>
+                  <h1>{riskCase.title}</h1>
+                  <p className="risk-case__def">
+                    Risk definition · <b>{riskCase.riskDefinition}</b>
+                    {" · "}
+                    monitored via{" "}
+                    <button
+                      type="button"
+                      className="linkish"
+                      onClick={() =>
+                        navigate(
+                          `/monitoring-objectives/${encodeURIComponent(
+                            riskCase.monitoringObjectiveId
+                          )}`
+                        )
+                      }
+                    >
+                      open sources
+                    </button>
+                  </p>
+                  <span className={`risk-lvl risk-lvl--${riskCase.level}`}>
+                    {riskCase.scoreBump > 0 && riskCase.baselineScore != null ? (
+                      <>
+                        Score {riskCase.baselineScore}→{riskCase.score} ·{" "}
+                        {String(riskCase.level).toUpperCase()} · +{riskCase.scoreBump} live
+                      </>
+                    ) : (
+                      <>
+                        Score {riskCase.score} · {String(riskCase.level).toUpperCase()}
+                      </>
+                    )}
                   </span>
-                ) : riskCase.provenance?.illustrative ? (
-                  <span className="risk-home__badge" style={{ marginLeft: 8 }}>
-                    Illustrative baseline — add sources to raise confidence
-                  </span>
-                ) : null}
+                  {riskCase.provenance?.liveBackedFactors > 0 ? (
+                    <span className="risk-home__badge risk-home__badge--live" style={{ marginLeft: 8 }}>
+                      {riskCase.provenance.liveBackedFactors} live-backed · conf{" "}
+                      {riskCase.provenance.confidenceBaseline != null
+                        ? `${riskCase.provenance.confidenceBaseline}→${riskCase.provenance.confidence}%`
+                        : `${riskCase.provenance.confidence}%`}
+                    </span>
+                  ) : riskCase.provenance?.illustrative ? (
+                    <span className="risk-home__badge" style={{ marginLeft: 8 }}>
+                      Illustrative baseline — add sources to raise confidence
+                    </span>
+                  ) : null}
+                </div>
+                <RiskCaseScoreTrend riskCase={riskCase} />
+              </div>
+              <div className="risk-case__head-actions">
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  disabled={dismissing}
+                  onClick={onDismiss}
+                >
+                  {dismissing ? "Removing…" : "Remove case (demo)"}
+                </button>
               </div>
             </header>
 

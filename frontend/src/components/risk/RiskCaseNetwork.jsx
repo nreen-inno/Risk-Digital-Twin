@@ -73,7 +73,7 @@ export default function RiskCaseNetwork({ network }) {
             fontSize="10"
             fontWeight="800"
             letterSpacing="0.07em"
-            fill="#2f6bff"
+            fill="#0f9ed5"
           >
             {l.toUpperCase()}
           </text>
@@ -103,8 +103,8 @@ export default function RiskCaseNetwork({ network }) {
             const p = pos[n.id];
             if (!p) return null;
             const cur = Boolean(n.current);
-            const fill = cur ? "#14335f" : "#fff";
-            const stroke = cur ? "#14335f" : "#e4e9f2";
+            const fill = cur ? "#0e2841" : "#fff";
+            const stroke = cur ? "#0e2841" : "#d9e4ea";
             const txt = cur ? "#ffffff" : "#1f2a3a";
             const dot = COL[n.level] || COL.src;
             return (

@@ -74,6 +74,21 @@ export const REST_PROFILES = {
     pollInterval: "PT1H",
     accessNote:
       "Open access JSON API — no API key required for non-commercial use (CC BY 4.0). Sample stores current + hourly + daily forecast rows."
+  },
+  "brent-crude-spot": {
+    id: "brent-crude-spot",
+    label: "Brent crude spot (ICE)",
+    provider: "Market data · Brent",
+    documentationUrl: "https://www.ice.com/products/219/Brent-Crude-Futures",
+    endpoint: "https://demo.rdt.local/brent-spot",
+    method: "GET",
+    authenticationType: "none",
+    mapStrategy: "brent-crude-spot",
+    responseFormat: "application/json",
+    pollInterval: "PT12H",
+    budgetedBrentUsd: 78,
+    accessNote:
+      "Demo Brent snapshot (~$89/bbl) — connectivity uses a built-in fixture (no live market API). Set budgetedBrentUsd in connector config (Meyer planning default $78/bbl)."
   }
 };
 
@@ -119,6 +134,63 @@ const EU_FSF_DEMO_FIXTURE = [
   }
 ];
 
+/** Brent crude demo snapshot — Aug 2026 market context (~$89/bbl). */
+const BRENT_DEMO_FIXTURE = {
+  symbol: "BRENT",
+  priceUsd: 89.12,
+  currency: "USD",
+  unit: "bbl",
+  change1mPct: 7.1,
+  asOf: "2026-08-12",
+  trend6wUsd: [72, 75, 78, 81, 85, 89.12]
+};
+
+function mapBrentSpot(payload = {}, config = {}) {
+  const budget = Number(config.budgetedBrentUsd) || 78;
+  const spot = Number(payload.priceUsd ?? BRENT_DEMO_FIXTURE.priceUsd);
+  const change = Number(payload.change1mPct ?? BRENT_DEMO_FIXTURE.change1mPct);
+  const variance = ((spot - budget) / budget) * 100;
+  const title = `Brent crude USD ${spot.toFixed(2)}/bbl (+${change}% vs 4 weeks)`;
+  const summary = `ICE Brent spot ${spot.toFixed(2)} USD/bbl. Meyer planning budget ${budget} USD/bbl (${variance >= 0 ? "+" : ""}${variance.toFixed(1)}% vs budget). Middle East shipping tension supporting elevated energy costs.`;
+  return {
+    externalId: `brent-${payload.asOf || "demo"}`,
+    title,
+    summary,
+    canonicalUrl: "https://www.ice.com/products/219/Brent-Crude-Futures",
+    publishedAt: new Date().toISOString(),
+    language: "en",
+    payload: {
+      kind: "brent-crude-spot",
+      priceUsd: spot,
+      budgetUsd: budget,
+      variancePct: Math.round(variance * 10) / 10,
+      change1mPct: change,
+      trend6wUsd: payload.trend6wUsd || BRENT_DEMO_FIXTURE.trend6wUsd,
+      symbol: "BRENT"
+    }
+  };
+}
+
+function brentFixtureResult(config, { limit = 5 } = {}) {
+  const budget =
+    Number(config.budgetedBrentUsd) ||
+    Number(config.query?.budgetedBrentUsd) ||
+    78;
+  const item = mapBrentSpot({ ...BRENT_DEMO_FIXTURE, budgetUsd: budget }, {
+    ...config,
+    budgetedBrentUsd: budget
+  });
+  return {
+    ok: true,
+    mode: "fixture",
+    endpoint: config.endpoint || REST_PROFILES["brent-crude-spot"].endpoint,
+    message: `Brent demo snapshot $${item.payload.priceUsd}/bbl vs budget $${budget}/bbl.`,
+    sampleTitles: [item.title],
+    items: [item],
+    fetchedAt: new Date().toISOString()
+  };
+}
+
 function getByPath(obj, path) {
   if (!path) return obj;
   return String(path)
@@ -152,6 +224,14 @@ export function detectRestProfile(source = {}, endpoint = "") {
     /api\.open-meteo\.com/i.test(blob)
   ) {
     return REST_PROFILES["open-meteo-forecast"];
+  }
+
+  if (
+    /brent|crude oil|crude spot|oil price|oilprice|ice brent|brent crude/i.test(
+      blob
+    )
+  ) {
+    return REST_PROFILES["brent-crude-spot"];
   }
 
   if (
@@ -593,6 +673,10 @@ function extractItems(payload, config = {}) {
     return mapOpenMeteoForecast(payload, config);
   }
 
+  if (strategy === "brent-crude-spot" || config.profileId === "brent-crude-spot") {
+    return [mapBrentSpot(isPlainObject(payload) ? payload : BRENT_DEMO_FIXTURE, config)];
+  }
+
   const rawItems = locateRawItems(payload, config);
   return rawItems.map((item, index) => mapGenericItem(item, index, payload));
 }
@@ -643,6 +727,19 @@ export const restAdapter = {
         ok: false,
         message:
           "REST connector has no endpoint configured. Include a concrete HTTPS API URL in the proposal, or use a known profile (Open-Meteo, OpenSanctions EU FSF)."
+      };
+    }
+
+    // Demo-only Brent profile — never hit the placeholder URL.
+    if (resolved.profileId === "brent-crude-spot") {
+      const fix = brentFixtureResult(resolved, { limit: 5 });
+      return {
+        ok: true,
+        endpoint: fix.endpoint,
+        message: fix.message,
+        mode: "fixture",
+        sampleTitles: fix.sampleTitles,
+        accessNote: REST_PROFILES["brent-crude-spot"].accessNote
       };
     }
 
@@ -757,6 +854,17 @@ export const restAdapter = {
       };
     }
 
+    if (resolved.profileId === "brent-crude-spot") {
+      const fix = brentFixtureResult(resolved, { limit });
+      return {
+        fetchedAt: fix.fetchedAt,
+        rawContentType: "application/json",
+        endpoint: fix.endpoint,
+        mode: "fixture",
+        items: fix.items
+      };
+    }
+
     const url = buildUrl(resolved.endpoint, query);
     try {
       const { response, json } = await httpGetJson(url, buildHeaders(resolved));
@@ -767,6 +875,16 @@ export const restAdapter = {
             fetchedAt: fix.fetchedAt,
             rawContentType: "application/json",
             endpoint: url,
+            mode: "fixture",
+            items: fix.items
+          };
+        }
+        if (resolved.profileId === "brent-crude-spot") {
+          const fix = brentFixtureResult(resolved, { limit });
+          return {
+            fetchedAt: fix.fetchedAt,
+            rawContentType: "application/json",
+            endpoint: fix.endpoint,
             mode: "fixture",
             items: fix.items
           };
@@ -791,6 +909,16 @@ export const restAdapter = {
           fetchedAt: fix.fetchedAt,
           rawContentType: "application/json",
           endpoint: url,
+          mode: "fixture",
+          items: fix.items
+        };
+      }
+      if (resolved.profileId === "brent-crude-spot") {
+        const fix = brentFixtureResult(resolved, { limit });
+        return {
+          fetchedAt: fix.fetchedAt,
+          rawContentType: "application/json",
+          endpoint: fix.endpoint,
           mode: "fixture",
           items: fix.items
         };

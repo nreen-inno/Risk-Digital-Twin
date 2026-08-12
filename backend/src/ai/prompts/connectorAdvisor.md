@@ -97,6 +97,19 @@ Known executable adapters on this platform (prefer these over inventing custom o
      * NOAA NHC — https://www.nhc.noaa.gov/aboutrss.shtml → use gtwo.xml / basin feeds.
      * YLE — feeds.yle.fi catalog with publisherIds (YLE_NEWS / YLE_UUTISET).
      * FMI — alerts.fmi.fi CAP RSS or ilmatieteenlaitos press RSS.
+     * EU Commission Trade news (steel / safeguard / trade policy) —
+       endpoint https://ec.europa.eu/newsroom/trade/feed?item_type_id=1103&lang=en&orderby=item_date
+       documentation https://ec.europa.eu/newsroom/trade
+       Prefer for Commodity & Energy and Geopolitical objectives when monitoring
+       steel prices, import quotas, CBAM, tariffs and EU trade measures. High
+       authority — pair with market reporting for multi-source intelligence.
+     * Brent crude spot (oil / energy cost) —
+       connectionMethod "api", authenticationType "none",
+       profile id "brent-crude-spot" (demo fixture ~$89/bbl when no live key).
+       Set config.budgetedBrentUsd or monitoringConfiguration.businessThresholds
+       .budgetedBrentUsdPerBarrel to Meyer's planning assumption (illustrative
+       default $78/bbl). When spot exceeds budget by ≥5%, the platform proposes
+       the energy-oil-cost-escalation risk case with live evidence.
   4. Put endpoint reachability and parseability in automatedValidationPlan — the
      platform live-probes candidates (including scraping feed-directory pages) before
      the connector is built. Do not treat "probably has RSS" as unresolved.

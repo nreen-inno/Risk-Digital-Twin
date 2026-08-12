@@ -358,6 +358,519 @@ const riskCases = [
     }
   },
   {
+    id: "steel-supply-cost-pressure",
+    monitoringObjectiveId: "commodity-energy-prices",
+    categoryLabel: "Commodity · Materials",
+    riskDefinition: "Steel supply & cost pressure",
+    enterpriseCategory: "Supply Chain · Procurement",
+    level: "elev",
+    score: 58,
+    accent: "#156082",
+    trend: [48, 50, 52, 54, 55, 57, 58],
+    title: "European steel supply tightening & HRC/plate cost pressure",
+    summary:
+      "European hot-rolled coil and plate markets are edging higher as supply tightens. From July 2026 the EU steel safeguard caps duty-free imports at 18.3 million tonnes per year, with a 50% duty on out-of-quota volumes; CBAM adds a further carbon-cost layer on covered imports. Because plate and related steel grades are core shipbuilding inputs, tighter European availability and higher prices can raise hull and outfitting procurement cost, stretch supplier lead times, and put pressure on project margins across the newbuild portfolio. This case tracks that exposure — it does not assert that programmes are already impacted.",
+    /**
+     * No geo anchor — European steel / trade policy articles match on material terms.
+     * Source text rarely names the yard; reasoning is via shipbuilding input exposure.
+     */
+    relevanceKeywords: [
+      "steel",
+      "hrc",
+      "hot-rolled",
+      "hot rolled",
+      "coil",
+      "plate",
+      "shipbuilding",
+      "ship plate",
+      "hull",
+      "procurement",
+      "material",
+      "alloy",
+      "cbam",
+      "safeguard",
+      "quota",
+      "import",
+      "duty",
+      "tight",
+      "supply",
+      "availability",
+      "lead time",
+      "price",
+      "cost",
+      "meps",
+      "commodity",
+      "carbon border"
+    ],
+    relevanceCoreKeywords: [
+      "steel",
+      "hrc",
+      "coil",
+      "plate",
+      "cbam",
+      "safeguard",
+      "quota",
+      "hot-rolled",
+      "shipbuilding"
+    ],
+    relevanceAnchorKeywords: [],
+    factors: [
+      {
+        name: "European HRC / plate prices trending higher",
+        severity: "high",
+        observation:
+          "European hot-rolled coil benchmarks edging up as supply tightens — shipbuilding plate follows with a lag.",
+        sourceName: "Steel market news / MEPS",
+        tier: "external",
+        when: "awaiting live",
+        confidence: 52
+      },
+      {
+        name: "EU import quota & 50% out-of-quota duty (July 2026 regime)",
+        severity: "high",
+        observation:
+          "Duty-free steel imports capped at 18.3 Mt/year; volumes above quota face 50% duty — reshaping landed cost for non-EU plate.",
+        sourceName: "EU Commission Trade / policy",
+        tier: "external",
+        when: "awaiting live",
+        confidence: 55
+      },
+      {
+        name: "Tighter European availability & longer procurement lead times",
+        severity: "elev",
+        observation:
+          "Mill allocations and delivery windows lengthen when regional supply tightens — affects hull block and outfitting schedules.",
+        sourceName: "Supplier quotations / market reporting",
+        tier: "external",
+        when: "awaiting live",
+        confidence: 48
+      },
+      {
+        name: "CBAM carbon-cost layer on imports",
+        severity: "elev",
+        observation:
+          "Definitive CBAM regime adds embedded-carbon reporting and cost on covered imports — incremental landed-cost pressure.",
+        sourceName: "EU regulatory / trade policy",
+        tier: "external",
+        when: "awaiting live",
+        confidence: 50
+      }
+    ],
+    sources: [
+      {
+        name: "EU Commission Trade news & steel measures",
+        tier: "external",
+        evidence: "evidences: safeguard / quota regime",
+        observations: 3,
+        updated: "awaiting live"
+      },
+      {
+        name: "European steel-market reporting",
+        tier: "external",
+        evidence: "evidences: HRC / plate price movement",
+        observations: 2,
+        updated: "awaiting live"
+      },
+      {
+        name: "Internal procurement / BOM",
+        tier: "internal",
+        evidence: "evidences: plate spend exposure (illustrative)",
+        observations: 1,
+        updated: "illustrative"
+      }
+    ],
+    provenance: {
+      sources: 3,
+      observations: 6,
+      confidence: 54,
+      updated: "awaiting live",
+      illustrative: true
+    },
+    impacts: [
+      {
+        value: "+6–9%",
+        label: "Hull & outfitting material cost pressure (illustrative)",
+        explain: {
+          what: "Estimated rise in landed steel/plate cost for shipbuilding-grade inputs if European HRC/plate benchmarks hold at current elevated levels — weighted across hull blocks and outfitting categories.",
+          formula: "Σ ( category steel spend share × category price change )",
+          inputs: [
+            {
+              k: "Hull plate & blocks — 55% of steel spend × +7%",
+              v: "+3.9%",
+              source: "ERP + market indices"
+            },
+            {
+              k: "Outfitting / sections — 45% × +8%",
+              v: "+3.6%",
+              source: "ERP + supplier quotes"
+            }
+          ],
+          result: "Weighted ≈ +6–9% on affected steel categories",
+          assumptions: [
+            "European HRC/plate benchmarks — not identical to global HRC but directionally linked.",
+            "No mitigation (forward-buy, substitution) applied in this gross figure.",
+            "Illustrative until MEPS / ERP price feeds are connected."
+          ],
+          sources: [
+            "European steel-market reporting",
+            "EU Commission Trade",
+            "Internal procurement"
+          ],
+          confidence: 58,
+          updated: "illustrative"
+        }
+      },
+      {
+        value: "+2–4 wk",
+        label: "Procurement lead-time stretch (plate / sections)",
+        explain: {
+          what: "Additional weeks to secure shipbuilding-grade plate and sections when European mills tighten allocations — schedule risk before it hits the yard.",
+          formula: "baseline lead time + allocation delay (low … high)",
+          inputs: [
+            {
+              k: "Mill allocation delay",
+              v: "+1–2 wk",
+              source: "Supplier quotes"
+            },
+            {
+              k: "Import / quota processing",
+              v: "+1–2 wk",
+              source: "EU trade policy context"
+            }
+          ],
+          result: "Low +2 wk … High +4 wk vs baseline",
+          assumptions: [
+            "Applies to programmes drawing on European or quota-affected supply.",
+            "Does not yet model a specific hull — portfolio-level watch."
+          ],
+          sources: ["Supplier quotations", "EU Commission Trade"],
+          confidence: 52,
+          updated: "illustrative"
+        }
+      },
+      {
+        value: "€8–12M",
+        label: "Portfolio margin pressure if sustained (illustrative)",
+        explain: {
+          what: "Rough annualised euro pressure across active programmes if +6–9% material cost persists on steel-heavy work packages — before commercial recovery or spec change.",
+          formula: "affected steel spend × weighted cost increase",
+          inputs: [
+            {
+              k: "Annual steel-heavy procurement (illustrative)",
+              v: "€140M",
+              source: "ERP spend"
+            },
+            {
+              k: "Weighted cost increase",
+              v: "×7% mid-case",
+              source: "derived from +6–9% tile"
+            }
+          ],
+          result: "€140M × 7% ≈ €9.8M (range €8–12M)",
+          assumptions: [
+            "Does not assert Meyer is already paying these prices — exposure pathway only.",
+            "Gross figure before mitigations or customer indexation."
+          ],
+          sources: ["Internal ERP / Procurement", "Market reporting"],
+          confidence: 55,
+          updated: "illustrative"
+        }
+      },
+      {
+        value: "5 of 6",
+        label: "Programmes with steel-heavy BOM exposure",
+        explain: {
+          what: "How many active newbuild programmes carry material steel/plate intensity high enough to feel European price and availability moves.",
+          formula: "count( programmes where steel BOM share ≥ threshold )",
+          inputs: [
+            {
+              k: "Active programmes",
+              v: "6",
+              source: "Programme register"
+            },
+            {
+              k: "Steel-heavy (≥ threshold)",
+              v: "5",
+              source: "ERP / BOM"
+            }
+          ],
+          result: "5 of 6 programmes exposed to steel cost moves",
+          assumptions: [
+            "Threshold is illustrative until BOM analytics are live.",
+            "Shipbuilding input link — no need for source to name Meyer."
+          ],
+          sources: ["Programme register", "Internal ERP / BOM"],
+          confidence: 72,
+          updated: "illustrative"
+        }
+      }
+    ],
+    network: {
+      lanes: [
+        "Risk sources",
+        "Risk factors",
+        "Risk",
+        "Linked risks",
+        "Enterprise impact"
+      ],
+      nodes: [
+        { id: "src1", name: "EU Commission Trade", lane: 0, level: "src" },
+        { id: "src2", name: "Steel market news", lane: 0, level: "src" },
+        { id: "src3", name: "Procurement / BOM", lane: 0, level: "src" },
+        { id: "f1", name: "HRC / plate prices ↑", lane: 1, level: "high" },
+        { id: "f2", name: "Import quota & duty", lane: 1, level: "high" },
+        { id: "f3", name: "Availability / lead time", lane: 1, level: "elev" },
+        { id: "f4", name: "CBAM carbon cost", lane: 1, level: "elev" },
+        {
+          id: "r1",
+          name: "Steel supply & cost pressure",
+          lane: 2,
+          level: "elev",
+          current: true
+        },
+        { id: "l1", name: "Budget overrun", lane: 3, level: "elev" },
+        { id: "l2", name: "Late delivery", lane: 3, level: "elev" },
+        { id: "l3", name: "Material shortage", lane: 3, level: "elev" },
+        { id: "i1", name: "Procurement cost → margin", lane: 4, level: "elev" },
+        { id: "i2", name: "Schedule pressure", lane: 4, level: "elev" },
+        { id: "i3", name: "Supplier quote volatility", lane: 4, level: "elev" }
+      ],
+      links: [
+        ["src1", "f2"],
+        ["src1", "f4"],
+        ["src2", "f1"],
+        ["src2", "f3"],
+        ["src3", "f3"],
+        ["f1", "r1"],
+        ["f2", "r1"],
+        ["f3", "r1"],
+        ["f4", "r1"],
+        ["r1", "l1"],
+        ["r1", "l2"],
+        ["r1", "l3"],
+        ["l1", "i1"],
+        ["l2", "i2"],
+        ["l3", "i2"],
+        ["l1", "i3"]
+      ]
+    },
+    actions: [
+      {
+        priority: 1,
+        title: "Monitor European steel prices & shipbuilding-grade plate availability",
+        detail:
+          "Track HRC/plate benchmarks, mill allocations and EU quota utilisation weekly; flag programmes with open steel buy windows.",
+        effects: [
+          { label: "Early procurement risk visibility" },
+          { label: "Quote surprise ↓" }
+        ]
+      },
+      {
+        priority: 2,
+        title: "Forward-buy / index critical plate categories",
+        detail:
+          "Lock 2–3 quarters of hull plate where spec allows; align commercial indexation clauses with customers.",
+        effects: [
+          { label: "Cost variance −40%" },
+          { label: "Lead-time risk ↓" }
+        ]
+      },
+      {
+        priority: 2,
+        title: "Qualify alternate EU / EEA mill routes",
+        detail:
+          "Reduce single-mill dependency; validate CBAM and quota implications on each route.",
+        effects: [{ label: "Availability risk −25%" }]
+      },
+      {
+        priority: 3,
+        title: "Review BOM substitution & grade optimisation",
+        detail:
+          "Engineering review of grade/spec options that preserve class requirements with lower exposure to quota-affected imports.",
+        effects: [{ label: "Material cost −2–4%" }]
+      }
+    ],
+    aiInsight: {
+      html: "European steel price and safeguard signals indicate <b>rising material-cost and availability risk</b> for shipbuilding programmes. Severity <b>Medium–Elevated</b>; trend <b>Increasing</b> while regional supply stays tight. Recommended posture: monitor plate benchmarks, quota utilisation and open buy windows — <b>potential</b> procurement and schedule pressure, not a confirmed programme hit.",
+      confidence: 62
+    }
+  },
+  {
+    id: "energy-oil-cost-escalation",
+    monitoringObjectiveId: "commodity-energy-prices",
+    categoryLabel: "Commodity · Energy",
+    riskDefinition: "Energy & logistics cost escalation",
+    enterpriseCategory: "Supply Chain · Energy",
+    level: "elev",
+    score: 54,
+    accent: "#E97132",
+    trend: [46, 48, 50, 52, 51, 53, 54],
+    title: "Brent crude above planning budget — energy & logistics cost pressure",
+    summary:
+      "Awaiting Brent crude feed. When spot exceeds Meyer's planning assumption, this case compares market price to budgeted $/bbl and tracks freight, supplier energy and yard utility exposure.",
+    relevanceKeywords: [
+      "brent",
+      "crude",
+      "oil",
+      "energy",
+      "freight",
+      "logistics",
+      "barrel",
+      "bbl",
+      "shipping",
+      "fuel",
+      "diesel",
+      "middle east",
+      "hormuz"
+    ],
+    relevanceCoreKeywords: ["brent", "crude", "oil", "barrel", "bbl", "energy"],
+    relevanceAnchorKeywords: [],
+    factors: [
+      {
+        name: "Brent crude spot above Meyer planning budget",
+        severity: "high",
+        observation: "Compare ICE Brent spot to budgeted $/bbl in connector config.",
+        sourceName: "Brent crude spot feed",
+        tier: "external",
+        when: "awaiting live",
+        confidence: 50
+      },
+      {
+        name: "Freight & logistics surcharge risk",
+        severity: "elev",
+        observation:
+          "Elevated oil supports higher sea-freight and inland logistics surcharges on material lanes.",
+        sourceName: "Market / freight indices",
+        tier: "external",
+        when: "awaiting live",
+        confidence: 48
+      },
+      {
+        name: "Supplier & yard energy cost pass-through",
+        severity: "elev",
+        observation:
+          "European suppliers and yard utilities may pass through higher energy input costs into quotes.",
+        sourceName: "Procurement / utilities",
+        tier: "internal",
+        when: "illustrative",
+        confidence: 46
+      }
+    ],
+    sources: [
+      {
+        name: "Brent crude spot (ICE)",
+        tier: "external",
+        evidence: "spot vs budget $/bbl",
+        observations: 1,
+        updated: "awaiting live"
+      }
+    ],
+    provenance: {
+      sources: 1,
+      observations: 1,
+      confidence: 52,
+      illustrative: true,
+      updated: "awaiting live"
+    },
+    impacts: [
+      {
+        value: "+14%",
+        label: "vs Meyer Brent planning assumption (illustrative)",
+        explain: {
+          what: "How far current Brent exceeds the budgeted $/bbl set in the oil price connector (default $78/bbl planning, spot ~$89).",
+          formula: "(spot − budget) / budget",
+          inputs: [
+            { k: "Brent spot", v: "market feed", source: "Brent connector" },
+            { k: "Meyer budget", v: "connector config", source: "Risk manager" }
+          ],
+          result: "Variance % shown live when feed runs",
+          assumptions: [
+            "Budget is a planning assumption for energy/logistics — not actual invoiced oil spend.",
+            "Brent is a proxy for wider energy and freight pressure."
+          ],
+          sources: ["Brent crude spot feed"],
+          confidence: 60,
+          updated: "live"
+        }
+      },
+      {
+        value: "€3–6M",
+        label: "Portfolio logistics & energy pass-through (illustrative)",
+        explain: {
+          what: "Rough annualised exposure if elevated Brent persists on freight surcharges and supplier energy clauses.",
+          formula: "affected logistics spend × energy pass-through %",
+          inputs: [
+            { k: "Affected logistics spend", v: "€42M", source: "ERP (illustrative)" },
+            { k: "Pass-through", v: "8–14%", source: "derived" }
+          ],
+          result: "€3–6M range before mitigation",
+          assumptions: ["Gross exposure before hedging or indexation."],
+          sources: ["Internal procurement", "Brent feed"],
+          confidence: 52,
+          updated: "illustrative"
+        }
+      }
+    ],
+    network: {
+      lanes: [
+        "Risk sources",
+        "Risk factors",
+        "Risk",
+        "Linked risks",
+        "Enterprise impact"
+      ],
+      nodes: [
+        { id: "src1", name: "Brent crude feed", lane: 0, level: "src" },
+        { id: "src2", name: "Freight indices", lane: 0, level: "src" },
+        { id: "f1", name: "Brent > budget", lane: 1, level: "high" },
+        { id: "f2", name: "Freight surcharges", lane: 1, level: "elev" },
+        { id: "f3", name: "Energy pass-through", lane: 1, level: "elev" },
+        {
+          id: "r1",
+          name: "Energy & logistics cost escalation",
+          lane: 2,
+          level: "elev",
+          current: true
+        },
+        { id: "l1", name: "Budget overrun", lane: 3, level: "elev" },
+        { id: "l2", name: "Late delivery", lane: 3, level: "elev" },
+        { id: "i1", name: "Procurement cost", lane: 4, level: "elev" },
+        { id: "i2", name: "Margin pressure", lane: 4, level: "elev" }
+      ],
+      links: [
+        ["src1", "f1"],
+        ["src1", "f2"],
+        ["src2", "f2"],
+        ["f1", "r1"],
+        ["f2", "r1"],
+        ["f3", "r1"],
+        ["r1", "l1"],
+        ["r1", "l2"],
+        ["l1", "i1"],
+        ["l1", "i2"]
+      ]
+    },
+    actions: [
+      {
+        priority: 1,
+        title: "Monitor Brent vs budget weekly",
+        detail:
+          "Track spot against connector budgeted $/bbl; review freight surcharge clauses on open POs.",
+        effects: [{ label: "Early cost visibility" }]
+      },
+      {
+        priority: 2,
+        title: "Review logistics contracts & fuel surcharges",
+        detail: "Renegotiate or cap surcharges on Asia–Europe lanes where possible.",
+        effects: [{ label: "Freight variance ↓" }]
+      }
+    ],
+    aiInsight: {
+      html: "Connect a <b>Brent crude</b> source and set Meyer's planning budget ($/bbl). When spot exceeds budget by ≥5%, this case is proposed with live evidence.",
+      confidence: 55
+    }
+  },
+  {
     id: "yard-weather-disruption",
     monitoringObjectiveId: "weather-natural-hazards",
     categoryLabel: "Weather · Yard operations",

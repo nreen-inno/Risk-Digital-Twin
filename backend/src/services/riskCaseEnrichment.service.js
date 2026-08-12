@@ -5,6 +5,10 @@ import {
 } from "../connectors/connectorLifecycle.service.js";
 import { levelForScore } from "../data/riskOverview.js";
 import { findMonitoringCapabilityById } from "../data/monitoringCapabilities.js";
+import {
+  enrichOilRiskCase,
+  OIL_CASE_ID
+} from "./oilPriceMonitor.service.js";
 
 /** Demo keyword hints → factor themes (light touch until AI enrichment). */
 const FACTOR_HINTS = [
@@ -36,6 +40,26 @@ const FACTOR_HINTS = [
   {
     keys: ["temp", "temperature", "frost", "heat", "weather", "wmo", "open-meteo", "forecast"],
     factorMatch: /weather|temp|sea trial|condition|forecast/i
+  },
+  {
+    keys: ["hrc", "hot-rolled", "hot rolled", "coil", "steel price", "plate price", "meps", "benchmark"],
+    factorMatch: /hrc|plate|steel.*price|price.*steel|cost/i
+  },
+  {
+    keys: ["quota", "safeguard", "18.3", "out-of-quota", "duty-free", "50%", "import limit"],
+    factorMatch: /quota|safeguard|import|duty|regime/i
+  },
+  {
+    keys: ["availability", "lead time", "lead-time", "supply tight", "shortage", "allocation", "mill"],
+    factorMatch: /availability|lead|supply|shortage|allocation/i
+  },
+  {
+    keys: ["cbam", "carbon border", "embedded carbon", "carbon cost"],
+    factorMatch: /cbam|carbon/i
+  },
+  {
+    keys: ["oil", "brent", "crude", "energy cost", "freight", "shipping disruption"],
+    factorMatch: /energy|logistics|freight|oil|shipping/i
   }
 ];
 
@@ -98,6 +122,47 @@ const OBJECTIVE_PROFILE_DEFAULTS = {
     excludeTerms: ["sanction", "tariff", "china export", "football"],
     entities: [],
     locations: ["turku", "finland", "baltic"]
+  },
+  "commodity-energy-prices": {
+    includeTerms: [
+      "steel",
+      "hrc",
+      "hot-rolled",
+      "coil",
+      "plate",
+      "shipbuilding",
+      "hull",
+      "procurement",
+      "material",
+      "commodity",
+      "cbam",
+      "safeguard",
+      "quota",
+      "import",
+      "duty",
+      "price",
+      "cost",
+      "meps",
+      "energy",
+      "oil",
+      "brent",
+      "crude",
+      "inflation",
+      "carbon border",
+      "supply",
+      "availability"
+    ],
+    excludeTerms: [
+      "sport",
+      "football",
+      "entertainment",
+      "recipe",
+      "sperm donor",
+      "moped",
+      "school year"
+    ],
+    entities: [],
+    locations: ["europe", "european union", "eu", "finland"]
   }
 };
 
@@ -578,7 +643,11 @@ export async function enrichRiskCaseWithLiveEvidence(
     };
   }
 
-  return applyLiveDeltaToCase(riskCase, collected);
+  const baseEnriched = applyLiveDeltaToCase(riskCase, collected);
+  if (riskCase.id === OIL_CASE_ID) {
+    return enrichOilRiskCase(riskCase, baseEnriched);
+  }
+  return baseEnriched;
 }
 
 /**

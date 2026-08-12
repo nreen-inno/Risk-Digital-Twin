@@ -63,8 +63,8 @@
   margin-top: 14px;
   padding: 12px 15px;
   border-radius: var(--r-md, 12px);
-  background: rgba(47, 107, 255, 0.05);
-  border: 1px solid rgba(47, 107, 255, 0.16);
+  background: rgba(15, 158, 213, 0.05);
+  border: 1px solid rgba(15, 158, 213, 0.16);
 }
 .sd-value__k {
   flex: none;
@@ -72,7 +72,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--accent-600, #1f56e0);
+  color: var(--accent-600, #156082);
 }
 .sd-value__v { font-size: 13.5px; color: var(--ink); line-height: 1.55; }
 
@@ -133,14 +133,14 @@
 .ba-choice input { accent-color: var(--accent); }
 .ba-choice--on {
   border-color: var(--accent);
-  background: rgba(47, 107, 255, 0.06);
+  background: rgba(15, 158, 213, 0.06);
   color: var(--ink);
 }
 .ba-disclose {
   align-self: flex-start;
   border: 0;
   background: transparent;
-  color: var(--accent-600, #1f56e0);
+  color: var(--accent-600, #156082);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -181,7 +181,7 @@
 .ba-input select:focus,
 .ba-input textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(15, 158, 213, 0.15);
 }
 .ba-input textarea { resize: vertical; }
 .ba-actions { display: flex; gap: 12px; }
@@ -387,7 +387,7 @@
   font-size: 12px;
   font-weight: 600;
   line-height: 1.4;
-  color: var(--accent-600, #1f56e0);
+  color: var(--accent-600, #156082);
   overflow-wrap: anywhere;
   word-break: break-word;
   text-decoration: none;
@@ -430,7 +430,7 @@
 /* Raw records preview */
 .rr-preview__actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
 .rr-meta { margin: 0 0 10px; font-size: 13px; color: var(--ink-2); }
-.rr-meta a { color: var(--accent-600, #1f56e0); font-weight: 600; }
+.rr-meta a { color: var(--accent-600, #156082); font-weight: 600; }
 .rr-test {
   margin: 0 0 14px; padding: 10px 12px; border-radius: var(--r-sm, 8px);
   font-size: 13px; line-height: 1.45;
@@ -447,7 +447,7 @@
 .rr-item__top strong { font-size: 14px; color: var(--ink); line-height: 1.4; }
 .rr-item__top span { flex: none; font-size: 12px; color: var(--ink-3); }
 .rr-item__summary { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.45; }
-.rr-item__link { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: var(--accent-600, #1f56e0); }
+.rr-item__link { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: var(--accent-600, #156082); }
 .rr-approve {
   display: flex;
   align-items: center;
@@ -493,7 +493,7 @@
   padding: 13px 14px;
   outline: none;
 }
-.op-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,107,255,.15); }
+.op-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,158,213,.15); }
 .op-history { display: grid; gap: 7px; font-size: 13px; color: var(--ink-2); }
 .op-history > div { padding: 10px 12px; border-radius: var(--r-sm, 8px); background: var(--surface-2, #f9fbfd); border: 1px solid var(--border, #e4e9f2); }
 @media (max-width: 700px) {
@@ -529,7 +529,7 @@
 /* "Change mode" link in a branch header */
 .onb-change {
   flex: none; align-self: flex-start; border: 0; background: transparent; cursor: pointer;
-  font: inherit; font-size: 12.5px; font-weight: 700; color: var(--accent-600, #1f56e0); padding: 2px 4px;
+  font: inherit; font-size: 12.5px; font-weight: 700; color: var(--accent-600, #156082); padding: 2px 4px;
 }
 .onb-change:hover { text-decoration: underline; }
 

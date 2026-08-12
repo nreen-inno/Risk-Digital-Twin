@@ -646,7 +646,9 @@ export async function acceptConnectorSpecification({
         itemsPath: restProfile?.itemsPath,
         apiKeyEnv: restProfile?.apiKeyEnv,
         apiKeyHeader: restProfile?.apiKeyHeader,
-        apiKeyPrefix: restProfile?.apiKeyPrefix
+        apiKeyPrefix: restProfile?.apiKeyPrefix,
+        budgetedBrentUsd: restProfile?.budgetedBrentUsd,
+        mapStrategy: restProfile?.mapStrategy
       },
       source
     );

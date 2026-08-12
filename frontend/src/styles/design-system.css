@@ -1,46 +1,47 @@
 /* =============================================================================
    Risk Digital Twin — Design System
-   A restrained, premium enterprise design language.
+   Meyer Turku deck-aligned: deep petrol navy, signal cyan/teal, amber heat.
    Tokens first, then primitives. Components consume these; they don't redefine.
    ============================================================================= */
 
 :root {
-  /* --- Surface & structure --- */
-  --bg: #f7f9fc;
-  --bg-deep: #eef2f8;
+  /* --- Surface & structure (cool maritime mist) --- */
+  --bg: #f3f7f9;
+  --bg-deep: #e6eef2;
   --surface: #ffffff;
-  --surface-2: #f9fbfd;
-  --surface-inset: #f3f6fb;
+  --surface-2: #f6fafb;
+  --surface-inset: #eef4f6;
 
   /* --- Lines --- */
-  --border: #e4e9f2;
-  --border-strong: #d3dbe8;
-  --border-focus: #2f6bff;
+  --border: #d9e4ea;
+  --border-strong: #c5d4dd;
+  --border-focus: #0f9ed5;
 
   /* --- Ink / typography --- */
-  --ink: #0d1b2f; /* near-black navy */
-  --ink-2: #45566e; /* secondary text */
-  --ink-3: #7a8aa3; /* muted / captions */
-  --ink-inv: #f4f8ff;
+  --ink: #0a1a2b;
+  --ink-2: #3d5266;
+  --ink-3: #6f8496;
+  --ink-inv: #f2f9fc;
 
-  /* --- Brand --- */
-  --navy: #14335f;
-  --navy-700: #0f2748;
-  --accent: #2f6bff; /* restrained signal blue */
-  --accent-600: #1f56e0;
-  --ai-1: #3b5bdb; /* AI gradient endpoints */
-  --ai-2: #5f8bff;
-  --ai-3: #35b6c9;
+  /* --- Brand (from Meyer RDT slides theme) --- */
+  --navy: #0e2841;
+  --navy-700: #081c2e;
+  --accent: #0f9ed5; /* signal cyan */
+  --accent-600: #156082; /* deep teal */
+  --accent-soft: rgba(15, 158, 213, 0.14);
+  --ai-1: #156082;
+  --ai-2: #0f9ed5;
+  --ai-3: #2ec4a8;
 
   /* --- Semantic --- */
-  --ok: #1f9d6b;
-  --warn: #c98a17;
+  --ok: #196b24;
+  --warn: #e97132; /* slide accent orange */
   --danger: #d64545;
 
   /* --- Source tiers --- */
-  --tier-internal: #2f6bff;
-  --tier-external: #35a0b8;
-  --tier-historical: #8a6dc4;
+  --tier-internal: #0f9ed5;
+  --tier-external: #2ec4a8;
+  --tier-historical: #7a8fa3;
 
   /* --- Radii (moderate — not childish) --- */
   --r-sm: 8px;
@@ -48,11 +49,12 @@
   --r-lg: 16px;
   --r-pill: 999px;
 
-  /* --- Shadows (soft, layered) --- */
-  --sh-1: 0 1px 2px rgba(13, 27, 47, 0.04);
-  --sh-2: 0 2px 6px rgba(13, 27, 47, 0.05), 0 8px 24px rgba(13, 27, 47, 0.05);
-  --sh-3: 0 8px 20px rgba(13, 27, 47, 0.08), 0 24px 48px rgba(13, 27, 47, 0.09);
-  --sh-focus: 0 0 0 3px rgba(47, 107, 255, 0.18);
+  /* --- Shadows (soft, teal-tinted depth) --- */
+  --sh-1: 0 1px 2px rgba(14, 40, 65, 0.05);
+  --sh-2: 0 2px 8px rgba(14, 40, 65, 0.06), 0 10px 28px rgba(21, 96, 130, 0.07);
+  --sh-3: 0 10px 24px rgba(14, 40, 65, 0.09), 0 28px 56px rgba(15, 158, 213, 0.1);
+  --sh-focus: 0 0 0 3px rgba(15, 158, 213, 0.22);
+  --sh-glow: 0 0 0 1px rgba(15, 158, 213, 0.2), 0 8px 28px rgba(15, 158, 213, 0.18);
 
   /* --- Spacing scale --- */
   --s-1: 4px;
@@ -87,7 +89,6 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--ink);
   font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
     Roboto, Helvetica, Arial, sans-serif;
@@ -95,6 +96,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
   line-height: 1.5;
+  /* Atmospheric deck-like depth without going full dark-mode */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1100px 520px at 8% -8%, rgba(15, 158, 213, 0.16), transparent 58%),
+    radial-gradient(900px 480px at 100% 0%, rgba(21, 96, 130, 0.12), transparent 55%),
+    radial-gradient(700px 420px at 70% 100%, rgba(46, 196, 168, 0.08), transparent 50%),
+    linear-gradient(180deg, #f1f6f8 0%, #eef4f7 42%, #f6f9fb 100%);
+  background-attachment: fixed;
 }
 
 button {
@@ -138,17 +147,17 @@ button {
 }
 
 .btn--primary {
-  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-600) 100%);
+  background: linear-gradient(165deg, #1ab0e0 0%, var(--accent) 42%, var(--accent-600) 100%);
   color: #fff;
-  box-shadow: var(--sh-1), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: var(--sh-1), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 .btn--primary:hover {
-  box-shadow: var(--sh-2), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  box-shadow: var(--sh-glow);
   transform: translateY(-1px);
 }
 
 .btn--dark {
-  background: var(--navy);
+  background: linear-gradient(180deg, #163553 0%, var(--navy) 100%);
   color: #fff;
 }
 .btn--dark:hover {
@@ -164,6 +173,7 @@ button {
 .btn--ghost:hover {
   border-color: var(--accent);
   color: var(--accent-600);
+  box-shadow: var(--sh-1);
 }
 
 .btn--quiet {
@@ -183,10 +193,18 @@ button {
 
 /* --- Card shell --- */
 .surface {
-  background: var(--surface);
+  background: rgba(255, 255, 255, 0.86);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   box-shadow: var(--sh-1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease),
+    transform 0.18s var(--ease);
+}
+.surface:hover {
+  border-color: rgba(15, 158, 213, 0.35);
+  box-shadow: var(--sh-2);
 }
 
 /* --- Badge / chip --- */
@@ -222,7 +240,7 @@ button {
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--accent-600);
 }
 
 /* --- Kbd hint --- */

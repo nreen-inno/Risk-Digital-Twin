@@ -47,15 +47,15 @@ const postureByObjectiveId = {
     hasCase: true
   },
   "commodity-energy-prices": {
-    score: 55,
-    trend: [62, 60, 58, 57, 55, 54, 55],
+    score: 62,
+    trend: [48, 50, 52, 55, 58, 60, 62],
     topDrivers: [
-      "Commodity-price volatility",
-      "Energy-price volatility",
-      "Inflation"
+      "European steel prices",
+      "Import quota / CBAM",
+      "Procurement cost pressure"
     ],
-    caseId: null,
-    hasCase: false
+    caseId: "steel-supply-cost-pressure",
+    hasCase: true
   },
   "customer-commercial": {
     score: 68,
@@ -175,6 +175,20 @@ const identifiedRisks = [
     objectiveName: "Supplier Stability",
     score: 56,
     caseId: null
+  },
+  {
+    name: "Steel supply & cost pressure",
+    objectiveId: "commodity-energy-prices",
+    objectiveName: "Commodity & Energy",
+    score: 62,
+    caseId: "steel-supply-cost-pressure"
+  },
+  {
+    name: "Energy & logistics cost escalation",
+    objectiveId: "commodity-energy-prices",
+    objectiveName: "Commodity & Energy",
+    score: 54,
+    caseId: "energy-oil-cost-escalation"
   },
   {
     name: "Budget overrun",

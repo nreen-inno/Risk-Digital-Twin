@@ -85,8 +85,8 @@ export function BrandMark(props) {
         strokeWidth="1.4"
         strokeLinejoin="round"
       />
-      <circle cx="12" cy="11" r="2.4" fill="#7ea6ff" />
-      <path d="M12 3v5.6M12 13.4V21M6 8l3.9 1.8M18 8l-3.9 1.8" stroke="#7ea6ff" strokeWidth="1.2" strokeLinecap="round" />
+      <circle cx="12" cy="11" r="2.4" fill="#7dd3f0" />
+      <path d="M12 3v5.6M12 13.4V21M6 8l3.9 1.8M18 8l-3.9 1.8" stroke="#7dd3f0" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   );
 }

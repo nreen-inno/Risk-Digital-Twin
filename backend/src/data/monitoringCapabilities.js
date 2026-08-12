@@ -177,6 +177,20 @@ const monitoringCapabilities = [
         ],
         suggestedSources: [
             {
+                id: "eu-trade-news",
+                name: "EU Commission Trade news RSS",
+                sourceKind: "rss",
+                sourceRole: "external",
+                requiresSimulation: false
+            },
+            {
+                id: "brent-crude-spot",
+                name: "Brent crude spot (ICE)",
+                sourceKind: "restApi",
+                sourceRole: "external",
+                requiresSimulation: false
+            },
+            {
                 id: "meps",
                 name: "MEPS steel price information",
                 sourceKind: "restApi",

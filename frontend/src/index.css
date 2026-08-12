@@ -18,8 +18,8 @@
   z-index: -2;
   background: radial-gradient(
       1100px 520px at 50% -8%,
-      rgba(47, 107, 255, 0.09),
-      rgba(47, 107, 255, 0) 60%
+      rgba(15, 158, 213, 0.12),
+      rgba(15, 158, 213, 0) 60%
     ),
     radial-gradient(
       800px 420px at 88% 4%,
@@ -50,9 +50,15 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  backdrop-filter: saturate(1.2) blur(8px);
-  background: rgba(247, 249, 252, 0.82);
-  border-bottom: 1px solid var(--border);
+  backdrop-filter: saturate(1.25) blur(14px);
+  -webkit-backdrop-filter: saturate(1.25) blur(14px);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.88) 0%,
+    rgba(243, 247, 249, 0.78) 100%
+  );
+  border-bottom: 1px solid rgba(15, 158, 213, 0.14);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 8px 24px rgba(14, 40, 65, 0.04);
 }
 .topbar__inner {
   height: 60px;
@@ -73,9 +79,9 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  background: linear-gradient(155deg, #eafaf6, #cfeae2);
-  border: 1px solid rgba(20, 51, 95, 0.06);
-  box-shadow: var(--sh-2);
+  background: linear-gradient(155deg, #0f9ed5, #156082 55%, #0e2841);
+  border: 1px solid rgba(14, 40, 65, 0.12);
+  box-shadow: var(--sh-2), 0 0 20px rgba(15, 158, 213, 0.25);
 }
 .brand__mark svg {
   width: 100%;
@@ -92,7 +98,7 @@
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.01em;
-  color: var(--ink);
+  color: var(--navy);
   line-height: 1.15;
 }
 .brand__sub {
@@ -114,10 +120,18 @@
   text-decoration: none;
   padding: 7px 12px;
   border-radius: var(--r-sm);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
+}
+.topbar__nav a:hover {
+  color: var(--accent-600);
+  background: rgba(15, 158, 213, 0.08);
 }
 .topbar__nav a[aria-current="true"] {
-  color: var(--ink);
-  background: var(--surface-inset);
+  color: var(--accent-600);
+  background: rgba(15, 158, 213, 0.12);
+  box-shadow: inset 0 -2px 0 var(--accent);
+  font-weight: 650;
 }
 .topbar__right {
   margin-left: auto;
@@ -138,7 +152,7 @@
   height: 7px;
   border-radius: 50%;
   background: var(--ok);
-  box-shadow: 0 0 0 3px rgba(31, 157, 107, 0.15);
+  box-shadow: 0 0 0 3px rgba(25, 107, 36, 0.16), 0 0 10px rgba(46, 196, 168, 0.45);
 }
 .avatar {
   width: 32px;
@@ -315,7 +329,7 @@
   display: grid;
   place-items: center;
   color: var(--navy);
-  background: linear-gradient(160deg, #eef3fc, #e3ebf9);
+  background: linear-gradient(160deg, #e8f6fb, #dff0f5);
   border: 1px solid var(--border);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
@@ -453,8 +467,8 @@
   display: grid;
   place-items: center;
   color: var(--accent-600);
-  background: #eaf1ff;
-  border: 1px solid #d6e3ff;
+  background: #e8f6fb;
+  border: 1px solid #c5e6f3;
   flex: none;
 }
 .custom__title {
@@ -478,10 +492,10 @@
   margin-top: var(--s-6);
   border-radius: var(--r-lg);
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, #0f2748, #14335f);
+  background: linear-gradient(165deg, #081c2e 0%, #0e2841 48%, #156082 100%);
   color: var(--ink-inv);
   padding: var(--s-6);
-  box-shadow: var(--sh-3);
+  box-shadow: var(--sh-3), 0 0 40px rgba(15, 158, 213, 0.12);
   position: relative;
   overflow: hidden;
 }
@@ -495,8 +509,8 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(95, 139, 255, 0.28),
-    rgba(95, 139, 255, 0) 65%
+    rgba(15, 158, 213, 0.32),
+    rgba(15, 158, 213, 0) 65%
   );
   pointer-events: none;
 }
@@ -513,7 +527,7 @@
   }
 }
 .selpanel .eyebrow {
-  color: #9fc0ff;
+  color: #7dd3f0;
 }
 .selpanel__title {
   font-size: 22px;
@@ -526,7 +540,7 @@
 }
 .selpanel__q {
   font-size: 14px;
-  color: #c4d4ee;
+  color: #b8d8e8;
   margin-top: 8px;
 }
 .selpanel__stat {
@@ -550,7 +564,7 @@
 .selpanel__num span {
   font-size: 14px;
   font-weight: 600;
-  color: #9fc0ff;
+  color: #7dd3f0;
   margin-left: 8px;
 }
 .selpanel__statlabel {
@@ -580,7 +594,7 @@
 }
 .selpanel__hint {
   font-size: 12px;
-  color: #9fc0ff;
+  color: #7dd3f0;
 }
 
 /* --- States (loading / empty / error) --- */

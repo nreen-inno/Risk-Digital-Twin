@@ -39,7 +39,7 @@ export function statusMeta(status) {
 export const PRIORITY_META = {
   high: { label: "High priority", color: "var(--danger)", bg: "rgba(214,69,69,.10)", bd: "rgba(214,69,69,.24)" },
   medium: { label: "Medium priority", color: "var(--warn)", bg: "rgba(201,138,23,.12)", bd: "rgba(201,138,23,.26)" },
-  low: { label: "Low priority", color: "var(--accent)", bg: "rgba(47,107,255,.10)", bd: "rgba(47,107,255,.24)" },
+  low: { label: "Low priority", color: "var(--accent)", bg: "rgba(15,158,213,.10)", bd: "rgba(15,158,213,.24)" },
 };
 
 export function priorityMeta(priority) {

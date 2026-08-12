@@ -145,6 +145,62 @@ export async function getRiskCasesForObjective(objectiveId, { signal } = {}) {
 }
 
 /**
+ * Accept or reject an AI-suggested risk case for an objective.
+ * POST /api/risk/objectives/:objectiveId/cases/:caseListId/review
+ */
+export async function reviewRiskCaseForObjective(
+  objectiveId,
+  caseListId,
+  decision,
+  { signal } = {}
+) {
+  return request(
+    `/api/risk/objectives/${encodeURIComponent(objectiveId)}/cases/${encodeURIComponent(caseListId)}/review`,
+    {
+      method: "POST",
+      signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision })
+    }
+  );
+}
+
+/**
+ * Accept, reject, or delete a risk case by case id.
+ * POST /api/risk/cases/:caseId/review
+ */
+export async function reviewRiskCaseById(caseId, decision, { signal } = {}) {
+  return request(`/api/risk/cases/${encodeURIComponent(caseId)}/review`, {
+    method: "POST",
+    signal,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ decision })
+  });
+}
+
+/**
+ * Restore a dismissed/deleted risk case (demo reset).
+ * POST /api/risk/cases/:caseId/restore
+ */
+export async function restoreRiskCase(caseId, { signal } = {}) {
+  return request(`/api/risk/cases/${encodeURIComponent(caseId)}/restore`, {
+    method: "POST",
+    signal
+  });
+}
+
+/**
+ * Restore all dismissed cases under an objective (demo reset).
+ * POST /api/risk/objectives/:objectiveId/cases/restore-dismissed
+ */
+export async function restoreDismissedRiskCases(objectiveId, { signal } = {}) {
+  return request(
+    `/api/risk/objectives/${encodeURIComponent(objectiveId)}/cases/restore-dismissed`,
+    { method: "POST", signal }
+  );
+}
+
+/**
  * Load the Monitoring Objectives the user can choose from.
  * GET /api/monitoring-capabilities
  */
@@ -456,6 +512,8 @@ export function normalizeInformationSource(s, i = 0) {
     lifecycle,
     lifecycleLabel:
       lifecycle === "active" ? "In use" : lifecycle === "disabled" ? "Disabled" : "Setup in progress",
+    demoMock: Boolean(s.demoMock),
+    demoMockLabel: pick(s, ["demoMockLabel"], s.demoMock ? "Demo mock connection" : ""),
     raw: s,
   };
 }

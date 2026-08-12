@@ -25,7 +25,7 @@
 .adv-head__icon {
   flex: none; width: 52px; height: 52px; border-radius: 13px;
   display: grid; place-items: center; color: var(--navy);
-  background: linear-gradient(160deg, #eef3fc, #e3ebf9); border: 1px solid var(--border);
+  background: linear-gradient(160deg, #e8f6fb, #dff0f5); border: 1px solid var(--border);
 }
 .adv-head__title {
   font-size: clamp(22px, 3vw, 30px); font-weight: 800;
@@ -147,7 +147,7 @@
 .rec__value {
   display: flex; gap: 10px; align-items: baseline; margin-top: 12px;
   padding: 11px 14px; border-radius: var(--r-md);
-  background: rgba(47,107,255,.05); border: 1px solid rgba(47,107,255,.16);
+  background: rgba(15,158,213,.05); border: 1px solid rgba(15,158,213,.16);
 }
 .rec__value-k {
   flex: none; font-size: 11px; font-weight: 800; text-transform: uppercase;
@@ -200,7 +200,7 @@
 /* --- Sticky summary panel --- */
 .asum {
   position: sticky; bottom: 0; z-index: 30; margin-top: var(--s-6);
-  background: linear-gradient(180deg, #0f2748, #14335f);
+  background: linear-gradient(180deg, #081c2e, #0e2841 55%, #156082);
   border-radius: var(--r-lg) var(--r-lg) 0 0; box-shadow: var(--sh-3);
 }
 .asum__inner {
@@ -209,7 +209,7 @@
 }
 .asum__info { display: flex; align-items: center; gap: var(--s-6); flex-wrap: wrap; }
 .asum__obj { display: flex; flex-direction: column; gap: 2px; }
-.asum__lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: #9fc0ff; font-weight: 700; }
+.asum__lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: #7dd3f0; font-weight: 700; }
 .asum__val { font-size: 15px; font-weight: 700; color: #fff; }
 .asum__group { display: flex; align-items: center; gap: var(--s-4); }
 .asum__coverage { font-size: 12.5px; color: #c4d4ee; font-weight: 500; }
@@ -217,7 +217,7 @@
 .asum__sep { width: 1px; height: 26px; background: rgba(255,255,255,.16); }
 .asum__stat { display: flex; flex-direction: column; align-items: center; min-width: 44px; }
 .asum__n { font-size: 22px; font-weight: 800; line-height: 1; color: #fff; }
-.asum__l { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: #9fc0ff; margin-top: 4px; font-weight: 600; }
+.asum__l { font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: #7dd3f0; margin-top: 4px; font-weight: 600; }
 .asum__actions { display: flex; align-items: center; gap: var(--s-3); }
 .asum__actions .btn--ghost { background: transparent; color: #dce7f8; border-color: rgba(255,255,255,.28); }
 .asum__actions .btn--ghost:hover { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.45); }

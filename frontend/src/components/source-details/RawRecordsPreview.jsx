@@ -32,10 +32,13 @@ export default function RawRecordsPreview({
     <section className="sd-card surface op-card rr-preview fade" aria-live="polite">
       <div className="op-head">
         <div>
-          <span className="eyebrow">Collected evidence</span>
-          <h2 className="sd-h2">Raw records from this source</h2>
+          <span className="eyebrow">Connectivity sample</span>
+          <h2 className="sd-h2">Raw feed items (unfiltered)</h2>
           <p className="sd-muted op-intro">
-            The connector verifies feed URLs before it is built. Review this sample — only Approve moves the source to In use.
+            This sample checks that the connector can reach the feed and store items.
+            It is <strong>not</strong> filtered by your include/exclude terms yet —
+            those apply later when evidence is matched to risk cases. Approve if this
+            is the right source and the feed works; reject if the feed itself is wrong.
           </p>
         </div>
         <div className="rr-preview__actions">
@@ -145,11 +148,11 @@ export default function RawRecordsPreview({
       {(canApprove || sampleApproved) && (
         <div className="rr-approve">
           <div>
-            <strong>{sampleApproved ? "Sample approved — source is In use" : "Is this sample useful for monitoring?"}</strong>
+            <strong>{sampleApproved ? "Sample approved — source is In use" : "Approve connectivity sample?"}</strong>
             <p className="sd-muted">
               {sampleApproved
-                ? "The source is active. You can fetch again later."
-                : "Approve only if the evidence looks relevant enough. If not, reject and update the connector (scope, feed, or filters) above."}
+                ? "The source is active. Topic filters will narrow what attaches to risk cases on later collections."
+                : "You are approving the feed connection, not every headline below. Expect broad news; relevance filtering happens at risk-case assessment. Reject only if this is the wrong feed or language for the objective."}
             </p>
           </div>
           {sampleApproved ? (
@@ -174,7 +177,7 @@ export default function RawRecordsPreview({
                 onClick={onApproveSample}
                 disabled={approving || status === "loading"}
               >
-                {approving ? "Approving…" : "Approve sample → In use"}
+                {approving ? "Approving…" : "Approve feed → In use"}
               </button>
             </div>
           )}

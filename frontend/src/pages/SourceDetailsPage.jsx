@@ -160,8 +160,8 @@ export default function SourceDetailsPage() {
       } else if (result.executable) {
         setToast(
           result.verification?.endpoint
-            ? `Verified ${result.verification.endpoint}. Review the sample — approve only if relevant.`
-            : "Sample collected — review below, then approve to move to In use."
+            ? `Verified ${result.verification.endpoint}. Connectivity sample below is unfiltered — approve if this is the right feed.`
+            : "Connectivity sample collected (unfiltered). Approve if the feed is correct for this objective."
         );
       } else {
         setToast(
@@ -202,7 +202,7 @@ export default function SourceDetailsPage() {
       setSampleApproved(false);
       setToast(
         result.testResult?.ok
-          ? "Sample collected — review below. Approve only if relevant for monitoring."
+          ? "Connectivity sample refreshed (unfiltered raw feed). Approve if this is the right source."
           : result.testResult?.message || "Connector test finished with issues."
       );
     } catch (error) {
