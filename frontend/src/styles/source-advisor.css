@@ -147,7 +147,7 @@
 .rec__value {
   display: flex; gap: 10px; align-items: baseline; margin-top: 12px;
   padding: 11px 14px; border-radius: var(--r-md);
-  background: rgba(15,158,213,.05); border: 1px solid rgba(15,158,213,.16);
+  background: rgba(14,110,102,.05); border: 1px solid rgba(14,110,102,.16);
 }
 .rec__value-k {
   flex: none; font-size: 11px; font-weight: 800; text-transform: uppercase;
@@ -200,7 +200,7 @@
 /* --- Sticky summary panel --- */
 .asum {
   position: sticky; bottom: 0; z-index: 30; margin-top: var(--s-6);
-  background: linear-gradient(180deg, #081c2e, #0e2841 55%, #156082);
+  background: linear-gradient(180deg, #052320, #0A4F49 55%, #0A4F49);
   border-radius: var(--r-lg) var(--r-lg) 0 0; box-shadow: var(--sh-3);
 }
 .asum__inner {

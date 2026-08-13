@@ -267,7 +267,7 @@
   bottom: 0;
   z-index: 30;
   margin-top: var(--s-6);
-  background: linear-gradient(180deg, #081c2e, #0e2841 55%, #156082);
+  background: linear-gradient(180deg, #052320, #0A4F49 55%, #0A4F49);
   border-radius: var(--r-lg) var(--r-lg) 0 0;
   box-shadow: var(--sh-3);
 }

@@ -64,7 +64,7 @@
 }
 .risk-kpi:hover {
   transform: translateY(-2px);
-  border-color: rgba(15, 158, 213, 0.35);
+  border-color: rgba(14, 110, 102, 0.35);
   box-shadow: var(--sh-glow);
 }
 
@@ -116,7 +116,7 @@
   border-radius: 12px;
   background: linear-gradient(160deg, #e8f6fb, #dff0f5);
   color: var(--accent-600);
-  box-shadow: inset 0 0 0 1px rgba(15, 158, 213, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(14, 110, 102, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -432,7 +432,7 @@
 
 .risk-tile:hover {
   transform: translateY(-3px);
-  border-color: rgba(15, 158, 213, 0.38);
+  border-color: rgba(14, 110, 102, 0.38);
   box-shadow: var(--sh-glow);
 }
 
@@ -568,13 +568,13 @@
 }
 
 .risk-case-card.is-openable:hover {
-  border-color: rgba(15, 158, 213, 0.35);
+  border-color: rgba(14, 110, 102, 0.35);
   transform: translateY(-1px);
   box-shadow: var(--sh-glow);
 }
 
 .risk-case-card.is-suggested {
-  border-color: rgba(15, 158, 213, 0.28);
+  border-color: rgba(14, 110, 102, 0.28);
   background: linear-gradient(165deg, rgba(232, 246, 251, 0.95), rgba(255, 255, 255, 0.96));
 }
 
@@ -610,8 +610,8 @@
 
 .risk-case-card__origin--ai {
   color: var(--accent-600);
-  background: rgba(15, 158, 213, 0.1);
-  border-color: rgba(15, 158, 213, 0.28);
+  background: rgba(14, 110, 102, 0.1);
+  border-color: rgba(14, 110, 102, 0.28);
 }
 
 .risk-case-card__origin--ok {
@@ -807,7 +807,7 @@
 }
 
 .risk-case-trend--elev {
-  border-color: rgba(15, 158, 213, 0.28);
+  border-color: rgba(14, 110, 102, 0.28);
 }
 
 @media (max-width: 720px) {
@@ -1042,8 +1042,8 @@
 }
 
 .risk-impact--int:hover {
-  border-color: rgba(15, 158, 213, 0.35);
-  box-shadow: 0 8px 22px rgba(15, 158, 213, 0.12);
+  border-color: rgba(14, 110, 102, 0.35);
+  box-shadow: 0 8px 22px rgba(14, 110, 102, 0.12);
 }
 
 .risk-impact--int:active {
@@ -1051,13 +1051,13 @@
 }
 
 .risk-impact--int.is-on {
-  border-color: var(--accent, #0f9ed5);
-  box-shadow: 0 8px 22px rgba(15, 158, 213, 0.14);
+  border-color: var(--accent, #0E6E66);
+  box-shadow: 0 8px 22px rgba(14, 110, 102, 0.14);
   background: #fff;
 }
 
 .risk-impact--int:focus-visible {
-  outline: 2px solid var(--accent, #0f9ed5);
+  outline: 2px solid var(--accent, #0E6E66);
   outline-offset: 2px;
 }
 
@@ -1080,7 +1080,7 @@
 }
 
 .risk-impact--int:hover .risk-impact__i {
-  color: var(--accent, #0f9ed5);
+  color: var(--accent, #0E6E66);
   border-color: var(--border-2, #d7deea);
 }
 
@@ -1124,7 +1124,7 @@
   display: block;
   height: 100%;
   border-radius: 3px;
-  background: var(--accent, #0f9ed5);
+  background: var(--accent, #0E6E66);
 }
 
 .risk-impact__tt {
@@ -1268,8 +1268,8 @@
 .risk-impd__src {
   font-size: 10px;
   font-weight: 700;
-  color: var(--accent, #0f9ed5);
-  background: rgba(15, 158, 213, 0.09);
+  color: var(--accent, #0E6E66);
+  background: rgba(14, 110, 102, 0.09);
   border-radius: 5px;
   padding: 2px 6px;
   white-space: nowrap;
@@ -1279,8 +1279,8 @@
   font-size: 12.5px;
   font-weight: 700;
   color: var(--navy);
-  background: rgba(15, 158, 213, 0.06);
-  border: 1px solid rgba(15, 158, 213, 0.16);
+  background: rgba(14, 110, 102, 0.06);
+  border: 1px solid rgba(14, 110, 102, 0.16);
   border-radius: 8px;
   padding: 8px 10px;
   margin-top: 10px;
