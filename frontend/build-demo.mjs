@@ -195,6 +195,75 @@ cssFiles.sort((a, b) => {
 });
 const css = cssFiles.map((c) => `/* ${path.relative(SRC, c.abs)} */\n` + c.css).join("\n\n");
 
+// ---- Demo access gate (light shared-password screen; NOT real security) ----
+const logoB64 = fs.readFileSync(path.join(SRC, "demo", "rdt-logo.b64"), "utf8").trim();
+const GATE_USER = "demo-user";
+const GATE_PW_B64 = Buffer.from("RDT-Meyer!").toString("base64");
+const gateCss = `
+/* demo access gate */
+#rdt-gate{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(1100px 560px at 18% -12%, rgba(36,216,192,.16), transparent 60%),
+             radial-gradient(900px 520px at 100% 0%, rgba(14,110,102,.35), transparent 58%),
+             linear-gradient(135deg,#052320 0%, #0A4F49 58%, #07302B 100%);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;}
+#rdt-gate .card{width:372px;max-width:92vw;background:#fff;border-radius:16px;padding:32px 30px 24px;
+  box-shadow:0 30px 80px rgba(5,35,32,.55);text-align:center;}
+#rdt-gate .logo{width:78px;height:78px;margin:0 auto 14px;display:block}
+#rdt-gate h1{margin:0;font-size:19px;font-weight:800;color:#0A4F49;letter-spacing:.01em}
+#rdt-gate .sub{margin:5px 0 22px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#0E6E66}
+#rdt-gate label{display:block;text-align:left;font-size:10.5px;font-weight:700;color:#566B67;text-transform:uppercase;letter-spacing:.06em;margin:0 0 5px}
+#rdt-gate input{width:100%;box-sizing:border-box;height:42px;border:1px solid #CBDCD6;border-radius:9px;padding:0 12px;
+  font-size:14px;color:#123833;outline:none;margin-bottom:14px;background:#F8FBFA;font-family:inherit}
+#rdt-gate input:focus{border-color:#0E6E66;background:#fff;box-shadow:0 0 0 3px rgba(14,110,102,.12)}
+#rdt-gate .err{color:#D32F2F;font-size:12px;font-weight:600;min-height:16px;margin:-6px 0 8px;text-align:left}
+#rdt-gate button{width:100%;height:44px;border:none;border-radius:9px;cursor:pointer;color:#fff;font-size:14px;font-weight:700;
+  letter-spacing:.02em;font-family:inherit;background:linear-gradient(135deg,#0E6E66,#0A4F49)}
+#rdt-gate button:hover{filter:brightness(1.07)}
+#rdt-gate .foot{margin-top:16px;font-size:10.5px;color:#9CA8B4;line-height:1.5}
+#rdt-gate.hide{opacity:0;pointer-events:none;transition:opacity .4s ease}
+@keyframes rdtshake{10%,90%{transform:translateX(-2px)}30%,70%{transform:translateX(4px)}50%{transform:translateX(-7px)}}
+#rdt-gate .card.shake{animation:rdtshake .4s}
+`;
+const gateBody = `<div id="rdt-gate">
+  <form class="card" id="rdt-gate-form" autocomplete="off" spellcheck="false">
+    <img class="logo" src="data:image/png;base64,${logoB64}" alt="Risk Digital Twin" />
+    <h1>Risk Digital Twin</h1>
+    <div class="sub">Demo access</div>
+    <label for="rdt-u">Username</label>
+    <input id="rdt-u" type="text" value="${GATE_USER}" autocomplete="off" />
+    <label for="rdt-p">Password</label>
+    <input id="rdt-p" type="password" placeholder="Enter password" autocomplete="off" />
+    <div class="err" id="rdt-err"></div>
+    <button type="submit">Open demo</button>
+    <div class="foot">Authorised preview &middot; illustrative data</div>
+  </form>
+</div>
+<script>
+(function(){
+  var U=${JSON.stringify(GATE_USER)}, P=atob(${JSON.stringify(GATE_PW_B64)}), KEY="rdt.demo.unlocked";
+  try{ if(sessionStorage.getItem(KEY)==="1"){ var g0=document.getElementById("rdt-gate"); if(g0&&g0.parentNode) g0.parentNode.removeChild(g0); return; } }catch(e){}
+  function ready(fn){ if(document.readyState!=="loading") fn(); else document.addEventListener("DOMContentLoaded",fn); }
+  ready(function(){
+    var gate=document.getElementById("rdt-gate"); if(!gate) return;
+    var form=document.getElementById("rdt-gate-form"), err=document.getElementById("rdt-err"), pw=document.getElementById("rdt-p");
+    setTimeout(function(){ if(pw) pw.focus(); },60);
+    form.addEventListener("submit",function(e){
+      e.preventDefault();
+      var u=(document.getElementById("rdt-u").value||"").trim(), p=document.getElementById("rdt-p").value||"";
+      if(u===U && p===P){
+        try{ sessionStorage.setItem(KEY,"1"); }catch(e){}
+        gate.classList.add("hide");
+        setTimeout(function(){ if(gate.parentNode) gate.parentNode.removeChild(gate); },420);
+      } else {
+        err.textContent="Incorrect username or password.";
+        form.classList.add("shake"); setTimeout(function(){ form.classList.remove("shake"); },420);
+        pw.value=""; pw.focus();
+      }
+    });
+  });
+})();
+</script>`;
+
 const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -207,9 +276,11 @@ const html = `<!doctype html>
 <title>Risk Digital Twin — Demo</title>
 <style>
 ${css}
+${gateCss}
 </style>
 </head>
 <body>
+${gateBody}
 <div id="root"></div>
 <script>
 ${bundle}
